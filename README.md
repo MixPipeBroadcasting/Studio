@@ -1,2 +1,2 @@
 # MixPipe Studio
-A vision and audio mixer for live video productions.
+A pipeline-based vision and audio mixer for live video productions.
