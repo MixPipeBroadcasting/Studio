@@ -141,8 +141,8 @@ export class ProjectModel {
 
                 var path = thisScope.project.get([...thisScope.path, name]);
 
-                if (path == null) {
-                    return null;
+                if (path == undefined) {
+                    return undefined;
                 }
 
                 return new classType(thisScope.project, path);
