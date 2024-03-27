@@ -1,0 +1,20 @@
+:root {
+    --primaryBackground: #eeeeee;
+    --secondaryBackground: #cccccc;
+    --selectedBackground: #4444ff;
+    --primaryForeground: black;
+    --selectedForeground: white;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background-color: var(--primaryBackground);
+    color: var(--primaryForeground);
+}
+
+#root {
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+}
