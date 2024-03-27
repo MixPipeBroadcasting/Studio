@@ -1,3 +1,5 @@
+import * as events from "./events.js";
+
 export const styleMixins = {
     GROW: `flex-grow: 1;`,
     VERTICAL_STACK: `display: flex; flex-direction: column;`,
@@ -5,43 +7,10 @@ export const styleMixins = {
     ICON_INVERT: `filter: contrast(0.5) brightness(10);`
 };
 
-export class EventConnection {
-    constructor(component, callback) {
-        this.component = component;
-        this.callback = callback;
-    }
-
-    call(data) {
-        this.callback.apply(this.component, [data]);
-    }
-}
-
-export class EventType {
-    constructor(component) {
-        this.component = component;
-
-        this.connections = [];
-    }
-
-    connect(callback, component = this.component) {
-        var connection = new EventConnection(component, callback);
-
-        this.connections.push(connection);
-
-        return connection;
-    }
-
-    disconnect(connection) {
-        this.connections = this.connections.filter((currentConnection) => currentConnection != connection);
-    }
-
-    emit(data = {}) {
-        this.connections.forEach((callback) => callback.call(data));
-    }
-}
-
-export class Component {
+export class Component extends events.EventDrivenObject {
     constructor(elementName) {
+        super();
+
         this.element = document.createElement(elementName);
 
         this.parent = null;
@@ -49,8 +18,8 @@ export class Component {
         this.childContainerElement = this.element;
 
         this.events = {
-            childAdded: new EventType(this),
-            childRemoved: new EventType(this)
+            childAdded: new events.EventType(this),
+            childRemoved: new events.EventType(this)
         };
     }
 
@@ -106,7 +75,7 @@ export class Component {
         var thisScope = this;
         var value = defaultValue;
 
-        this.events[stateEventName] ??= new EventType(this);
+        this.events[stateEventName] ??= new events.EventType(this);
 
         Object.defineProperty(this, name, {
             get: function() {
@@ -115,7 +84,7 @@ export class Component {
             set: function(newValue) {
                 value = newValue;
 
-                this.events[stateEventName].emit({value: newValue}, thisScope);
+                this.events[stateEventName].emit({value: newValue});
             }
         });
 
@@ -151,7 +120,7 @@ export function className(name) {
     return new ElementData("class", name);
 }
 
-export function text(value) {
+export function text(value = "") {
     return document.createTextNode(value);
 }
 

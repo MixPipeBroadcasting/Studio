@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as EventTypeJs from "./events.js";
 
 components.css(`
     img.icon.invert {
@@ -46,7 +47,7 @@ export class Button extends components.Component {
         this.registerState("tooltip", "tooltipChanged", null, (event) => this.element.title = event.value);
         this.registerState("enabled", "interactionChanged", true, (event) => this.element.disabled = !event.value);
 
-        this.events.activate = new components.EventType(this);
+        this.events.activate = new EventTypeJs.EventType(this);
 
         this.element.addEventListener("click", () => this.events.activate.emit({}, this));
     }

@@ -1,3 +1,5 @@
+import * as events from "./events.js";
+
 var keyIndex = 0;
 
 export class Transaction {
@@ -25,11 +27,17 @@ export class DeleteDataTransaction extends Transaction {
     }
 }
 
-export class Project {
+export class Project extends events.EventDrivenObject {
     constructor() {
+        super();
+
         this.data = {};
         this.timeline = [];
         this.createdAt = Date.now();
+        this.unregisteredModels = [];
+        this.models = [];
+
+        this.events.modelAdded = new events.EventType(this);
     }
 
     applyTransaction(transaction) {
@@ -102,27 +110,82 @@ export class Project {
 
         this.addTransaction(transaction);
     }
+
+    registerNewModels() {
+        this.models.push(...this.unregisteredModels);
+
+        for (var model of this.unregisteredModels) {
+            this.events.modelAdded.emit({model});
+        }
+
+        this.unregisteredModels = [];
+    }
+
+    getModels(types, modelFilter = (model) => true) {
+        return this.models.filter(function(model) {
+            if (!modelFilter(model)) {
+                return false;
+            }
+
+            for (var type of types) {
+                if (model instanceof type) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    }
+
+    associateChildModels(view, modelViewMap, modelFilter = (model) => true) {
+        for (var model of this.getModels(modelViewMap.keys(), modelFilter)) {
+            view.add(new (modelViewMap.get(model.constructor))(model));
+        }
+
+        this.events.modelAdded.connect(function(event) {
+            if (!modelFilter(event.model)) {
+                return;
+            }
+
+            view.add(new (modelViewMap.get(event.model.constructor))(event.model));
+        });
+    }
 }
 
-export class ProjectModel {
+export class ProjectModel extends events.EventDrivenObject {
     constructor(project, path) {
+        super();
+
+        console.log("constructing");
+
         this.project = project;
         this.path = path;
 
         this.project.softSet(this.path, {});
+        this.project.unregisteredModels.push(this);
     }
 
-    registerProperty(name, defaultValue = null) {
+    registerProperty(name, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
+
+        if (propertyEventName != null) {
+            this.events[propertyEventName] ??= new events.EventType(this);
+        }
 
         Object.defineProperty(this, name, {
             get: function() {
                 return thisScope.project.get([...thisScope.path, name]);
             },
             set: function(newValue) {
+                if (propertyEventName != null) {
+                    this.events[propertyEventName].emit({value: newValue});
+                }
+
                 return thisScope.project.set([...thisScope.path, name], newValue);
             }
         });
+
+        console.log("defined", name);
 
         if (defaultValue != null) {
             thisScope.project.softSet([...thisScope.path, name], defaultValue);

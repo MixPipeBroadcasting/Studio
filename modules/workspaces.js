@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as events from "./events.js";
 import * as ui from "./ui.js";
 
 components.css(`
@@ -8,6 +9,7 @@ components.css(`
     }
 
     mixpipe-workspace .panels {
+        ${components.styleMixins.HORIZONTAL_STACK}
         ${components.styleMixins.GROW}
     }
 
@@ -43,6 +45,11 @@ components.css(`
 
     mixpipe-tab.active img.icon {
         ${components.styleMixins.ICON_INVERT}
+    }
+
+    mixpipe-panel {
+        ${components.styleMixins.HORIZONTAL_STACK}
+        ${components.styleMixins.GROW}
     }
 `);
 
@@ -94,8 +101,8 @@ export class Panel extends components.Component {
 
         this.tab = null;
 
-        this.events.activated = new components.EventType(this);
-        this.events.closed = new components.EventType(this);
+        this.events.activated = new events.EventType(this);
+        this.events.closed = new events.EventType(this);
 
         this.registerState("name", "nameChanged", name);
     }
@@ -134,7 +141,7 @@ export class Workspace extends components.Component {
             this.childContainerElement
         );
 
-        this.events.allPanelsClosed = new components.EventType(this);
+        this.events.allPanelsClosed = new events.EventType(this);
 
         this.registerState("activePanel", "switchedPanels", null, (event) => this._switchToPanel(event.value));
 
