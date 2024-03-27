@@ -10,6 +10,8 @@ components.css(`
         color: inherit;
         font-size: 1em;
         font-family: inherit;
+        padding-block: 0.1rem;
+        padding-inline: 0.4rem;
         border: none;
         border-radius: 0.25rem;
     }
