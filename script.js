@@ -10,6 +10,7 @@ var mainWorkspace = new workspaces.Workspace();
 var mainPanel = new workspaces.Panel("Main panel");
 var otherPanel = new workspaces.Panel("Other panel");
 var thirdPanel = new workspaces.Panel("Third panel");
+
 var storyboardPanel = new storyboards.StoryboardPanel(project);
 
 mainPanel.childContainerElement.append(components.text("Main panel!"));

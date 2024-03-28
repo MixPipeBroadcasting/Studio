@@ -9,7 +9,7 @@ components.css(`
     }
 
     mixpipe-workspace .panels {
-        ${components.styleMixins.HORIZONTAL_STACK}
+        ${components.styleMixins.VERTICAL_STACK}
         ${components.styleMixins.GROW}
     }
 
@@ -48,7 +48,34 @@ components.css(`
     }
 
     mixpipe-panel {
+        ${components.styleMixins.VERTICAL_STACK}
+        ${components.styleMixins.GROW}
+    }
+
+    mixpipe-toolbar {
         ${components.styleMixins.HORIZONTAL_STACK}
+        height: 2.4rem;
+        padding: 0.2rem;
+        gap: 0.2rem;
+        border-block-end: 0.2rem solid var(--secondaryBackground);
+    }
+
+    mixpipe-toolbar button:has(img.icon) {
+        min-width: 2rem;
+        padding: 0.1rem;
+    }
+
+    mixpipe-toolbar button img.icon {
+        height: 100%;
+    }
+
+    mixpipe-workarea {
+        ${components.styleMixins.HORIZONTAL_STACK}
+        ${components.styleMixins.GROW}
+    }
+
+    mixpipe-documentarea {
+        ${components.styleMixins.VERTICAL_STACK}
         ${components.styleMixins.GROW}
     }
 `);
@@ -65,8 +92,8 @@ export class Tab extends components.Component {
         this.element.append(this.activateButton.becomeChild(this));
         this.element.append(this.closeButton.becomeChild(this));
 
-        this.activateButton.events.activate.connect(this.activate, this);
-        this.closeButton.events.activate.connect(this.close, this);
+        this.activateButton.events.activated.connect(this.activate, this);
+        this.closeButton.events.activated.connect(this.close, this);
 
         panel.events.nameChanged.connect(this.update, this);
 
@@ -181,5 +208,45 @@ export class Workspace extends components.Component {
                 child.element.style.display = "none";
             }
         }
+    }
+}
+
+export class Toolbar extends components.Component {
+    constructor() {
+        super("mixpipe-toolbar");
+    }
+}
+
+export class WorkArea extends components.Component {
+    constructor() {
+        super("mixpipe-workarea");
+
+        this.documentArea = new DocumentArea();
+
+        this.add(this.documentArea);
+    }
+
+    addSidebar(beforeDocumentArea = false) {
+        var sidebar = new Sidebar(position);
+
+        if (beforeDocumentArea) {
+            this.insert(0, sidebar);
+        } else {
+            this.add(sidebar);
+        }
+
+        return sidebar;
+    }
+}
+
+export class DocumentArea extends components.Component {
+    constructor() {
+        super("mixpipe-documentarea");
+    }
+}
+
+export class Sidebar extends components.Component {
+    constructor() {
+        super("mixpipe-sidebar");
     }
 }

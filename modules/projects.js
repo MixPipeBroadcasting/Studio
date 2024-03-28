@@ -137,9 +137,9 @@ export class Project extends events.EventDrivenObject {
         });
     }
 
-    associateChildModels(view, modelViewMap, modelFilter = (model) => true) {
+    associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
         for (var model of this.getModels(modelViewMap.keys(), modelFilter)) {
-            view.add(new (modelViewMap.get(model.constructor))(model));
+            view.add(new (modelViewMap.get(model.constructor))(model, ...args));
         }
 
         this.events.modelAdded.connect(function(event) {
@@ -147,7 +147,7 @@ export class Project extends events.EventDrivenObject {
                 return;
             }
 
-            view.add(new (modelViewMap.get(event.model.constructor))(event.model));
+            view.add(new (modelViewMap.get(event.model.constructor))(event.model, ...args));
         });
     }
 }
@@ -155,8 +155,6 @@ export class Project extends events.EventDrivenObject {
 export class ProjectModel extends events.EventDrivenObject {
     constructor(project, path) {
         super();
-
-        console.log("constructing");
 
         this.project = project;
         this.path = path;
@@ -177,15 +175,13 @@ export class ProjectModel extends events.EventDrivenObject {
                 return thisScope.project.get([...thisScope.path, name]);
             },
             set: function(newValue) {
+                thisScope.project.set([...thisScope.path, name], newValue);
+
                 if (propertyEventName != null) {
                     this.events[propertyEventName].emit({value: newValue});
                 }
-
-                return thisScope.project.set([...thisScope.path, name], newValue);
             }
         });
-
-        console.log("defined", name);
 
         if (defaultValue != null) {
             thisScope.project.softSet([...thisScope.path, name], defaultValue);

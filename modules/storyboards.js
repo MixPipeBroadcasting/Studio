@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as scenes from "./scenes.js";
 
@@ -19,9 +20,16 @@ components.css(`
         border-radius: 0.25rem;
     }
 
-    mixpipe-scene .handle {
+    mixpipe-scene .title {
+        height: 1.6rem;
         padding: 0.2rem;
         font-size: 1rem;
+    }
+
+    mixpipe-scene .title input {
+        width: 100%;
+        background: transparent;
+        border: 0.1rem solid transparent;
     }
 
     mixpipe-scene canvas {
@@ -33,31 +41,167 @@ components.css(`
 
     mixpipe-scenegroup {
         overflow: hidden;
+        background-color: var(--primaryBackground);
         border: 0.15rem solid var(--secondaryForeground);
         border-radius: 0.25rem;
     }
 
-    mixpipe-scenegroup > .name {
+    mixpipe-scenegroup > input {
+        width: 100%;
         padding: 0.2rem;
+        background-color: transparent;
         color: var(--secondaryForeground);
         font-size: 1rem;
+        border: none;
     }
 `);
 
 export class StoryboardObjectView extends components.Component {
-    constructor(elementName, model) {
+    constructor(elementName, model, storyboard) {
         super(elementName);
 
+        var thisScope = this;
+
         this.model = model;
+        this.storyboard = storyboard;
         this.sizeUnconstrained = false;
 
         this.connectPositioningUpdater(this.updatePositioning);
         this.updatePositioning();
+
+        var movingObject = false;
+        var movedObject = false;
+        var moveOffset = null;
+
+        this.element.addEventListener("pointerdown", function(event) {
+            if (!event.target.matches("mixpipe-scene, mixpipe-scene *:not(input), mixpipe-scenegroup > input")) {
+                return;
+            }
+
+            if (thisScope instanceof SceneGroupView && event.target != thisScope.nameInput.element) {
+                return;
+            }
+
+            var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            thisScope.parent.remove(thisScope);
+            thisScope.storyboard.add(thisScope);
+
+            movingObject = true;
+            moveOffset = {
+                x: event.clientX - objectRect.x + storyboardRect.x,
+                y: event.clientY - objectRect.y + storyboardRect.y
+            };
+
+            thisScope.element.style.left = `${objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft}px`;
+            thisScope.element.style.top = `${objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop}px`;
+        });
+
+        document.body.addEventListener("pointermove", function move(event) {
+            if (!movingObject) {
+                return;
+            }
+
+            var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
+
+            thisScope.element.style.left = `${event.clientX + thisScope.storyboard.element.scrollLeft - moveOffset.x}px`;
+            thisScope.element.style.top = `${event.clientY + thisScope.storyboard.element.scrollTop - moveOffset.y}px`;
+
+            var slowlyScroll = {x: 0, y: 0};
+
+            if (event.clientX < storyboardRect.x + 20) {
+                slowlyScroll.x = -5;
+            }
+
+            if (event.clientX >= storyboardRect.x + storyboardRect.width - 20) {
+                slowlyScroll.x = 5;
+            }
+
+            if (event.clientY < storyboardRect.y + 20) {
+                slowlyScroll.y = -5;
+            }
+
+            if (event.clientY >= storyboardRect.y + storyboardRect.height - 20) {
+                slowlyScroll.y = 5;
+            }
+
+            if (slowlyScroll.x != 0 || slowlyScroll.y != 0) {
+                thisScope.storyboard.slowlyScroll = {x: slowlyScroll.x, y: slowlyScroll.y};
+                
+                thisScope.storyboard.slowlyScrollCallback = function() {
+                    move(event);
+                };
+            } else {
+                thisScope.storyboard.slowlyScroll = null;
+                thisScope.storyboard.slowlyScrollCallback = null;
+            }
+
+            movedObject = true;
+        });
+
+        document.body.addEventListener("pointerup", function(event) {
+            if (!movingObject) {
+                return;
+            }
+
+            if (!movedObject) {
+                thisScope.updatePositioning();
+
+                return;
+            }
+
+            thisScope.storyboard.slowlyScroll = null;
+            thisScope.storyboard.slowlyScrollCallback = null;
+
+            var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            movingObject = false;
+
+            var newPosition = {
+                x: objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft,
+                y: objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop
+            };
+
+            var parentSceneGroupView = null;
+
+            for (var object of thisScope.storyboard.descendentsOfTypes([SceneGroupView])) {
+                if (object == thisScope) {
+                    continue;
+                }
+
+                var groupRect = object.element.getBoundingClientRect();
+
+                if (
+                    groupRect.x <= objectRect.x - storyboardRect.x + moveOffset.x &&
+                    groupRect.y <= objectRect.y - storyboardRect.y + moveOffset.y &&
+                    groupRect.x + groupRect.width > objectRect.x - storyboardRect.x + moveOffset.x &&
+                    groupRect.y + groupRect.height > objectRect.y - storyboardRect.y + moveOffset.y
+                ) {
+                    parentSceneGroupView = object;
+                }
+            }
+
+            if (parentSceneGroupView != null) {
+                var groupRect = parentSceneGroupView.element.getBoundingClientRect();
+
+                newPosition.x = objectRect.x - groupRect.x - parentSceneGroupView.element.clientLeft;
+                newPosition.y = objectRect.y - groupRect.y - parentSceneGroupView.element.clientTop;
+
+                thisScope.model.parentGroup = parentSceneGroupView.model;
+
+                thisScope.parent.remove(thisScope);
+                parentSceneGroupView.add(thisScope);
+            }
+
+            thisScope.model.position = newPosition;
+        });
     }
 
     connectPositioningUpdater(callback) {
-        this.model.events.moved.connect(callback);
-        this.model.events.resized.connect(callback);
+        this.model.events.moved.connect(callback, this);
+        this.model.events.resized.connect(callback, this);
     }
 
     updatePositioning() {
@@ -75,30 +219,32 @@ export class StoryboardObjectView extends components.Component {
 }
 
 export class SceneView extends StoryboardObjectView {
-    constructor(model) {
-        super("mixpipe-scene", model);
+    constructor(model, storyboard) {
+        super("mixpipe-scene", model, storyboard);
 
         var thisScope = this;
 
         this.sizeUnconstrained = true;
 
-        this.nameElement = components.text();
+        this.nameInput = new ui.Input("Untitled scene");
         this.canvasElement = components.element("canvas");
 
-        this.handleElement = components.element("div", [
-            components.className("handle"),
-            this.nameElement
+        this.titleElement = components.element("div", [
+            components.className("title"),
+            this.nameInput.becomeChild(this.titleElement)
         ]);
 
-        this.element.append(this.handleElement, this.canvasElement);
+        this.element.append(this.titleElement, this.canvasElement);
 
         this.updatePositioning();
 
-        this.model.events.renamed.connect(this.updateInfo);
+        this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
         this.connectPositioningUpdater(this.updateCanvasSize);
         this.updateCanvasSize();
+
+        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         requestAnimationFrame(function render() {
             thisScope.render();
@@ -108,7 +254,7 @@ export class SceneView extends StoryboardObjectView {
     }
 
     updateInfo() {
-        this.nameElement.textContent = this.model.name;
+        this.nameInput.value = this.model.name;
     }
 
     updateCanvasSize() {
@@ -126,19 +272,21 @@ export class SceneView extends StoryboardObjectView {
 }
 
 export class SceneGroupView extends StoryboardObjectView {
-    constructor(model) {
-        super("mixpipe-scenegroup", model);
+    constructor(model, storyboard) {
+        super("mixpipe-scenegroup", model, storyboard);
 
-        this.nameElement = components.element("div", [components.className("name")]);
+        this.nameInput = new ui.Input("Untitled group");
 
-        this.element.append(this.nameElement);
+        this.add(this.nameInput);
 
-        this.model.events.renamed.connect(this.updateInfo);
+        this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
+
+        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         model.project.associateChildModels(this, new Map([
             [scenes.Scene, SceneView]
-        ]), function(childModel) {
+        ]), [storyboard], function(childModel) {
             if (childModel.parentGroup != model) {
                 return false;
             }
@@ -148,7 +296,7 @@ export class SceneGroupView extends StoryboardObjectView {
     }
 
     updateInfo() {
-        this.nameElement.textContent = this.model.name;
+        this.nameInput.value = this.model.name;
     }
 }
 
@@ -156,18 +304,65 @@ export class Storyboard extends components.Component {
     constructor(project) {
         super("mixpipe-storyboard");
 
+        var thisScope = this;
+
         this.project = project;
+
+        this.slowlyScroll = null;
+        this.slowlyScrollCallback = null;
 
         project.associateChildModels(this, new Map([
             [scenes.Scene, SceneView],
             [scenes.SceneGroup, SceneGroupView]
-        ]), function(model) {
+        ]), [this], function(model) {
             if (model.parentGroup) {
                 return false;
             }
 
             return true;
         });
+
+        setInterval(function() {
+            if (thisScope.slowlyScroll != null) {
+                thisScope.element.scrollBy(thisScope.slowlyScroll.x, thisScope.slowlyScroll.y);
+
+                if (thisScope.slowlyScrollCallback != null) {
+                    thisScope.slowlyScrollCallback();
+                }
+            }
+        }, 20);
+    }
+
+    createScene() {
+        var scene = new scenes.Scene(this.project);
+
+        this.project.registerNewModels();
+
+        return scene;
+    }
+
+    createSceneGroup() {
+        var scene = new scenes.SceneGroup(this.project);
+
+        this.project.registerNewModels();
+
+        return scene;
+    }
+}
+
+export class StoryboardToolbar extends workspaces.Toolbar {
+    constructor(storyboard) {
+        super();
+
+        this.storyboard = storyboard;
+
+        this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
+        this.createSceneGroupButton = new ui.IconButton("icons/add.svg", "Create scene group");
+
+        this.add(this.createSceneButton, this.createSceneGroupButton);
+
+        this.createSceneButton.events.activated.connect(() => this.storyboard.createScene());
+        this.createSceneGroupButton.events.activated.connect(() => this.storyboard.createSceneGroup());
     }
 }
 
@@ -176,7 +371,11 @@ export class StoryboardPanel extends workspaces.Panel {
         super("Storyboard");
 
         this.storyboard = new Storyboard(project);
+        this.toolbar = new StoryboardToolbar(this.storyboard);
+        this.workArea = new workspaces.WorkArea();
 
-        this.add(this.storyboard);
+        this.workArea.documentArea.add(this.storyboard);
+
+        this.add(this.toolbar, this.workArea);
     }
 }

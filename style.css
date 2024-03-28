@@ -7,6 +7,10 @@
     --selectedForeground: white;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: system-ui, sans-serif;

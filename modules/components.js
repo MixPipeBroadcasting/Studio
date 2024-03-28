@@ -35,6 +35,18 @@ export class Component extends events.EventDrivenObject {
         }
     }
 
+    insert(index, ...children) {
+        for (var child of children) {
+            this.children.splice(index, 0, child);
+
+            child.parent = this;
+
+            this.childContainerElement.insertBefore(child.element, this.childContainerElement.childNodes[index]);
+    
+            this.events.childAdded.emit({child}, this);
+        }
+    }
+
     remove(...children) {
         for (var child of children) {
             this.children = this.children.filter((currentChild) => currentChild != child);
@@ -71,8 +83,27 @@ export class Component extends events.EventDrivenObject {
         return null;
     }
 
+    descendentsOfTypes(types, singleOnly = false) {
+        var children = [];
+
+        for (var child of this.children) {
+            for (var type of types) {
+                if (child instanceof type) {    
+                    children.push(child);
+
+                    if (singleOnly) {
+                        return children;
+                    }
+                }
+            }
+
+            children.push(...child.descendentsOfTypes(types, singleOnly));
+        }
+
+        return children;
+    }
+
     registerState(name, stateEventName, defaultValue, setCallback = null) {
-        var thisScope = this;
         var value = defaultValue;
 
         this.events[stateEventName] ??= new events.EventType(this);

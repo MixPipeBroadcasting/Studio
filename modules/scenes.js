@@ -5,7 +5,7 @@ export class StoryboardObject extends projects.ProjectModel {
         super(project, path);
 
         this.registerProperty("position", {x: 100, y: 100}, "moved");
-        this.registerProperty("size", {width: 1920, height: 1080}, "resized");
+        this.registerProperty("size", {width: 600, height: 400}, "resized");
         this.registerReferenceProperty("parentGroup", SceneGroup);
     }
 }
@@ -29,8 +29,6 @@ export class Scene extends StoryboardObject {
         this.registerProperty("scale", 1);
 
         this.events.resized.connect((event) => this.canvas = new OffscreenCanvas(event.value.width, event.value.height));
-
-        console.log("constructed", this);
     }
 
     render() {
