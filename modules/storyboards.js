@@ -3,6 +3,9 @@ import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as scenes from "./scenes.js";
 
+const OBJECT_MOVE_Z_INDEX = 2;
+const SCENE_GROUP_RESIZE_HANDLE_Z_INDEX = 1;
+
 components.css(`
     mixpipe-storyboard {
         ${components.styleMixins.GROW}
@@ -54,6 +57,17 @@ components.css(`
         font-size: 1rem;
         border: none;
     }
+
+    mixpipe-scenegroup > .resizeHandle {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--secondaryBackground) 50%, var(--secondaryBackground) 100%);
+        z-index: ${SCENE_GROUP_RESIZE_HANDLE_Z_INDEX};
+        cursor: nwse-resize;
+    }
 `);
 
 export class StoryboardObjectView extends components.Component {
@@ -89,11 +103,13 @@ export class StoryboardObjectView extends components.Component {
             thisScope.storyboard.add(thisScope);
 
             movingObject = true;
+
             moveOffset = {
                 x: event.clientX - objectRect.x + storyboardRect.x,
                 y: event.clientY - objectRect.y + storyboardRect.y
             };
 
+            thisScope.element.style.zIndex = OBJECT_MOVE_Z_INDEX;
             thisScope.element.style.left = `${objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft}px`;
             thisScope.element.style.top = `${objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop}px`;
         });
@@ -158,6 +174,8 @@ export class StoryboardObjectView extends components.Component {
             var objectRect = thisScope.element.getBoundingClientRect();
 
             movingObject = false;
+
+            thisScope.element.style.zIndex = null;
 
             var newPosition = {
                 x: objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft,
@@ -275,9 +293,14 @@ export class SceneGroupView extends StoryboardObjectView {
     constructor(model, storyboard) {
         super("mixpipe-scenegroup", model, storyboard);
 
+        var thisScope = this;
+
         this.nameInput = new ui.Input("Untitled group");
+        this.resizeHandleElement = components.element("div", [components.className("resizeHandle")]);
 
         this.add(this.nameInput);
+
+        this.element.append(this.resizeHandleElement);
 
         this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
@@ -292,6 +315,44 @@ export class SceneGroupView extends StoryboardObjectView {
             }
 
             return true;
+        });
+
+        var resizingObject = false;
+        var resizeOffset = null;
+
+        this.resizeHandleElement.addEventListener("pointerdown", function(event) {
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            resizingObject = true;
+
+            resizeOffset = {
+                x: event.clientX - objectRect.width,
+                y: event.clientY - objectRect.height
+            };
+        });
+
+        document.body.addEventListener("pointermove", function(event) {
+            if (!resizingObject) {
+                return;
+            }
+
+            thisScope.element.style.width = `${event.clientX - resizeOffset.x}px`;
+            thisScope.element.style.height = `${event.clientY - resizeOffset.y}px`;
+        });
+
+        document.body.addEventListener("pointerup", function(event) {
+            if (!resizingObject) {
+                return;
+            }
+
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            resizingObject = false;
+
+            thisScope.model.size = {
+                width: objectRect.width,
+                height: objectRect.height
+            };
         });
     }
 
