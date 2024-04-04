@@ -112,6 +112,8 @@ export class StoryboardObjectView extends components.Component {
             thisScope.element.style.zIndex = OBJECT_MOVE_Z_INDEX;
             thisScope.element.style.left = `${objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft}px`;
             thisScope.element.style.top = `${objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop}px`;
+
+            event.preventDefault();
         });
 
         document.body.addEventListener("pointermove", function move(event) {
@@ -329,6 +331,8 @@ export class SceneGroupView extends StoryboardObjectView {
                 x: event.clientX - objectRect.width,
                 y: event.clientY - objectRect.height
             };
+
+            event.preventDefault();
         });
 
         document.body.addEventListener("pointermove", function(event) {
