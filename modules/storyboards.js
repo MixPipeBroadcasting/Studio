@@ -112,8 +112,6 @@ export class StoryboardObjectView extends components.Component {
             thisScope.element.style.zIndex = OBJECT_MOVE_Z_INDEX;
             thisScope.element.style.left = `${objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft}px`;
             thisScope.element.style.top = `${objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop}px`;
-
-            event.preventDefault();
         });
 
         document.body.addEventListener("pointermove", function move(event) {
@@ -156,6 +154,8 @@ export class StoryboardObjectView extends components.Component {
             }
 
             movedObject = true;
+
+            event.preventDefault();
         });
 
         document.body.addEventListener("pointerup", function(event) {
@@ -331,8 +331,6 @@ export class SceneGroupView extends StoryboardObjectView {
                 x: event.clientX - objectRect.width,
                 y: event.clientY - objectRect.height
             };
-
-            event.preventDefault();
         });
 
         document.body.addEventListener("pointermove", function(event) {
@@ -342,6 +340,8 @@ export class SceneGroupView extends StoryboardObjectView {
 
             thisScope.element.style.width = `${event.clientX - resizeOffset.x}px`;
             thisScope.element.style.height = `${event.clientY - resizeOffset.y}px`;
+
+            event.preventDefault();
         });
 
         document.body.addEventListener("pointerup", function(event) {
