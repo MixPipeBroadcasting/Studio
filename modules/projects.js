@@ -1,5 +1,7 @@
 import * as events from "./events.js";
 
+const TIMELINE_TRIM_COUNT_TRIGGER = 20;
+
 var keyIndex = 0;
 
 export class Transaction {
@@ -73,6 +75,29 @@ export class Project extends events.EventDrivenObject {
         this.timeline.push(transaction);
 
         this.applyTransaction(transaction);
+
+        if (this.timeline.length > 0 && this.timeline.length % TIMELINE_TRIM_COUNT_TRIGGER == 0) {
+            this.trimTimeline();
+        }
+    }
+
+    trimTimeline() {
+        var reversedTimeline = [...this.timeline].reverse();
+        var trimmedTimeline = [];
+        var touchedPaths = [];
+
+        for (var transaction of reversedTimeline) {
+            var pathHash = transaction.path.join(".");
+
+            if (touchedPaths.includes(pathHash)) {
+                continue;
+            }
+
+            touchedPaths.push(pathHash);
+            trimmedTimeline.unshift(transaction);
+        }
+
+        this.timeline = trimmedTimeline;
     }
 
     get(path) {

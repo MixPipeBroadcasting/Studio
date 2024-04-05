@@ -1,9 +1,9 @@
 :root {
     --primaryBackground: #eeeeee;
-    --secondaryBackground: #cccccc;
-    --selectedBackground: #4444ff;
     --primaryForeground: black;
+    --secondaryBackground: #cccccc;
     --secondaryForeground: #666666;
+    --selectedBackground: #4444ff;
     --selectedForeground: white;
 }
 
@@ -22,4 +22,13 @@ body {
     display: flex;
     height: 100vh;
     flex-direction: column;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primaryBackground: #111111;
+        --primaryForeground: white;
+        --secondaryBackground: #333333;
+        --secondaryForeground: #999999;
+    }
 }

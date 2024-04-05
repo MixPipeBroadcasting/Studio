@@ -32,6 +32,12 @@ components.css(`
         border-radius: 0.25rem;
         outline: none;
     }
+
+    @media (prefers-color-scheme: dark) {
+        img.icon {
+            ${components.styleMixins.ICON_INVERT}
+        }
+    }
 `);
 
 export class Icon extends components.Component {

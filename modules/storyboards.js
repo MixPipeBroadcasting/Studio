@@ -39,6 +39,7 @@ components.css(`
         --zoom: 0.1;
         margin: calc(0.2rem / var(--zoom));
         margin-block-start: 0;
+        background: repeating-conic-gradient(var(--primaryBackground) 0% 25%, var(--secondaryBackground) 0% 50%) 50% / 128px 128px;
         zoom: var(--zoom);
     }
 
@@ -287,6 +288,7 @@ export class SceneView extends StoryboardObjectView {
 
         var context = this.canvasElement.getContext("2d");
 
+        context.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         context.drawImage(this.model.canvas, 0, 0);
     }
 }
