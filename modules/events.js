@@ -1,4 +1,3 @@
-
 export class EventConnection {
     constructor(component, callback) {
         this.component = component;

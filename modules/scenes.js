@@ -1,4 +1,5 @@
 import * as projects from "./projects.js";
+import * as sceneObjects from "./sceneobjects.js";
 
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
@@ -11,19 +12,25 @@ export class StoryboardObject extends projects.ProjectModel {
 }
 
 export class SceneGroup extends StoryboardObject {
-    constructor(project, path) {
-        super(project, path ?? ["sceneGroups", projects.generateKey()]);
+    constructor(project, path = ["sceneGroups", projects.generateKey()]) {
+        super(project, path);
 
         this.registerProperty("name", "", "renamed");
     }
 }
 
 export class Scene extends StoryboardObject {
-    constructor(project, path) {
-        super(project, path ?? ["scenes", projects.generateKey()]);
+    constructor(project, path = ["scenes", projects.generateKey()]) {
+        super(project, path);
         
         this.size = {width: 1920, height: 1080};
         this.canvas = new OffscreenCanvas(this.size.width, this.size.height);
+
+        this.objects = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "objects"], sceneObjects.SceneObject);
+
+        for (var type in sceneObjects.SCENE_OBJECT_TYPES) {
+            this.objects.associateCustomModel(sceneObjects.SCENE_OBJECT_TYPES[type], (data) => data.type == type);
+        }
 
         this.registerProperty("name", "", "renamed");
         this.registerProperty("scale", 1);
@@ -31,13 +38,17 @@ export class Scene extends StoryboardObject {
         this.events.resized.connect((event) => this.canvas = new OffscreenCanvas(event.value.width, event.value.height));
     }
 
+    get canvasContext() {
+        return this.canvas.getContext("2d");
+    }
+
     render() {
-        var context = this.canvas.getContext("2d");
+        var objectsList = this.objects.getModelList();
 
-        context.fillStyle = "red";
-        context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        context.fillStyle = "green";
-        context.fillRect(10, 10, this.canvas.width / 2, this.canvas.height / 2);
+        for (var object of objectsList) {
+            object.draw(this);
+        }
     }
 }

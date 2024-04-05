@@ -139,15 +139,27 @@ export class Project extends events.EventDrivenObject {
 
     associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
         for (var model of this.getModels(modelViewMap.keys(), modelFilter)) {
-            view.add(new (modelViewMap.get(model.constructor))(model, ...args));
-        }
+            var modelClass = modelViewMap.get(model.constructor);
 
+            if (!modelClass) {
+                continue;
+            }
+
+            view.add(new modelClass(model, ...args));
+        }
+        
         this.events.modelAdded.connect(function(event) {
             if (!modelFilter(event.model)) {
                 return;
             }
 
-            view.add(new (modelViewMap.get(event.model.constructor))(event.model, ...args));
+            var modelClass = modelViewMap.get(event.model.constructor);
+
+            if (!modelClass) {
+                return;
+            }
+
+            view.add(new modelClass(event.model, ...args));
         });
     }
 }
@@ -165,6 +177,12 @@ export class ProjectModel extends events.EventDrivenObject {
 
     registerProperty(name, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
+
+        if (this.hasOwnProperty(name)) {
+            this[name] = defaultValue;
+
+            return;
+        }
 
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
@@ -216,6 +234,134 @@ export class ProjectModel extends events.EventDrivenObject {
         if (defaultValue != null) {
             thisScope.project.softSet([...thisScope.path, name], defaultValue.path);
         }
+    }
+}
+
+export class ProjectModelGroup extends events.EventDrivenObject {
+    constructor(project, path) {
+        super();
+
+        this.project = project;
+        this.path = path;
+
+        this.events.changed = new events.EventType(this);
+    }
+
+    get length() {
+        return this.getItemKeys().length;
+    }
+
+    getItems() {
+        return this.project.get(this.path) || {};
+    }
+
+    getItemKeys() {
+        return Object.keys(this.getItems());
+    }
+
+    getItemValues() {
+        return Object.values(this.getItems());
+    }
+
+    iterateOver() {
+        var items = this.getItems();
+
+        return Object.keys(items).map((key) => ({key, value: items[key]}));
+    }
+
+    getItem(key) {
+        return this.getItems()[key] || null;
+    }
+
+    setItem(key, value) {
+        this.project.set([...this.path, key], value);
+
+        this.events.changed.emit();
+    }
+
+    addItem(value) {
+        this.setItem(generateKey(), value);
+    }
+
+    removeItem(key) {
+        this.project.delete([...this.path, key]);
+
+        this.events.changed.emit();
+    }
+}
+
+export class ProjectModelReferenceGroup extends ProjectModelGroup {
+    constructor(project, path, baseModel = ProjectModel) {
+        super(project, path);
+
+        this.baseModel = baseModel;
+
+        this.customModelMatchers = [];
+        this.modelCache = {};
+    }
+
+    associateCustomModel(type, matcher) {
+        this.customModelMatchers.push({type, matcher});
+    }
+
+    getModels() {
+        var object = {};
+
+        for (var key of this.getModelKeys()) {
+            object[key] = this.getModel(key);
+        }
+
+        return object;
+    }
+
+    getModelKeys() {
+        return this.getItemKeys();
+    }
+
+    getModelList() {
+        return this.getModelKeys().map((key) => this.getModel(key));
+    }
+
+    iterateOver() {
+        var models = this.getModels();
+
+        return Object.keys(models).map((key) => ({key, value: models[key]}));
+    }
+
+    getModel(key) {
+        if (this.modelCache[key]) {
+            return this.modelCache[key];
+        }
+
+        var modelPath = this.getItem(key);
+        var data = this.project.get(modelPath);
+        var model = this.baseModel;
+
+        for (var matcher of this.customModelMatchers) {
+            if (matcher.matcher(data)) {
+                model = matcher.type;
+
+                break;
+            }
+        }
+
+        return new model(this.project, modelPath);
+    }
+
+    setModel(key, model) {
+        this.setItem(key, model.path);
+
+        this.modelCache[key] = model;
+    }
+
+    addModel(model) {
+        this.setModel(generateKey(), model);
+    }
+
+    removeModel(key) {
+        this.removeItem(key);
+
+        delete this.modelCache[key];
     }
 }
 
