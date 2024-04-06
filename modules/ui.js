@@ -1,6 +1,8 @@
 import * as components from "./components.js";
 import * as events from "./events.js";
 
+export const DOUBLE_CLICK_DURATION = 500; // 500 milliseconds
+
 components.css(`
     img.icon.invert {
         ${components.styleMixins.ICON_INVERT}

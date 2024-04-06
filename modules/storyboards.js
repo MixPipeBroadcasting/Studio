@@ -2,6 +2,7 @@ import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as scenes from "./scenes.js";
+import * as sceneEditor from "./sceneeditor.js";
 
 const OBJECT_MOVE_Z_INDEX = 2;
 const SCENE_GROUP_RESIZE_HANDLE_Z_INDEX = 1;
@@ -100,19 +101,12 @@ export class StoryboardObjectView extends components.Component {
             var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
             var objectRect = thisScope.element.getBoundingClientRect();
 
-            thisScope.parent.remove(thisScope);
-            thisScope.storyboard.add(thisScope);
-
             movingObject = true;
 
             moveOffset = {
                 x: event.clientX - objectRect.x + storyboardRect.x,
                 y: event.clientY - objectRect.y + storyboardRect.y
             };
-
-            thisScope.element.style.zIndex = OBJECT_MOVE_Z_INDEX;
-            thisScope.element.style.left = `${objectRect.x - storyboardRect.x + thisScope.storyboard.element.scrollLeft}px`;
-            thisScope.element.style.top = `${objectRect.y - storyboardRect.y + thisScope.storyboard.element.scrollTop}px`;
         });
 
         document.body.addEventListener("pointermove", function move(event) {
@@ -120,8 +114,14 @@ export class StoryboardObjectView extends components.Component {
                 return;
             }
 
+            if (!movedObject) {
+                thisScope.parent.remove(thisScope);
+                thisScope.storyboard.add(thisScope);
+            }
+
             var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
 
+            thisScope.element.style.zIndex = OBJECT_MOVE_Z_INDEX;
             thisScope.element.style.left = `${event.clientX + thisScope.storyboard.element.scrollLeft - moveOffset.x}px`;
             thisScope.element.style.top = `${event.clientY + thisScope.storyboard.element.scrollTop - moveOffset.y}px`;
 
@@ -163,20 +163,22 @@ export class StoryboardObjectView extends components.Component {
             if (!movingObject) {
                 return;
             }
+            
+            movingObject = false;
 
             if (!movedObject) {
                 thisScope.updatePositioning();
-
+                
                 return;
             }
 
+            movedObject = false;
+            
             thisScope.storyboard.slowlyScroll = null;
             thisScope.storyboard.slowlyScrollCallback = null;
 
             var storyboardRect = thisScope.storyboard.element.getBoundingClientRect();
             var objectRect = thisScope.element.getBoundingClientRect();
-
-            movingObject = false;
 
             thisScope.element.style.zIndex = null;
 
@@ -267,6 +269,24 @@ export class SceneView extends StoryboardObjectView {
 
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
+        var lastClicked = null;
+
+        this.canvasElement.addEventListener("pointerdown", function(event) {
+            event.preventDefault();
+        });
+
+        this.canvasElement.addEventListener("pointermove", function() {
+            lastClicked = null;
+        });
+
+        this.canvasElement.addEventListener("pointerup", function() {
+            if (lastClicked != null && Date.now() - lastClicked <= ui.DOUBLE_CLICK_DURATION) {
+                thisScope.openEditor();
+            }
+
+            lastClicked = Date.now();
+        });
+
         requestAnimationFrame(function render() {
             thisScope.render();
 
@@ -290,6 +310,12 @@ export class SceneView extends StoryboardObjectView {
 
         context.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         context.drawImage(this.model.canvas, 0, 0);
+    }
+
+    openEditor() {
+        var workspace = this.ancestor(workspaces.Workspace);
+
+        workspace.add(new sceneEditor.SceneEditorPanel(this.model));
     }
 }
 
