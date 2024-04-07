@@ -1,6 +1,8 @@
 import * as components from "./components.js";
 import * as workspaces from "./workspaces.js";
 
+var lastAbsolutePointerPosition = null;
+
 export class SceneEditorPanel extends workspaces.Panel {
     constructor(scene) {
         super(scene.name || "Untitled scene");
@@ -29,7 +31,6 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         var panning = false;
         var panOffset = null;
-        var lastMousePosition = null;
 
         this.canvasElement.addEventListener("pointerdown", function(event) {
             if (event.ctrlKey) {
@@ -45,11 +46,6 @@ export class SceneEditorPanel extends workspaces.Panel {
         });
 
         document.body.addEventListener("pointermove", function(event) {
-            lastMousePosition = {
-                x: event.clientX,
-                y: event.clientY
-            };
-
             if (!panning) {
                 return;
             }
@@ -66,14 +62,7 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         this.canvasElement.addEventListener("wheel", function(event) {
             var previousZoom = thisScope.zoom;
-            var lastX = null;
-            var lastY = null;
-            var workAreaRect = thisScope.workArea.element.getBoundingClientRect();
-
-            if (lastMousePosition) {
-                lastX = (lastMousePosition.x - workAreaRect.x - (thisScope.offset.x * thisScope.zoom)) / thisScope.zoom;
-                lastY = (lastMousePosition.y - workAreaRect.y - (thisScope.offset.y * thisScope.zoom)) / thisScope.zoom;
-            }
+            var lastPointerPosition = thisScope.pointerPosition;
 
             thisScope.zoom -= event.deltaY * 0.01;
 
@@ -86,14 +75,24 @@ export class SceneEditorPanel extends workspaces.Panel {
                 y: thisScope.offset.y * (previousZoom / thisScope.zoom)
             };
 
-            if (lastMousePosition) {
-                var absoluteX = (lastMousePosition.x - workAreaRect.x - (thisScope.offset.x * thisScope.zoom)) / thisScope.zoom;
-                var absoluteY = (lastMousePosition.y - workAreaRect.y - (thisScope.offset.y * thisScope.zoom)) / thisScope.zoom;
-
-                thisScope.offset.x -= lastX - absoluteX;
-                thisScope.offset.y -= lastY - absoluteY;
+            if (lastPointerPosition) {
+                thisScope.offset.x -= lastPointerPosition.x - thisScope.pointerPosition.x;
+                thisScope.offset.y -= lastPointerPosition.y - thisScope.pointerPosition.y;
             }
         });
+    }
+
+    get pointerPosition() {
+        if (lastAbsolutePointerPosition == null) {
+            return null;
+        }
+
+        var workAreaRect = this.workArea.element.getBoundingClientRect();
+
+        return {
+            x: (lastAbsolutePointerPosition.x - workAreaRect.x - (this.offset.x * this.zoom)) / this.zoom,
+            y: (lastAbsolutePointerPosition.y - workAreaRect.y - (this.offset.y * this.zoom)) / this.zoom
+        };
     }
 
     render() {
@@ -144,3 +143,10 @@ export class SceneEditorPanel extends workspaces.Panel {
         context.stroke();
     }
 }
+
+document.body.addEventListener("pointermove", function(event) {
+    lastAbsolutePointerPosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+});
