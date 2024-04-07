@@ -42,13 +42,17 @@ export class Scene extends StoryboardObject {
         return this.canvas.getContext("2d");
     }
 
-    render() {
+    drawToContext(context = this.canvasContext) {
         var objectsList = this.objects.getModelList();
 
+        for (var object of objectsList) {
+            object.draw(context);
+        }
+    }
+
+    render() {
         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        for (var object of objectsList) {
-            object.draw(this);
-        }
+        this.drawToContext();
     }
 }

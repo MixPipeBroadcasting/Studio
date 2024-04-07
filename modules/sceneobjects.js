@@ -10,7 +10,7 @@ export class SceneObject extends projects.ProjectModel {
         this.registerReferenceProperty("parentObject", SceneObject);
     }
 
-    draw(scene) {}
+    draw(context) {}
 }
 
 export class Rectangle extends SceneObject {
@@ -23,9 +23,7 @@ export class Rectangle extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(scene) {
-        var context = scene.canvasContext;
-
+    draw(context) {
         context.beginPath();
         context.rect(this.position.x, this.position.y, this.size.width, this.size.height);
         context.closePath();
@@ -53,9 +51,7 @@ export class CompositedScene extends SceneObject {
         this.registerReferenceProperty("scene");
     }
 
-    draw(scene) {
-        var context = scene.canvasContext;
-
+    draw(context) {
         if (!this.scene) {
             return;
         }
@@ -86,9 +82,7 @@ export class Text extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(scene) {
-        var context = scene.canvasContext;
-
+    draw(context) {
         if (this.text.trim() == "") {
             return;
         }
