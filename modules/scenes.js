@@ -42,10 +42,25 @@ export class Scene extends StoryboardObject {
         return this.canvas.getContext("2d");
     }
 
-    drawToContext(context = this.canvasContext) {
-        var objectsList = this.objects.getModelList();
+    getObjectsAtPoint(point) {
+        var objectsAtPoint = [];
 
-        for (var object of objectsList) {
+        for (var object of this.objects.getModelList()) {
+            if (
+                object.position.x <= point.x &&
+                object.position.y <= point.y &&
+                object.position.x + object.size.width > point.x &&
+                object.position.y + object.size.height > point.y
+            ) {
+                objectsAtPoint.push(object);
+            }
+        }
+
+        return objectsAtPoint;
+    }
+
+    drawToContext(context = this.canvasContext) {
+        for (var object of this.objects.getModelList()) {
             object.draw(context);
         }
     }
