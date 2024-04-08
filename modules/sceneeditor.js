@@ -33,14 +33,18 @@ export class SceneEditorPanel extends workspaces.Panel {
             requestAnimationFrame(render);
         });
 
-        var pointerDown = false;
         var panning = false;
         var panOffset = null;
         var moving = false;
-        var lastMoveOffset = null;
-        var handleIsGrabbed = false;
+        var initialPointerPosition = null;
+        var lastPointerPosition = null;
+        var grabbedHandle = null;
+        var initialBoundingHalo = null;
+        var lastBoundingHalo = null;
 
         this.canvasElement.addEventListener("pointerdown", function(event) {
+            initialPointerPosition = lastPointerPosition = thisScope.pointerPosition;
+
             if (common.ctrlOrCommandKey(event)) {
                 panning = true;
 
@@ -55,20 +59,84 @@ export class SceneEditorPanel extends workspaces.Panel {
             }
 
             if (thisScope.checkHandles() != null) {
-                handleIsGrabbed = true;
-                lastBoundingHalo = thisScope.boundingHalo;
+                grabbedHandle = thisScope.targetHandle;
+                initialBoundingHalo = lastBoundingHalo = thisScope.boundingHalo;
 
                 return;
             }
 
             thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey);
 
-            pointerDown = true;
             moving = thisScope.scene.getObjectsAtPoint(thisScope.pointerPosition).filter((object) => thisScope.selectedObjects.includes(object)).length > 0;
-            lastMoveOffset = thisScope.pointerPosition;
         });
 
         document.body.addEventListener("pointermove", function(event) {
+            if (grabbedHandle != null) {
+                var newBoundingHalo = {...thisScope.boundingHalo};
+
+                if (grabbedHandle.x == -1) {
+                    newBoundingHalo.xMin = initialBoundingHalo.xMin + (thisScope.pointerPosition.x - initialPointerPosition.x);
+
+                    if (newBoundingHalo.xMin >= newBoundingHalo.xMax) {
+                        newBoundingHalo.xMin = newBoundingHalo.xMax - 1;
+                    }
+                }
+
+                if (grabbedHandle.x == 1) {
+                    newBoundingHalo.xMax = initialBoundingHalo.xMax + (thisScope.pointerPosition.x - initialPointerPosition.x);
+
+                    if (newBoundingHalo.xMax <= newBoundingHalo.xMin) {
+                        newBoundingHalo.xMax = newBoundingHalo.xMin + 1;
+                    }
+                }
+
+                if (grabbedHandle.y == -1) {
+                    newBoundingHalo.yMin = initialBoundingHalo.yMin + (thisScope.pointerPosition.y - initialPointerPosition.y);
+
+                    if (newBoundingHalo.yMin >= newBoundingHalo.yMax) {
+                        newBoundingHalo.yMin = newBoundingHalo.yMax - 1;
+                    }
+                }
+
+                if (grabbedHandle.y == 1) {
+                    newBoundingHalo.yMax = initialBoundingHalo.yMax + (thisScope.pointerPosition.y - initialPointerPosition.y);
+
+                    if (newBoundingHalo.yMax <= newBoundingHalo.yMin) {
+                        newBoundingHalo.yMax = newBoundingHalo.yMin + 1;
+                    }
+                }
+
+                for (var object of thisScope.selectedObjects) {
+                    object.position = {
+                        x: common.lerp(
+                            newBoundingHalo.xMin,
+                            newBoundingHalo.xMax,
+                            common.invLerp(
+                                lastBoundingHalo.xMin,
+                                lastBoundingHalo.xMax,
+                                object.position.x
+                            )
+                        ),
+                        y: common.lerp(
+                            newBoundingHalo.yMin,
+                            newBoundingHalo.yMax,
+                            common.invLerp(
+                                lastBoundingHalo.yMin,
+                                lastBoundingHalo.yMax,
+                                object.position.y
+                            )
+                        )
+                    };
+
+                    object.size = {
+                        width: object.size.width * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)),
+                        height: object.size.height * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin))
+                    };
+                }
+
+                lastBoundingHalo = thisScope.checkHalos();
+            }
+
             if (panning) {
                 thisScope.offset = {
                     x: (event.clientX - panOffset.x) / thisScope.zoom,
@@ -78,8 +146,8 @@ export class SceneEditorPanel extends workspaces.Panel {
 
             if (moving) {
                 var moveDelta = {
-                    x: thisScope.pointerPosition.x - lastMoveOffset.x,
-                    y: thisScope.pointerPosition.y - lastMoveOffset.y
+                    x: thisScope.pointerPosition.x - lastPointerPosition.x,
+                    y: thisScope.pointerPosition.y - lastPointerPosition.y
                 };
     
                 for (var object of thisScope.selectedObjects) {
@@ -88,22 +156,21 @@ export class SceneEditorPanel extends workspaces.Panel {
                         y: object.position.y + moveDelta.y
                     };
                 }
-
-                lastMoveOffset = thisScope.pointerPosition;
-                hasMoved = true;
             }
+
+            lastPointerPosition = thisScope.pointerPosition;
         });
 
         document.body.addEventListener("pointerup", function(event) {
-            pointerDown = false;
             panning = false;
             moving = false;
-            handleIsGrabbed = false;
+            grabbedHandle = null;
         });
 
         this.canvasElement.addEventListener("wheel", function(event) {
             var previousZoom = thisScope.zoom;
-            var lastPointerPosition = thisScope.pointerPosition;
+
+            lastPointerPosition = thisScope.pointerPosition;
 
             thisScope.zoom -= event.deltaY * 0.01;
 
@@ -204,21 +271,21 @@ export class SceneEditorPanel extends workspaces.Panel {
         var boundingHalo = this.boundingHalo;
         
         function checkHandle(x, y, targetHandle = null) {
-            const HANDLE_EDGE = 4 / thisScope.zoom;
+            const HANDLE_RADIUS = 8 / thisScope.zoom;
 
             if (draw) {
                 context.fillStyle = "blue";
 
                 context.beginPath();
-                context.arc(x, y, 8 / thisScope.zoom, 0, 2 * Math.PI, false);
+                context.arc(x, y, HANDLE_RADIUS, 0, 2 * Math.PI, false);
                 context.fill();
             }
 
             if (
-                thisScope.pointerPosition.x >= x - HANDLE_EDGE &&
-                thisScope.pointerPosition.y >= y - HANDLE_EDGE &&
-                thisScope.pointerPosition.x < x + HANDLE_EDGE &&
-                thisScope.pointerPosition.y < y + HANDLE_EDGE
+                thisScope.pointerPosition.x >= x - HANDLE_RADIUS &&
+                thisScope.pointerPosition.y >= y - HANDLE_RADIUS &&
+                thisScope.pointerPosition.x < x + HANDLE_RADIUS &&
+                thisScope.pointerPosition.y < y + HANDLE_RADIUS
             ) {
                 thisScope.targetHandle = targetHandle;
             }
