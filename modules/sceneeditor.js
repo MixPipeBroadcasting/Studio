@@ -17,6 +17,8 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.zoom = null;
         this.offset = null;
         this.selectedObjects = [];
+        this.boundingHalo = null;
+        this.targetHandle = null;
 
         this.workArea.element.append(this.canvasElement);
 
@@ -34,6 +36,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         var panOffset = null;
         var moving = false;
         var lastMoveOffset = null;
+        var handleIsGrabbed = false;
 
         this.canvasElement.addEventListener("pointerdown", function(event) {
             if (event.shiftKey) {
@@ -45,6 +48,13 @@ export class SceneEditorPanel extends workspaces.Panel {
                 };
 
                 event.preventDefault();
+
+                return;
+            }
+
+            if (thisScope.checkHandles() != null) {
+                handleIsGrabbed = true;
+                lastBoundingHalo = thisScope.boundingHalo;
 
                 return;
             }
@@ -83,6 +93,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         document.body.addEventListener("pointerup", function() {
             panning = false;
             moving = false;
+            handleIsGrabbed = false;
         });
 
         this.canvasElement.addEventListener("wheel", function(event) {
@@ -107,6 +118,10 @@ export class SceneEditorPanel extends workspaces.Panel {
         });
     }
 
+    get canvasContext() {
+        return this.canvasElement.getContext("2d");
+    }
+
     get pointerPosition() {
         if (lastAbsolutePointerPosition == null) {
             return null;
@@ -126,25 +141,9 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.selectedObjects = objectsAtPoint.slice(-1);
     }
 
-    render() {
-        var workAreaRect = this.workArea.element.getBoundingClientRect();
+    drawScreenAreas() {
         var sceneSize = this.scene.size;
-        var context = this.canvasElement.getContext("2d");
-
-        this.canvasElement.width = workAreaRect.width;
-        this.canvasElement.height = workAreaRect.height;
-
-        this.zoom ??= (workAreaRect.width / sceneSize.width) * 0.75;
-
-        this.offset ??= {
-            x: (workAreaRect.width - (sceneSize.width * this.zoom)) / 2 / this.zoom,
-            y: (workAreaRect.height - (sceneSize.height * this.zoom)) / 2 / this.zoom
-        };
-
-        context.scale(this.zoom, this.zoom);
-        context.translate(this.offset.x, this.offset.y);
-
-        this.scene.drawToContext(context);
+        var context = this.canvasContext;
 
         context.lineWidth = 1 / this.zoom;
         context.strokeStyle = "#666666";
@@ -172,13 +171,125 @@ export class SceneEditorPanel extends workspaces.Panel {
         context.moveTo(sceneSize.width / 2, sceneSize.height * 0.95);
         context.lineTo(sceneSize.width / 2, sceneSize.height * 0.925);
         context.stroke();
+    }
+
+    checkHandles(draw = false) {
+        if (this.boundingHalo == null) {
+            return null;
+        }
+
+        var thisScope = this;
+        var context = this.canvasContext;
+        var boundingHalo = this.boundingHalo;
+        
+        function checkHandle(x, y, targetHandle = null) {
+            const HANDLE_EDGE = 4 / thisScope.zoom;
+
+            if (draw) {
+                context.fillStyle = "blue";
+
+                context.beginPath();
+                context.arc(x, y, 8 / thisScope.zoom, 0, 2 * Math.PI, false);
+                context.fill();
+            }
+
+            if (
+                thisScope.pointerPosition.x >= x - HANDLE_EDGE &&
+                thisScope.pointerPosition.y >= y - HANDLE_EDGE &&
+                thisScope.pointerPosition.x < x + HANDLE_EDGE &&
+                thisScope.pointerPosition.y < y + HANDLE_EDGE
+            ) {
+                thisScope.targetHandle = targetHandle;
+            }
+        }
+
+        thisScope.targetHandle = null;
+
+        checkHandle(boundingHalo.xMin, boundingHalo.yMin, {x: -1, y: -1});
+        checkHandle((boundingHalo.xMin + boundingHalo.xMax) / 2, boundingHalo.yMin, {x: 0, y: -1});
+        checkHandle(boundingHalo.xMax, boundingHalo.yMin, {x: 1, y: -1});
+        checkHandle(boundingHalo.xMin, (boundingHalo.yMin + boundingHalo.yMax) / 2, {x: -1, y: 0});
+        checkHandle(boundingHalo.xMax, (boundingHalo.yMin + boundingHalo.yMax) / 2, {x: 1, y: 0});
+        checkHandle(boundingHalo.xMin, boundingHalo.yMax, {x: -1, y: 1});
+        checkHandle((boundingHalo.xMin + boundingHalo.xMax) / 2, boundingHalo.yMax, {x: 0, y: 1});
+        checkHandle(boundingHalo.xMax, boundingHalo.yMax, {x: 1, y: 1});
+
+        return thisScope.targetHandle;
+    }
+
+    checkHalos(draw = false) {
+        if (this.selectedObjects.length == 0) {
+            this.boundingHalo = null;
+            this.targetHandle = null;
+
+            return;
+        }
+
+        var context = this.canvasContext;
+
+        var boundingHalo = {
+            xMin: Infinity,
+            yMin: Infinity,
+            xMax: -Infinity,
+            yMax: -Infinity
+        };
+
+        if (draw) {
+            context.lineWidth = 1 / this.zoom;
+            context.strokeStyle = "red";
+        }
 
         for (var object of this.selectedObjects) {
-            context.lineWidth = 2 / this.zoom;
-            context.strokeStyle = "red";
+            if (draw) {
+                context.strokeRect(object.position.x, object.position.y, object.size.width, object.size.height);
+            }
 
-            context.strokeRect(object.position.x, object.position.y, object.size.width, object.size.height);
+            boundingHalo.xMin = Math.min(boundingHalo.xMin, object.position.x);
+            boundingHalo.yMin = Math.min(boundingHalo.yMin, object.position.y);
+            boundingHalo.xMax = Math.max(boundingHalo.xMax, object.position.x + object.size.width);
+            boundingHalo.yMax = Math.max(boundingHalo.yMax, object.position.y + object.size.height);
         }
+
+        this.boundingHalo = boundingHalo;
+
+        if (draw) {
+            context.lineWidth = 2 / this.zoom;
+
+            context.strokeRect(
+                boundingHalo.xMin,
+                boundingHalo.yMin,
+                boundingHalo.xMax - boundingHalo.xMin,
+                boundingHalo.yMax - boundingHalo.yMin
+            );
+        }
+
+        this.checkHandles(draw);
+
+        return boundingHalo;
+    }
+
+    render() {
+        var workAreaRect = this.workArea.element.getBoundingClientRect();
+        var sceneSize = this.scene.size;
+        var context = this.canvasContext;
+
+        this.canvasElement.width = workAreaRect.width;
+        this.canvasElement.height = workAreaRect.height;
+
+        this.zoom ??= (workAreaRect.width / sceneSize.width) * 0.75;
+
+        this.offset ??= {
+            x: (workAreaRect.width - (sceneSize.width * this.zoom)) / 2 / this.zoom,
+            y: (workAreaRect.height - (sceneSize.height * this.zoom)) / 2 / this.zoom
+        };
+
+        context.scale(this.zoom, this.zoom);
+        context.translate(this.offset.x, this.offset.y);
+
+        this.scene.drawToContext(context);
+
+        this.drawScreenAreas();
+        this.checkHalos(true);
     }
 }
 
