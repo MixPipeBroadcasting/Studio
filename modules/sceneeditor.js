@@ -42,7 +42,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         var handleIsGrabbed = false;
 
         this.canvasElement.addEventListener("pointerdown", function(event) {
-            if (event.shiftKey) {
+            if (common.ctrlOrCommandKey(event)) {
                 panning = true;
 
                 panOffset = {
@@ -96,7 +96,7 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         document.body.addEventListener("pointerup", function(event) {
             if (!hasMoved) {
-                thisScope.selectObjectAtPoint(thisScope.pointerPosition, common.ctrlOrCommandKey(event));
+                thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey);
             }
 
             pointerDown = false;
