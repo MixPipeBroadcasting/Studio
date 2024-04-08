@@ -106,7 +106,7 @@ export class Tab extends components.Component {
     update() {
         this.activateButton.text = this.panel.name;
 
-        if (this.ancestor(Workspace).activePanel == this.panel) {
+        if (this.ancestor(Workspace)?.activePanel == this.panel) {
             this.element.classList.add("active");
         } else {
             this.element.classList.remove("active");

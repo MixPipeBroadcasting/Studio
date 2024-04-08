@@ -45,7 +45,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.canvasElement.addEventListener("pointerdown", function(event) {
             initialPointerPosition = lastPointerPosition = thisScope.pointerPosition;
 
-            if (common.ctrlOrCommandKey(event)) {
+            if (event.button == 1 || common.ctrlOrCommandKey(event)) {
                 panning = true;
 
                 panOffset = {
@@ -172,10 +172,10 @@ export class SceneEditorPanel extends workspaces.Panel {
 
             lastPointerPosition = thisScope.pointerPosition;
 
-            thisScope.zoom -= event.deltaY * 0.01;
+            thisScope.zoom -= event.deltaY * 0.002;
 
-            if (thisScope.zoom < 0.1) {
-                thisScope.zoom = 0.1;
+            if (thisScope.zoom < 0.01) {
+                thisScope.zoom = previousZoom;
             }
 
             thisScope.offset = {
