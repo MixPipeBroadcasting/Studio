@@ -36,7 +36,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         var lastMoveOffset = null;
 
         this.canvasElement.addEventListener("pointerdown", function(event) {
-            if (event.ctrlKey) {
+            if (event.shiftKey) {
                 panning = true;
 
                 panOffset = {
