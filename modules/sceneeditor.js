@@ -1,3 +1,4 @@
+import * as common from "./common.js";
 import * as components from "./components.js";
 import * as workspaces from "./workspaces.js";
 
@@ -32,9 +33,11 @@ export class SceneEditorPanel extends workspaces.Panel {
             requestAnimationFrame(render);
         });
 
+        var pointerDown = false;
         var panning = false;
         var panOffset = null;
         var moving = false;
+        var hasMoved = false;
         var lastMoveOffset = null;
         var handleIsGrabbed = false;
 
@@ -59,9 +62,9 @@ export class SceneEditorPanel extends workspaces.Panel {
                 return;
             }
 
-            thisScope.selectObjectAtPoint();
-
-            moving = true;
+            pointerDown = true;
+            moving = thisScope.scene.getObjectsAtPoint(thisScope.pointerPosition).length > 0; // TODO: Get selected objects at point instead
+            hasMoved = false;
             lastMoveOffset = thisScope.pointerPosition;
         });
 
@@ -75,25 +78,33 @@ export class SceneEditorPanel extends workspaces.Panel {
 
             if (moving) {
                 var moveDelta = {
-                    x: lastMoveOffset.x - thisScope.pointerPosition.x,
-                    y: lastMoveOffset.y - thisScope.pointerPosition.y
+                    x: thisScope.pointerPosition.x - lastMoveOffset.x,
+                    y: thisScope.pointerPosition.y - lastMoveOffset.y
                 };
     
                 for (var object of thisScope.selectedObjects) {
                     object.position = {
-                        x: object.position.x - moveDelta.x,
-                        y: object.position.y - moveDelta.y
+                        x: object.position.x + moveDelta.x,
+                        y: object.position.y + moveDelta.y
                     };
                 }
-    
+
                 lastMoveOffset = thisScope.pointerPosition;
+                hasMoved = true;
             }
         });
 
-        document.body.addEventListener("pointerup", function() {
+        document.body.addEventListener("pointerup", function(event) {
+            if (!hasMoved) {
+                thisScope.selectObjectAtPoint(thisScope.pointerPosition, common.ctrlOrCommandKey(event));
+            }
+
+            pointerDown = false;
             panning = false;
             moving = false;
+            hasMoved = false;
             handleIsGrabbed = false;
+
         });
 
         this.canvasElement.addEventListener("wheel", function(event) {
@@ -135,10 +146,22 @@ export class SceneEditorPanel extends workspaces.Panel {
         };
     }
 
-    selectObjectAtPoint(point = this.pointerPosition) {
+    selectObjectAtPoint(point = this.pointerPosition, addToSelection = false) {
         var objectsAtPoint = this.scene.getObjectsAtPoint(point);
 
-        this.selectedObjects = objectsAtPoint.slice(-1);
+        if (!addToSelection) {
+            this.selectedObjects = [];            
+        }
+
+        if (objectsAtPoint.length == 0) {
+            return;
+        }
+
+        var objectToSelect = objectsAtPoint[objectsAtPoint.length - 1];
+
+        if (!this.selectedObjects.includes(objectToSelect)) {
+            this.selectedObjects.push(objectsAtPoint[objectsAtPoint.length - 1]);
+        }
     }
 
     drawScreenAreas() {
