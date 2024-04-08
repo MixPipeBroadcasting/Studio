@@ -37,7 +37,6 @@ export class SceneEditorPanel extends workspaces.Panel {
         var panning = false;
         var panOffset = null;
         var moving = false;
-        var hasMoved = false;
         var lastMoveOffset = null;
         var handleIsGrabbed = false;
 
@@ -62,9 +61,10 @@ export class SceneEditorPanel extends workspaces.Panel {
                 return;
             }
 
+            thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey);
+
             pointerDown = true;
-            moving = thisScope.scene.getObjectsAtPoint(thisScope.pointerPosition).length > 0; // TODO: Get selected objects at point instead
-            hasMoved = false;
+            moving = thisScope.scene.getObjectsAtPoint(thisScope.pointerPosition).filter((object) => thisScope.selectedObjects.includes(object)).length > 0;
             lastMoveOffset = thisScope.pointerPosition;
         });
 
@@ -95,16 +95,10 @@ export class SceneEditorPanel extends workspaces.Panel {
         });
 
         document.body.addEventListener("pointerup", function(event) {
-            if (!hasMoved) {
-                thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey);
-            }
-
             pointerDown = false;
             panning = false;
             moving = false;
-            hasMoved = false;
             handleIsGrabbed = false;
-
         });
 
         this.canvasElement.addEventListener("wheel", function(event) {
@@ -150,7 +144,11 @@ export class SceneEditorPanel extends workspaces.Panel {
         var objectsAtPoint = this.scene.getObjectsAtPoint(point);
 
         if (!addToSelection) {
-            this.selectedObjects = [];            
+            if (objectsAtPoint.length > 0 && this.selectedObjects.includes(objectsAtPoint[objectsAtPoint.length - 1])) {
+                return;
+            }
+
+            this.selectedObjects = [];
         }
 
         if (objectsAtPoint.length == 0) {
