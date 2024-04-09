@@ -84,10 +84,11 @@ export class IconButton extends Button {
 }
 
 export class Input extends components.Component {
-    constructor(placeholder = "", value = "") {
+    constructor(placeholder = "", type = "text", value = "") {
         super("input");
 
         this.element.placeholder = placeholder;
+        this.element.type = type;
         this.element.value = value;
 
         this.registerState("placeholder", "placeholderChanged", placeholder, (event) => this.element.placeholder = event.value);

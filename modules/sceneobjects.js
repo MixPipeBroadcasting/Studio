@@ -5,6 +5,7 @@ export class SceneObject extends projects.ProjectModel {
         super(project, path);
 
         this.registerProperty("type", null);
+        this.registerProperty("name", "Object");
         this.registerProperty("position", {x: 0, y: 0}, "moved");
         this.registerProperty("size", {width: 0, height: 0}, "resized");
         this.registerReferenceProperty("parentObject", SceneObject);
@@ -18,8 +19,9 @@ export class Rectangle extends SceneObject {
         super(project, path);
 
         this.registerProperty("type", "rectangle");
+        this.registerProperty("name", "Rectangle");
         this.registerProperty("backgroundFill");
-        this.registerProperty("borderWidth");
+        this.registerProperty("borderWidth", 0);
         this.registerProperty("borderFill");
     }
 
@@ -48,6 +50,7 @@ export class CompositedScene extends SceneObject {
         super(project, path);
 
         this.registerProperty("type", "compositedScene");
+        this.registerProperty("name", "Composited scene");
         this.registerReferenceProperty("scene");
     }
 
@@ -75,6 +78,7 @@ export class Text extends SceneObject {
         super(project, path);
 
         this.registerProperty("type", "text");
+        this.registerProperty("name", "Text");
         this.registerProperty("text");
         this.registerProperty("font");
         this.registerProperty("backgroundFill");
@@ -106,5 +110,6 @@ export class Text extends SceneObject {
 
 export const SCENE_OBJECT_TYPES = {
     "rectangle": Rectangle,
+    "compositedScene": CompositedScene,
     "text": Text
 };

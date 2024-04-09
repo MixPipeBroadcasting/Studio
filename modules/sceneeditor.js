@@ -1,8 +1,19 @@
 import * as common from "./common.js";
+import * as events from "./events.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
+import * as propertyTables from "./propertytables.js";
 import * as sceneObjects from "./sceneobjects.js";
+
+const PROPERTIES = [
+    new propertyTables.Property("name", "string", "Name"),
+    new propertyTables.Property("position", "position", "Position"),
+    new propertyTables.Property("size", "size", "Size"),
+    new propertyTables.Property("backgroundFill", "string", "Background"),
+    new propertyTables.Property("borderFill", "string", "Border"),
+    new propertyTables.Property("borderWidth", "number", "Border width")
+];
 
 var lastAbsolutePointerPosition = null;
 
@@ -27,7 +38,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
             sceneEditor.scene.objects.addModel(rectangle);
 
-            sceneEditor.selectedObjects = [rectangle];
+            sceneEditor.setSelectedObjects([rectangle]);
         });
 
         this.deleteObjectsButton.events.activated.connect(function() {
@@ -40,7 +51,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
                 sceneEditor.scene.objects.removeModel(key);
 
-                sceneEditor.selectedObjects = [];
+                sceneEditor.setSelectedObjects([]);
             }
         });
     }
@@ -51,6 +62,19 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
         super("Properties");
 
         this.sceneEditor = sceneEditor;
+    }
+
+    init() {
+        this.setPropertyTable();
+
+        this.sceneEditor.events.selectionChanged.connect(() => this.setPropertyTable(), this);
+    }
+
+    setPropertyTable() {
+        this.properties = new propertyTables.PropertyTableContainer(this.sceneEditor.selectedObjects, PROPERTIES);
+
+        this.clear();
+        this.add(this.properties);
     }
 }
 
@@ -65,6 +89,10 @@ export class SceneEditorPropertiesSidebar extends workspaces.Sidebar {
 
         this.workspace.add(this.propertiesPanel);
         this.add(this.workspace);
+    }
+
+    init() {
+        this.propertiesPanel.init();
     }
 }
 
@@ -85,6 +113,8 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.selectedObjects = [];
         this.boundingHalo = null;
         this.targetHandle = null;
+
+        this.events.selectionChanged = new events.EventType(this);
 
         this.workArea.documentArea.element.style.overflow = "hidden";
 
@@ -257,6 +287,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                 thisScope.offset.y -= lastPointerPosition.y - thisScope.pointerPosition.y;
             }
         });
+
+        this.endSidebar.init();
     }
 
     get canvasContext() {
@@ -287,17 +319,23 @@ export class SceneEditorPanel extends workspaces.Panel {
             this.selectedObjects = [];
         }
 
-        if (objectsAtPoint.length == 0) {
-            return;
+        if (objectsAtPoint.length > 0) {
+            var objectToSelect = objectsAtPoint[objectsAtPoint.length - 1];
+
+            if (!this.selectedObjects.includes(objectToSelect)) {
+                this.selectedObjects.push(objectsAtPoint[objectsAtPoint.length - 1]);
+            } else if (deselectIfSelected) {
+                this.selectedObjects = this.selectedObjects.filter((object) => object != objectToSelect);
+            }
         }
 
-        var objectToSelect = objectsAtPoint[objectsAtPoint.length - 1];
+        this.events.selectionChanged.emit({selectedObjects: this.selectedObjects});
+    }
 
-        if (!this.selectedObjects.includes(objectToSelect)) {
-            this.selectedObjects.push(objectsAtPoint[objectsAtPoint.length - 1]);
-        } else if (deselectIfSelected) {
-            this.selectedObjects = this.selectedObjects.filter((object) => object != objectToSelect);
-        }
+    setSelectedObjects(objects) {
+        this.selectedObjects = objects;
+
+        this.events.selectionChanged.emit({selectedObjects: this.selectedObjects});
     }
 
     drawScreenAreas() {

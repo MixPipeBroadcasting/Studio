@@ -86,6 +86,7 @@ components.css(`
     }
 
     mixpipe-sidebar {
+        ${components.styleMixins.VERTICAL_STACK}
         width: 20rem;
     }
 `);

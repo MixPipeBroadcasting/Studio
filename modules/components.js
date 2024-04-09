@@ -1,7 +1,7 @@
 import * as events from "./events.js";
 
 export const styleMixins = {
-    GROW: `flex-grow: 1;`,
+    GROW: `min-width: 0; min-height: 0; flex-grow: 1;`,
     VERTICAL_STACK: `display: flex; flex-direction: column;`,
     HORIZONTAL_STACK: `display: flex; flex-direction: row;`,
     ICON_INVERT: `filter: contrast(0.5) brightness(10);`
@@ -59,6 +59,10 @@ export class Component extends events.EventDrivenObject {
 
             this.events.childRemoved.emit({child}, this);
         }
+    }
+
+    clear() {
+        this.remove(...this.children);
     }
 
     set(...children) {
