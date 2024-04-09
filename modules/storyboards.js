@@ -450,7 +450,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.storyboard = storyboard;
 
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
-        this.createSceneGroupButton = new ui.IconButton("icons/add.svg", "Create scene group");
+        this.createSceneGroupButton = new ui.IconButton("icons/group.svg", "Create scene group");
 
         this.add(this.createSceneButton, this.createSceneGroupButton);
 

@@ -13,7 +13,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
         this.sceneEditor = sceneEditor;
 
         this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
-        this.deleteObjectsButton = new ui.IconButton("icons/add.svg", "Delete selected objects");
+        this.deleteObjectsButton = new ui.IconButton("icons/delete.svg", "Delete selected objects");
 
         this.add(this.createRectangleButton, this.deleteObjectsButton);
 
