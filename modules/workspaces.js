@@ -87,7 +87,23 @@ components.css(`
 
     mixpipe-sidebar {
         ${components.styleMixins.VERTICAL_STACK}
+        position: relative;
         width: 20rem;
+        min-width: 10rem;
+    }
+
+    mixpipe-sidebar > .resizeHandle {
+        position: absolute;
+        top: 0;
+        left: -0.3rem;
+        width: 0.4rem;
+        height: 100%;
+        cursor: ew-resize;
+    }
+
+    mixpipe-sidebar > .resizeHandle.beforeDocumentArea {
+        left: unset;
+        right: -0.3rem;
     }
 `);
 
@@ -237,8 +253,8 @@ export class WorkArea extends components.Component {
         this.add(this.documentArea);
     }
 
-    addSidebar(sidebar, beforeDocumentArea = false) {
-        if (beforeDocumentArea) {
+    addSidebar(sidebar) {
+        if (sidebar.beforeDocumentArea) {
             this.insert(0, sidebar);
         } else {
             this.add(sidebar);
@@ -253,7 +269,45 @@ export class DocumentArea extends components.Component {
 }
 
 export class Sidebar extends components.Component {
-    constructor() {
+    constructor(beforeDocumentArea = false) {
         super("mixpipe-sidebar");
+
+        var thisScope = this;
+
+        this.beforeDocumentArea = beforeDocumentArea;
+
+        this.resizeHandleElement = components.element("div", [
+            components.className("resizeHandle")
+        ]);
+
+        if (beforeDocumentArea) {
+            this.resizeHandleElement.classList.add("beforeDocumentArea");
+        }
+
+        this.element.append(this.resizeHandleElement);
+
+        var resizing = false;
+        var initialWidth = null;
+        var resizeOffset = null;
+
+        this.resizeHandleElement.addEventListener("pointerdown", function(event) {
+            resizing = true;
+            initialWidth = thisScope.element.getBoundingClientRect().width;
+            resizeOffset = event.clientX;
+        });
+
+        document.body.addEventListener("pointermove", function(event) {
+            if (!resizing) {
+                return;
+            }
+
+            thisScope.element.style.width = `${initialWidth + ((event.pageX - resizeOffset) * (thisScope.beforeDocumentArea ? 1 : -1))}px`;
+
+            event.preventDefault();
+        });
+
+        document.body.addEventListener("pointerup", function() {
+            resizing = false;
+        });
     }
 }
