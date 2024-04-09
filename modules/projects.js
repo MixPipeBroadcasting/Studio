@@ -269,6 +269,8 @@ export class ProjectModel extends events.EventDrivenObject {
 
     resetProperty(name) {
         this[name] = this.project.get([...this.path, `${name}:initial`]);
+
+        return this[name];
     }
 }
 
