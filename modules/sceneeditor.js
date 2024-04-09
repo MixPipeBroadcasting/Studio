@@ -235,6 +235,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                 }
 
                 lastBoundingHalo = thisScope.checkHalos();
+
+                event.preventDefault();
             }
 
             if (panning) {
@@ -242,6 +244,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                     x: (event.clientX - panOffset.x) / thisScope.zoom,
                     y: (event.clientY - panOffset.y) / thisScope.zoom
                 };
+
+                event.preventDefault();
             }
 
             if (moving) {
@@ -254,6 +258,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                     object.mutateProperty("x", object.x + moveDelta.x);
                     object.mutateProperty("y", object.y + moveDelta.y);
                 }
+
+                event.preventDefault();
             }
 
             lastPointerPosition = thisScope.pointerPosition;
