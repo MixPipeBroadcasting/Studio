@@ -47,7 +47,7 @@ export class CompositedScene extends SceneObject {
     constructor(project, path = undefined) {
         super(project, path);
 
-        this.registerProperty("type", "sceneMirror");
+        this.registerProperty("type", "compositedScene");
         this.registerReferenceProperty("scene");
     }
 
