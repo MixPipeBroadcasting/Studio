@@ -19,24 +19,6 @@ components.css(`
     }
 `);
 
-function labelledInput(labelText, input, minWidth = "4rem") {
-    input.element.id ||= projects.generateKey();
-    input.element.style.minWidth = "6rem";
-
-    return components.element("div", [
-        components.style("display", "flex"),
-        components.style("align-items", "center"),
-        components.style("gap", "0.2rem"),
-        components.element("label", [
-            components.attribute("for", input.element.id),
-            components.style("padding-inline-start", "0.5rem"),
-            components.style("min-width", minWidth),
-            components.text(labelText)
-        ]),
-        input.element
-    ]);
-}
-
 export class Property {
     constructor(name, type = "string", displayName = name, options = {}) {
         this.name = name;
