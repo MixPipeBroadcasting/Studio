@@ -38,10 +38,11 @@ function labelledInput(labelText, input, minWidth = "4rem") {
 }
 
 export class Property {
-    constructor(name, type = "string", displayName = name) {
+    constructor(name, type = "string", displayName = name, options = {}) {
         this.name = name;
         this.type = type;
         this.displayName = displayName;
+        this.options = options;
     }
 
     generateInputElementForModel(model) {
@@ -57,58 +58,20 @@ export class Property {
         }
 
         switch (this.type) {
-            case "position":
-                var position = model[this.name];
-
-                var xInput = new ui.Input("", "number", position.x);
-                var yInput = new ui.Input("", "number", position.y);
-
-                [xInput, yInput].forEach(function(input) {
-                    input.element.addEventListener("focus", () => input.element.select());
-
-                    input.events.valueChanged.connect(function() {
-                        model[thisScope.name] = {
-                            x: xInput.value,
-                            y: yInput.value
-                        };
-                    });
-                });
-
-                return components.element("div", [
-                    labelledInput("X", xInput),
-                    labelledInput("Y", yInput)
-                ]);
-
-            case "size":
-                var size = model[this.name];
-
-                var widthInput = new ui.Input("", "number", size.width);
-                var heightInput = new ui.Input("", "number", size.height);
-
-                [widthInput, heightInput].forEach(function(input) {
-                    input.element.addEventListener("focus", () => input.element.select());
-
-                    input.events.valueChanged.connect(function() {
-                        model[thisScope.name] = {
-                            width: widthInput.value,
-                            height: heightInput.value
-                        };
-                    });
-                });
-
-                return components.element("div", [
-                    labelledInput("Width", widthInput),
-                    labelledInput("Height", heightInput)
-                ]);
-
             case "string":
             case "number":
-                var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], model[this.name]);
+                var currentValue = model[this.name];
+
+                if (this.type == "number" && this.options.roundNumber) {
+                    currentValue = Math.round(currentValue);
+                }
+
+                var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], currentValue);
 
                 input.element.addEventListener("focus", () => input.element.select());
 
                 input.events.valueChanged.connect(function(event) {
-                    if (this.type == "number") {
+                    if (thisScope.type == "number") {
                         model[thisScope.name] = Number(event.value);
 
                         return;

@@ -8,8 +8,10 @@ import * as sceneObjects from "./sceneobjects.js";
 
 const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name"),
-    new propertyTables.Property("position", "position", "Position"),
-    new propertyTables.Property("size", "size", "Size"),
+    new propertyTables.Property("x", "number", "X", {roundNumber: true}),
+    new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
+    new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
+    new propertyTables.Property("height", "number", "Height", {roundNumber: true}),
     new propertyTables.Property("backgroundFill", "string", "Background"),
     new propertyTables.Property("borderFill", "string", "Border"),
     new propertyTables.Property("borderWidth", "number", "Border width")
@@ -31,8 +33,10 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
         this.createRectangleButton.events.activated.connect(function() {
             var rectangle = new sceneObjects.Rectangle(sceneEditor.scene.project);
 
-            rectangle.position = {x: 50, y: 50};
-            rectangle.size = {width: 100, height: 100};
+            rectangle.x = 50;
+            rectangle.y = 50;
+            rectangle.width = 100;
+            rectangle.height = 100;
 
             rectangle.backgroundFill = "cyan";
 
@@ -206,31 +210,28 @@ export class SceneEditorPanel extends workspaces.Panel {
                 }
 
                 for (var object of thisScope.selectedObjects) {
-                    object.mutateProperty("position", {
-                        x: common.lerp(
-                            newBoundingHalo.xMin,
-                            newBoundingHalo.xMax,
-                            common.invLerp(
-                                lastBoundingHalo.xMin,
-                                lastBoundingHalo.xMax,
-                                object.position.x
-                            )
-                        ),
-                        y: common.lerp(
-                            newBoundingHalo.yMin,
-                            newBoundingHalo.yMax,
-                            common.invLerp(
-                                lastBoundingHalo.yMin,
-                                lastBoundingHalo.yMax,
-                                object.position.y
-                            )
+                    object.mutateProperty("x", common.lerp(
+                        newBoundingHalo.xMin,
+                        newBoundingHalo.xMax,
+                        common.invLerp(
+                            lastBoundingHalo.xMin,
+                            lastBoundingHalo.xMax,
+                            object.x
                         )
-                    });
+                    ));
+                    
+                    object.mutateProperty("y", common.lerp(
+                        newBoundingHalo.yMin,
+                        newBoundingHalo.yMax,
+                        common.invLerp(
+                            lastBoundingHalo.yMin,
+                            lastBoundingHalo.yMax,
+                            object.y
+                        )
+                    ));
 
-                    object.mutateProperty("size", {
-                        width: object.size.width * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)),
-                        height: object.size.height * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin))
-                    });
+                    object.mutateProperty("width", object.width * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)));
+                    object.mutateProperty("height", object.height * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin)));
                 }
 
                 lastBoundingHalo = thisScope.checkHalos();
@@ -250,10 +251,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                 };
     
                 for (var object of thisScope.selectedObjects) {
-                    object.mutateProperty("position", {
-                        x: object.position.x + moveDelta.x,
-                        y: object.position.y + moveDelta.y
-                    });
+                    object.mutateProperty("x", object.x + moveDelta.x);
+                    object.mutateProperty("y", object.y + moveDelta.y);
                 }
             }
 
@@ -339,34 +338,33 @@ export class SceneEditorPanel extends workspaces.Panel {
     }
 
     drawScreenAreas() {
-        var sceneSize = this.scene.size;
         var context = this.canvasContext;
 
         context.lineWidth = 1 / this.zoom;
         context.strokeStyle = "#666666";
 
-        context.strokeRect(0, 0, sceneSize.width, sceneSize.height);
-        context.strokeRect(sceneSize.width * 0.05, sceneSize.height * 0.05, sceneSize.width * 0.9, sceneSize.height * 0.9);
-        context.strokeRect(sceneSize.width * 0.1, sceneSize.height * 0.1, sceneSize.width * 0.8, sceneSize.height * 0.8);
+        context.strokeRect(0, 0, this.scene.width, this.scene.height);
+        context.strokeRect(this.scene.width * 0.05, this.scene.height * 0.05, this.scene.width * 0.9, this.scene.height * 0.9);
+        context.strokeRect(this.scene.width * 0.1, this.scene.height * 0.1, this.scene.width * 0.8, this.scene.height * 0.8);
 
         context.beginPath();
-        context.moveTo(sceneSize.width * 0.05, sceneSize.height / 2);
-        context.lineTo(sceneSize.width * 0.075, sceneSize.height / 2);
+        context.moveTo(this.scene.width * 0.05, this.scene.height / 2);
+        context.lineTo(this.scene.width * 0.075, this.scene.height / 2);
         context.stroke();
 
         context.beginPath();
-        context.moveTo(sceneSize.width * 0.95, sceneSize.height / 2);
-        context.lineTo(sceneSize.width * 0.925, sceneSize.height / 2);
+        context.moveTo(this.scene.width * 0.95, this.scene.height / 2);
+        context.lineTo(this.scene.width * 0.925, this.scene.height / 2);
         context.stroke();
 
         context.beginPath();
-        context.moveTo(sceneSize.width / 2, sceneSize.height * 0.05);
-        context.lineTo(sceneSize.width / 2, sceneSize.height * 0.075);
+        context.moveTo(this.scene.width / 2, this.scene.height * 0.05);
+        context.lineTo(this.scene.width / 2, this.scene.height * 0.075);
         context.stroke();
 
         context.beginPath();
-        context.moveTo(sceneSize.width / 2, sceneSize.height * 0.95);
-        context.lineTo(sceneSize.width / 2, sceneSize.height * 0.925);
+        context.moveTo(this.scene.width / 2, this.scene.height * 0.95);
+        context.lineTo(this.scene.width / 2, this.scene.height * 0.925);
         context.stroke();
     }
 
@@ -438,13 +436,13 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         for (var object of this.selectedObjects) {
             if (draw) {
-                context.strokeRect(object.position.x, object.position.y, object.size.width, object.size.height);
+                context.strokeRect(object.x, object.y, object.width, object.height);
             }
 
-            boundingHalo.xMin = Math.min(boundingHalo.xMin, object.position.x);
-            boundingHalo.yMin = Math.min(boundingHalo.yMin, object.position.y);
-            boundingHalo.xMax = Math.max(boundingHalo.xMax, object.position.x + object.size.width);
-            boundingHalo.yMax = Math.max(boundingHalo.yMax, object.position.y + object.size.height);
+            boundingHalo.xMin = Math.min(boundingHalo.xMin, object.x);
+            boundingHalo.yMin = Math.min(boundingHalo.yMin, object.y);
+            boundingHalo.xMax = Math.max(boundingHalo.xMax, object.x + object.width);
+            boundingHalo.yMax = Math.max(boundingHalo.yMax, object.y + object.height);
         }
 
         this.boundingHalo = boundingHalo;
@@ -467,17 +465,16 @@ export class SceneEditorPanel extends workspaces.Panel {
 
     render() {
         var documentAreaRect = this.workArea.documentArea.element.getBoundingClientRect();
-        var sceneSize = this.scene.size;
         var context = this.canvasContext;
 
         this.canvasElement.width = documentAreaRect.width;
         this.canvasElement.height = documentAreaRect.height;
 
-        this.zoom ??= (documentAreaRect.width / sceneSize.width) * 0.75;
+        this.zoom ??= (documentAreaRect.width / this.scene.width) * 0.75;
 
         this.offset ??= {
-            x: (documentAreaRect.width - (sceneSize.width * this.zoom)) / 2 / this.zoom,
-            y: (documentAreaRect.height - (sceneSize.height * this.zoom)) / 2 / this.zoom
+            x: (documentAreaRect.width - (this.scene.width * this.zoom)) / 2 / this.zoom,
+            y: (documentAreaRect.height - (this.scene.height * this.zoom)) / 2 / this.zoom
         };
 
         context.scale(this.zoom, this.zoom);

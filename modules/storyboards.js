@@ -218,7 +218,8 @@ export class StoryboardObjectView extends components.Component {
                 parentSceneGroupView.add(thisScope);
             }
 
-            thisScope.model.position = newPosition;
+            thisScope.model.x = newPosition.x;
+            thisScope.model.y = newPosition.y;
         });
     }
 
@@ -228,12 +229,12 @@ export class StoryboardObjectView extends components.Component {
     }
 
     updatePositioning() {
-        this.element.style.left = `${this.model.position.x}px`;
-        this.element.style.top = `${this.model.position.y}px`;
+        this.element.style.left = `${this.model.x}px`;
+        this.element.style.top = `${this.model.y}px`;
         
         if (!this.sizeUnconstrained) {
-            this.element.style.width = `${this.model.size.width}px`;
-            this.element.style.height = `${this.model.size.height}px`;
+            this.element.style.width = `${this.model.width}px`;
+            this.element.style.height = `${this.model.height}px`;
         } else {
             this.element.style.width = null;
             this.element.style.height = null;
@@ -299,8 +300,8 @@ export class SceneView extends StoryboardObjectView {
     }
 
     updateCanvasSize() {
-        this.canvasElement.width = this.model.size.width;
-        this.canvasElement.height = this.model.size.height;
+        this.canvasElement.width = this.model.width;
+        this.canvasElement.height = this.model.height;
     }
 
     render() {
@@ -381,10 +382,8 @@ export class SceneGroupView extends StoryboardObjectView {
 
             resizingObject = false;
 
-            thisScope.model.size = {
-                width: objectRect.width,
-                height: objectRect.height
-            };
+            thisScope.width = objectRect.width;
+            thisScope.height = objectRect.height;
         });
     }
 

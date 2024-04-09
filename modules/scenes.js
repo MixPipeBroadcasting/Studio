@@ -5,8 +5,10 @@ export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
         super(project, path);
 
-        this.registerProperty("position", {x: 100, y: 100}, "moved");
-        this.registerProperty("size", {width: 600, height: 400}, "resized");
+        this.registerProperty("x", 100, "moved");
+        this.registerProperty("y", 100, "moved");
+        this.registerProperty("width", 600, "resized");
+        this.registerProperty("height", 400, "resized");
         this.registerReferenceProperty("parentGroup", SceneGroup);
     }
 }
@@ -23,8 +25,9 @@ export class Scene extends StoryboardObject {
     constructor(project, path = ["scenes", projects.generateKey()]) {
         super(project, path);
         
-        this.size = {width: 1920, height: 1080};
-        this.canvas = new OffscreenCanvas(this.size.width, this.size.height);
+        this.width = 1920;
+        this.height = 1080;
+        this.canvas = new OffscreenCanvas(this.width, this.height);
 
         this.objects = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "objects"], sceneObjects.SceneObject);
 
@@ -47,10 +50,10 @@ export class Scene extends StoryboardObject {
 
         for (var object of this.objects.getModelList()) {
             if (
-                object.position.x <= point.x &&
-                object.position.y <= point.y &&
-                object.position.x + object.size.width > point.x &&
-                object.position.y + object.size.height > point.y
+                object.x <= point.x &&
+                object.y <= point.y &&
+                object.x + object.width > point.x &&
+                object.y + object.height > point.y
             ) {
                 objectsAtPoint.push(object);
             }

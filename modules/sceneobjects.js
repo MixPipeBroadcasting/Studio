@@ -6,8 +6,10 @@ export class SceneObject extends projects.ProjectModel {
 
         this.registerProperty("type", null);
         this.registerProperty("name", "Object");
-        this.registerProperty("position", {x: 0, y: 0}, "moved");
-        this.registerProperty("size", {width: 0, height: 0}, "resized");
+        this.registerProperty("x", 0, "moved");
+        this.registerProperty("y", 0, "moved");
+        this.registerProperty("width", 0, "resized");
+        this.registerProperty("height", 0, "resized");
         this.registerReferenceProperty("parentObject", SceneObject);
     }
 
@@ -27,7 +29,7 @@ export class Rectangle extends SceneObject {
 
     draw(context) {
         context.beginPath();
-        context.rect(this.position.x, this.position.y, this.size.width, this.size.height);
+        context.rect(this.x, this.y, this.width, this.height);
         context.closePath();
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
@@ -59,17 +61,13 @@ export class CompositedScene extends SceneObject {
             return;
         }
 
-        if (this.size != null) {
-            context.drawImage(
-                this.scene.canvas,
-                0, 0,
-                this.scene.size.width, this.scene.size.height,
-                this.position.x, this.position.y,
-                this.size.width, this.size.height
-            );
-        } else {
-            context.drawImage(this.scene.canvas, this.position.x, this.position.y);
-        }
+        context.drawImage(
+            this.scene.canvas,
+            0, 0,
+            this.scene.width, this.scene.height,
+            this.x, this.y,
+            this.width, this.height
+        );
     }
 }
 
@@ -96,14 +94,14 @@ export class Text extends SceneObject {
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;
 
-            context.fillText(this.text || "", this.position.x, this.position.y);
+            context.fillText(this.text || "", this.x, this.y);
         }
 
         if (this.borderWidth && this.borderWidth > 0) {
             context.lineWidth = String(this.borderWidth);
             context.strokeStyle = this.borderFill;
 
-            context.strokeText(this.text || "", this.position.x, this.position.y);
+            context.strokeText(this.text || "", this.x, this.y);
         }
     }
 }
