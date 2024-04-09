@@ -16,6 +16,7 @@ body {
     font-family: system-ui, sans-serif;
     background-color: var(--primaryBackground);
     color: var(--primaryForeground);
+    overflow: hidden;
 }
 
 #root {

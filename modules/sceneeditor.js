@@ -46,6 +46,28 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
     }
 }
 
+export class SceneEditorPropertiesPanel extends workspaces.Panel {
+    constructor(sceneEditor) {
+        super("Properties");
+
+        this.sceneEditor = sceneEditor;
+    }
+}
+
+export class SceneEditorPropertiesSidebar extends workspaces.Sidebar {
+    constructor(sceneEditor) {
+        super();
+
+        this.sceneEditor = sceneEditor;
+
+        this.workspace = new workspaces.Workspace();
+        this.propertiesPanel = new SceneEditorPropertiesPanel(sceneEditor);
+
+        this.workspace.add(this.propertiesPanel);
+        this.add(this.workspace);
+    }
+}
+
 export class SceneEditorPanel extends workspaces.Panel {
     constructor(scene) {
         super(scene.name || "Untitled scene");
@@ -55,6 +77,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.scene = scene;
 
         this.toolbar = new SceneEditorToolbar(this);
+        this.endSidebar = new SceneEditorPropertiesSidebar(this);
         this.workArea = new workspaces.WorkArea();
         this.canvasElement = components.element("canvas");
         this.zoom = null;
@@ -63,7 +86,11 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.boundingHalo = null;
         this.targetHandle = null;
 
-        this.workArea.element.append(this.canvasElement);
+        this.workArea.documentArea.element.style.overflow = "hidden";
+
+        this.workArea.documentArea.element.append(this.canvasElement);
+
+        this.workArea.addSidebar(this.endSidebar);
 
         this.add(this.toolbar, this.workArea);
 
@@ -241,11 +268,11 @@ export class SceneEditorPanel extends workspaces.Panel {
             return null;
         }
 
-        var workAreaRect = this.workArea.element.getBoundingClientRect();
+        var documentAreaRect = this.workArea.documentArea.element.getBoundingClientRect();
 
         return {
-            x: (lastAbsolutePointerPosition.x - workAreaRect.x - (this.offset.x * this.zoom)) / this.zoom,
-            y: (lastAbsolutePointerPosition.y - workAreaRect.y - (this.offset.y * this.zoom)) / this.zoom
+            x: (lastAbsolutePointerPosition.x - documentAreaRect.x - (this.offset.x * this.zoom)) / this.zoom,
+            y: (lastAbsolutePointerPosition.y - documentAreaRect.y - (this.offset.y * this.zoom)) / this.zoom
         };
     }
 
@@ -401,18 +428,18 @@ export class SceneEditorPanel extends workspaces.Panel {
     }
 
     render() {
-        var workAreaRect = this.workArea.element.getBoundingClientRect();
+        var documentAreaRect = this.workArea.documentArea.element.getBoundingClientRect();
         var sceneSize = this.scene.size;
         var context = this.canvasContext;
 
-        this.canvasElement.width = workAreaRect.width;
-        this.canvasElement.height = workAreaRect.height;
+        this.canvasElement.width = documentAreaRect.width;
+        this.canvasElement.height = documentAreaRect.height;
 
-        this.zoom ??= (workAreaRect.width / sceneSize.width) * 0.75;
+        this.zoom ??= (documentAreaRect.width / sceneSize.width) * 0.75;
 
         this.offset ??= {
-            x: (workAreaRect.width - (sceneSize.width * this.zoom)) / 2 / this.zoom,
-            y: (workAreaRect.height - (sceneSize.height * this.zoom)) / 2 / this.zoom
+            x: (documentAreaRect.width - (sceneSize.width * this.zoom)) / 2 / this.zoom,
+            y: (documentAreaRect.height - (sceneSize.height * this.zoom)) / 2 / this.zoom
         };
 
         context.scale(this.zoom, this.zoom);

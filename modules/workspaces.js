@@ -72,11 +72,21 @@ components.css(`
     mixpipe-workarea {
         ${components.styleMixins.HORIZONTAL_STACK}
         ${components.styleMixins.GROW}
+        gap: 0.2rem;
+        background-color: var(--secondaryBackground);
+    }
+
+    mixpipe-workarea > * {
+        background-color: var(--primaryBackground);
     }
 
     mixpipe-documentarea {
         ${components.styleMixins.VERTICAL_STACK}
         ${components.styleMixins.GROW}
+    }
+
+    mixpipe-sidebar {
+        width: 20rem;
     }
 `);
 
@@ -226,16 +236,12 @@ export class WorkArea extends components.Component {
         this.add(this.documentArea);
     }
 
-    addSidebar(beforeDocumentArea = false) {
-        var sidebar = new Sidebar(position);
-
+    addSidebar(sidebar, beforeDocumentArea = false) {
         if (beforeDocumentArea) {
             this.insert(0, sidebar);
         } else {
             this.add(sidebar);
         }
-
-        return sidebar;
     }
 }
 
