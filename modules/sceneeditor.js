@@ -107,7 +107,7 @@ export class SceneEditorPanel extends workspaces.Panel {
                 return;
             }
 
-            thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey);
+            thisScope.selectObjectAtPoint(thisScope.pointerPosition, event.shiftKey, true);
 
             moving = thisScope.scene.getObjectsAtPoint(thisScope.pointerPosition).filter((object) => thisScope.selectedObjects.includes(object)).length > 0;
         });
@@ -249,7 +249,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         };
     }
 
-    selectObjectAtPoint(point = this.pointerPosition, addToSelection = false) {
+    selectObjectAtPoint(point = this.pointerPosition, addToSelection = false, deselectIfSelected = false) {
         var objectsAtPoint = this.scene.getObjectsAtPoint(point);
 
         if (!addToSelection) {
@@ -268,6 +268,8 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         if (!this.selectedObjects.includes(objectToSelect)) {
             this.selectedObjects.push(objectsAtPoint[objectsAtPoint.length - 1]);
+        } else if (deselectIfSelected) {
+            this.selectedObjects = this.selectedObjects.filter((object) => object != objectToSelect);
         }
     }
 
