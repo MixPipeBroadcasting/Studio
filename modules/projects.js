@@ -298,6 +298,18 @@ export class ProjectModelGroup extends events.EventDrivenObject {
         return this.getItems()[key] || null;
     }
 
+    getItemKey(item) {
+        var items = this.getItems();
+
+        for (var key in items) {
+            if (items[key] == item) {
+                return key;
+            }
+        }
+
+        return null;
+    }
+
     setItem(key, value) {
         this.project.set([...this.path, key], value);
 
@@ -371,6 +383,10 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
         }
 
         return new model(this.project, modelPath);
+    }
+
+    getModelKey(model) {
+        return this.getItemKey(model.path);
     }
 
     setModel(key, model) {

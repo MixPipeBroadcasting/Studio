@@ -1,8 +1,50 @@
 import * as common from "./common.js";
 import * as components from "./components.js";
+import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
+import * as sceneObjects from "./sceneobjects.js";
 
 var lastAbsolutePointerPosition = null;
+
+export class SceneEditorToolbar extends workspaces.Toolbar {
+    constructor(sceneEditor) {
+        super();
+
+        this.sceneEditor = sceneEditor;
+
+        this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
+        this.deleteObjectsButton = new ui.IconButton("icons/add.svg", "Delete selected objects");
+
+        this.add(this.createRectangleButton, this.deleteObjectsButton);
+
+        this.createRectangleButton.events.activated.connect(function() {
+            var rectangle = new sceneObjects.Rectangle(sceneEditor.scene.project);
+
+            rectangle.position = {x: 50, y: 50};
+            rectangle.size = {width: 100, height: 100};
+
+            rectangle.backgroundFill = "cyan";
+
+            sceneEditor.scene.objects.addModel(rectangle);
+
+            sceneEditor.selectedObjects = [rectangle];
+        });
+
+        this.deleteObjectsButton.events.activated.connect(function() {
+            for (var object of sceneEditor.selectedObjects) {
+                var key = sceneEditor.scene.objects.getModelKey(object);
+
+                if (key == null) {
+                    continue;
+                }
+
+                sceneEditor.scene.objects.removeModel(key);
+
+                sceneEditor.selectedObjects = [];
+            }
+        });
+    }
+}
 
 export class SceneEditorPanel extends workspaces.Panel {
     constructor(scene) {
@@ -12,7 +54,7 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         this.scene = scene;
 
-        this.toolbar = new workspaces.Toolbar();
+        this.toolbar = new SceneEditorToolbar(this);
         this.workArea = new workspaces.WorkArea();
         this.canvasElement = components.element("canvas");
         this.zoom = null;
