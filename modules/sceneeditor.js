@@ -149,7 +149,7 @@ export class SceneEditorPanel extends workspaces.Panel {
                 }
 
                 for (var object of thisScope.selectedObjects) {
-                    object.position = {
+                    object.mutateProperty("position", {
                         x: common.lerp(
                             newBoundingHalo.xMin,
                             newBoundingHalo.xMax,
@@ -168,12 +168,12 @@ export class SceneEditorPanel extends workspaces.Panel {
                                 object.position.y
                             )
                         )
-                    };
+                    });
 
-                    object.size = {
+                    object.mutateProperty("size", {
                         width: object.size.width * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)),
                         height: object.size.height * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin))
-                    };
+                    });
                 }
 
                 lastBoundingHalo = thisScope.checkHalos();
@@ -193,10 +193,10 @@ export class SceneEditorPanel extends workspaces.Panel {
                 };
     
                 for (var object of thisScope.selectedObjects) {
-                    object.position = {
+                    object.mutateProperty("position", {
                         x: object.position.x + moveDelta.x,
                         y: object.position.y + moveDelta.y
-                    };
+                    });
                 }
             }
 

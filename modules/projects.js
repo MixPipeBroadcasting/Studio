@@ -227,7 +227,7 @@ export class ProjectModel extends events.EventDrivenObject {
         });
 
         if (defaultValue != null) {
-            thisScope.project.softSet([...thisScope.path, name], defaultValue);
+            this.project.softSet([...this.path, name], defaultValue);
         }
     }
 
@@ -257,8 +257,18 @@ export class ProjectModel extends events.EventDrivenObject {
         });
 
         if (defaultValue != null) {
-            thisScope.project.softSet([...thisScope.path, name], defaultValue.path);
+            this.project.softSet([...this.path, name], defaultValue.path);
         }
+    }
+
+    mutateProperty(name, value) {
+        this.project.set([...this.path, `${name}:initial`], value);
+
+        this[name] = value;
+    }
+
+    resetProperty(name) {
+        this[name] = this.project.get([...this.path, `${name}:initial`]);
     }
 }
 
