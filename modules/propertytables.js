@@ -121,7 +121,6 @@ export class PropertyTable extends components.Component {
             var atLeastOneModelHasProperty = false;
 
             for (var model of models) {
-                console.log(model, property.name);
                 if (model.hasOwnProperty(property.name)) {
                     atLeastOneModelHasProperty = true;
 
