@@ -198,6 +198,8 @@ export class ProjectModel extends events.EventDrivenObject {
 
         this.project.softSet(this.path, {});
         this.project.unregisteredModels.push(this);
+
+        this.propertyEventAssociations = {};
     }
 
     registerProperty(name, defaultValue = null, propertyEventName = null) {
@@ -211,6 +213,7 @@ export class ProjectModel extends events.EventDrivenObject {
 
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
+            this.propertyEventAssociations[name] = propertyEventName;
         }
 
         Object.defineProperty(this, name, {
@@ -231,9 +234,20 @@ export class ProjectModel extends events.EventDrivenObject {
         }
     }
 
-    registerReferenceProperty(name, classType, defaultValue = null) {
+    registerReferenceProperty(name, classType, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
         var value = defaultValue;
+
+        if (this.hasOwnProperty(name)) {
+            this[name] = defaultValue.path;
+
+            return;
+        }
+
+        if (propertyEventName != null) {
+            this.events[propertyEventName] ??= new events.EventType(this);
+            this.propertyEventAssociations[name] = propertyEventName;
+        }
 
         Object.defineProperty(this, name, {
             get: function() {
@@ -251,6 +265,10 @@ export class ProjectModel extends events.EventDrivenObject {
             },
             set: function(newValue) {
                 value = newValue;
+
+                if (propertyEventName != null) {
+                    this.events[propertyEventName].emit({value: newValue});
+                }
 
                 return thisScope.project.set([...thisScope.path, name], newValue.path);
             }

@@ -42,17 +42,28 @@ export class Property {
         switch (this.type) {
             case "string":
             case "number":
-                var currentValue = model[this.name];
+                function getValue() {
+                    var currentValue = model[thisScope.name];
 
-                if (this.type == "number" && this.options.roundNumber) {
-                    currentValue = Math.round(currentValue);
+                    if (thisScope.type == "number" && thisScope.options.roundNumber) {
+                        currentValue = Math.round(currentValue);
+                    }
+
+                    return currentValue;
                 }
 
-                var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], currentValue);
+                var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], getValue());
+                var ignoreNextValueChange = false;
 
                 input.element.addEventListener("focus", () => input.element.select());
 
                 input.events.valueChanged.connect(function(event) {
+                    if (ignoreNextValueChange) {
+                        ignoreNextValueChange = false;
+
+                        return;
+                    }
+
                     if (thisScope.type == "number") {
                         model[thisScope.name] = Number(event.value);
 
@@ -61,6 +72,19 @@ export class Property {
 
                     model[thisScope.name] = event.value;
                 });
+
+                var eventName = model.propertyEventAssociations[this.name];
+
+                if (eventName != null) {
+                    model.events[eventName].connect(function() {
+                        if (document.activeElement == input.element) {
+                            return;
+                        }
+
+                        ignoreNextValueChange = true;
+                        input.value = getValue();
+                    });
+                }
 
                 return input.element;
 
