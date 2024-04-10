@@ -7,13 +7,20 @@
     --selectedForeground: white;
 }
 
+@font-face {
+    font-family: "Overpass";
+    font-weight: 400;
+    font-display: swap;
+    src: url("media/overpass.woff2") format("woff2");
+}
+
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: system-ui, sans-serif;
+    font-family: "Overpass", system-ui, sans-serif;
     background-color: var(--primaryBackground);
     color: var(--primaryForeground);
     overflow: hidden;
