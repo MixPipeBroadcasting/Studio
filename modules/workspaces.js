@@ -2,6 +2,9 @@ import * as components from "./components.js";
 import * as events from "./events.js";
 import * as ui from "./ui.js";
 
+export var mainWorkspace = null;
+export var panelTypes = {};
+
 components.css(`
     mixpipe-workspace {
         ${components.styleMixins.GROW}
@@ -173,6 +176,24 @@ export class Panel extends components.Component {
         this.registerState("name", "nameChanged", name);
     }
 
+    serialise() {
+        return {type: this.type};
+    }
+
+    static deserialise(data) {
+        if (this == Panel) {
+            var type = panelTypes[data.type];
+
+            if (!type) {
+                throw new Error("Unknown panel type");
+            }
+
+            return panelTypes[data.type].deserialise(data);
+        }
+
+        throw new Error("Not implemented");
+    }
+
     close() {
         this.parent.remove(this);
     }
@@ -323,3 +344,9 @@ export class Sidebar extends components.Component {
         });
     }
 }
+
+export function registerPanelType(name, type) {
+    panelTypes[name] = type;
+}
+
+mainWorkspace = new Workspace();

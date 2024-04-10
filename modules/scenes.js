@@ -24,7 +24,7 @@ export class SceneGroup extends StoryboardObject {
 export class Scene extends StoryboardObject {
     constructor(project, path = ["scenes", projects.generateKey()]) {
         super(project, path);
-        
+
         this.width = 1920;
         this.height = 1080;
         this.canvas = new OffscreenCanvas(this.width, this.height);
@@ -74,3 +74,6 @@ export class Scene extends StoryboardObject {
         this.drawToContext();
     }
 }
+
+projects.registerModelSyncHandler(["sceneGroups"], SceneGroup);
+projects.registerModelSyncHandler(["scenes"], Scene);

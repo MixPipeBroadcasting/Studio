@@ -1,5 +1,7 @@
+import * as projects from "./projects.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
+import * as windows from "./windows.js";
 import * as workspaces from "./workspaces.js";
 import * as scenes from "./scenes.js";
 import * as sceneEditor from "./sceneeditor.js";
@@ -443,18 +445,21 @@ export class Storyboard extends components.Component {
 }
 
 export class StoryboardToolbar extends workspaces.Toolbar {
-    constructor(storyboard) {
+    constructor(storyboardPanel) {
         super();
 
-        this.storyboard = storyboard;
+        this.storyboardPanel = storyboardPanel;
+        this.storyboard = this.storyboardPanel.storyboard;
 
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
         this.createSceneGroupButton = new ui.IconButton("icons/group.svg", "Create scene group");
+        this.newWindowButton = new ui.IconButton("icons/add.svg", "New window");
 
-        this.add(this.createSceneButton, this.createSceneGroupButton);
+        this.add(this.createSceneButton, this.createSceneGroupButton, this.newWindowButton);
 
         this.createSceneButton.events.activated.connect(() => this.storyboard.createScene());
         this.createSceneGroupButton.events.activated.connect(() => this.storyboard.createSceneGroup());
+        this.newWindowButton.events.activated.connect(() => windows.open(this.storyboard.project, this.storyboardPanel));
     }
 }
 
@@ -463,11 +468,24 @@ export class StoryboardPanel extends workspaces.Panel {
         super("Storyboard");
 
         this.storyboard = new Storyboard(project);
-        this.toolbar = new StoryboardToolbar(this.storyboard);
+        this.toolbar = new StoryboardToolbar(this);
         this.workArea = new workspaces.WorkArea();
 
         this.workArea.documentArea.add(this.storyboard);
 
         this.add(this.toolbar, this.workArea);
     }
+
+    serialise() {
+        return {
+            type: "storyboard",
+            projectId: this.storyboard.project.id
+        };
+    }
+
+    static deserialise(data) {
+        return new this(projects.getOrCreateProjectById(data.projectId));
+    }
 }
+
+workspaces.registerPanelType("storyboard", StoryboardPanel);

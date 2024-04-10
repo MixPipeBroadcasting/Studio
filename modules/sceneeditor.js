@@ -1,5 +1,7 @@
 import * as common from "./common.js";
 import * as events from "./events.js";
+import * as projects from "./projects.js";
+import * as scenes from "./scenes.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
@@ -296,6 +298,18 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.endSidebar.init();
     }
 
+    serialise() {
+        return {
+            type: "sceneEditor",
+            projectId: this.scene.project.id,
+            scenePath: this.scene.path
+        };
+    }
+
+    static deserialise(data) {
+        return new this(projects.getOrCreateProjectById(data.projectId).getOrCreateModel(data.scenePath));
+    }
+
     get canvasContext() {
         return this.canvasElement.getContext("2d");
     }
@@ -492,6 +506,8 @@ export class SceneEditorPanel extends workspaces.Panel {
         this.checkHalos(true);
     }
 }
+
+workspaces.registerPanelType("sceneEditor", SceneEditorPanel);
 
 document.body.addEventListener("pointermove", function(event) {
     lastAbsolutePointerPosition = {

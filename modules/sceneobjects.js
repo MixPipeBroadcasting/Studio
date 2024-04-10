@@ -111,3 +111,7 @@ export const SCENE_OBJECT_TYPES = {
     "compositedScene": CompositedScene,
     "text": Text
 };
+
+Object.keys(SCENE_OBJECT_TYPES).forEach(function(type) {
+    projects.registerModelSyncHandler(["sceneObjects"], SCENE_OBJECT_TYPES[type], (data) => data.type == type);
+});

@@ -1,5 +1,8 @@
 import * as events from "./events.js";
 
+export var projectsById = {};
+export var modelSyncHandlers = [];
+
 const TIMELINE_TRIM_COUNT_TRIGGER = 20;
 
 var keyIndex = 0;
@@ -10,6 +13,24 @@ export class Transaction {
 
         this.performedAt = Date.now();
     }
+
+    static deserialise(data) {
+        if (this == Transaction) {
+            switch (data.type) {
+                case "set": return SetDataTransaction.deserialise(data);
+                case "delete": return DeleteDataTransaction.deserialise(data);
+
+                default:
+                    throw new Error("Unknown transaction type");
+            }
+        }
+
+        var instance = new this(data.path);
+
+        instance.performedAt = data.performedAt;
+
+        return instance;
+    }
 }
 
 export class SetDataTransaction extends Transaction {
@@ -19,6 +40,22 @@ export class SetDataTransaction extends Transaction {
         this.path = path;
         this.value = value;
     }
+
+    serialise() {
+        return {
+            type: "set",
+            path: this.path,
+            value: this.value
+        };
+    }
+
+    static deserialise(data) {
+        var instance = new this(data.path, data.value);
+
+        instance.performedAt = data.performedAt;
+
+        return instance;
+    }
 }
 
 export class DeleteDataTransaction extends Transaction {
@@ -27,24 +64,44 @@ export class DeleteDataTransaction extends Transaction {
 
         this.path = path;
     }
+
+    serialise() {
+        return {
+            type: "delete",
+            path: this.path
+        };
+    }
+}
+
+export class ModelSyncHandler {
+    constructor(rootPath, modelType, condition = (data) => true) {
+        this.rootPath = rootPath;
+        this.modelType = modelType;
+        this.condition = condition;
+    }
 }
 
 export class Project extends events.EventDrivenObject {
-    constructor() {
+    constructor(id = generateKey()) {
         super();
 
+        this.id = id;
         this.data = {};
         this.timeline = [];
         this.createdAt = Date.now();
         this.unregisteredModels = [];
         this.models = [];
 
+        this.events.transactionAdded = new events.EventType(this);
         this.events.modelAdded = new events.EventType(this);
+
+        projectsById[this.id] = this;
     }
 
     applyTransaction(transaction) {
         var path = [...transaction.path];
         var currentObject = this.data;
+        var shouldSync = false;
 
         while (path.length > 1) {
             if (!currentObject.hasOwnProperty(path[0])) {
@@ -57,17 +114,26 @@ export class Project extends events.EventDrivenObject {
         }
 
         if (transaction instanceof SetDataTransaction) {
+            shouldSync ||= !(path[0] in currentObject);
             currentObject[path[0]] = transaction.value;
         }
 
         if (transaction instanceof DeleteDataTransaction) {
             delete currentObject[path[0]];
         }
+
+        return shouldSync;
     }
 
     applyTransactions(transactions) {
+        var shouldSync = false;
+
         for (var transaction of transactions) {
-            this.applyTransaction(transaction);
+            shouldSync ||= this.applyTransaction(transaction);
+        }
+
+        if (shouldSync) {
+            this.sync();
         }
     }
 
@@ -79,6 +145,8 @@ export class Project extends events.EventDrivenObject {
         if (this.timeline.length > 0 && this.timeline.length % TIMELINE_TRIM_COUNT_TRIGGER == 0) {
             this.trimTimeline();
         }
+
+        this.events.transactionAdded.emit({transaction});
     }
 
     trimTimeline() {
@@ -163,7 +231,7 @@ export class Project extends events.EventDrivenObject {
     }
 
     associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
-        for (var model of this.getModels(modelViewMap.keys(), modelFilter)) {
+        for (var model of this.getModels([...modelViewMap.keys()], modelFilter)) {
             var modelClass = modelViewMap.get(model.constructor);
 
             if (!modelClass) {
@@ -186,6 +254,47 @@ export class Project extends events.EventDrivenObject {
 
             view.add(new modelClass(event.model, ...args));
         });
+    }
+
+    getOrCreateModel(path) {
+        for (var model of this.models) {
+            if (model.path == path) {
+                return model;
+            }
+        }
+
+        var data = this.get(path);
+        var model = null;
+
+        for (var handler of modelSyncHandlers) {
+            if (path.slice(0, -1).join(".") == handler.rootPath.join(".") && handler.condition(data)) {
+                model = new handler.modelType(this, path);
+            }
+        }
+
+        this.registerNewModels();
+
+        return model;
+    }
+
+    sync() {
+        var syncedPathHashes = this.models.map((model) => model.path.join("."));
+
+        for (var handler of modelSyncHandlers) {
+            for (var key in this.get(handler.rootPath) ?? {}) {
+                if (syncedPathHashes.includes(`${handler.rootPath.join(".")}.${key}`)) {
+                    continue;
+                }
+
+                var modelPath = [...handler.rootPath, key];
+
+                if (handler.condition(this.get(modelPath))) {
+                    new handler.modelType(this, modelPath);
+                }
+            }
+        }
+
+        this.registerNewModels();
     }
 }
 
@@ -261,7 +370,7 @@ export class ProjectModel extends events.EventDrivenObject {
                     return undefined;
                 }
 
-                return new classType(thisScope.project, path);
+                return thisScope.project.getOrCreateModel(path);
             },
             set: function(newValue) {
                 value = newValue;
@@ -400,19 +509,7 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
             return this.modelCache[key];
         }
 
-        var modelPath = this.getItem(key);
-        var data = this.project.get(modelPath);
-        var model = this.baseModel;
-
-        for (var matcher of this.customModelMatchers) {
-            if (matcher.matcher(data)) {
-                model = matcher.type;
-
-                break;
-            }
-        }
-
-        return new model(this.project, modelPath);
+        return this.project.getOrCreateModel(this.getItem(key));
     }
 
     getModelKey(model) {
@@ -446,4 +543,12 @@ export function generateKey() {
         .map((part) => DIGITS[parseInt(part, 2)])
         .join("")
     ;
+}
+
+export function getOrCreateProjectById(id) {
+    return projectsById[id] ?? new Project(id);
+}
+
+export function registerModelSyncHandler(rootPath, modelType, condition = undefined) {
+    modelSyncHandlers.push(new ModelSyncHandler(rootPath, modelType, condition));
 }
