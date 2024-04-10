@@ -25,15 +25,15 @@ components.css(`
     }
 
     mixpipe-scene .title {
-        height: 1.6rem;
         padding: 0.2rem;
+        padding-block-end: 0;
         font-size: 1rem;
     }
 
     mixpipe-scene .title input {
         width: 100%;
         background: transparent;
-        border: 0.1rem solid transparent;
+        border: none;
     }
 
     mixpipe-scene canvas {

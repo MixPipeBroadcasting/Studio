@@ -9,6 +9,7 @@ components.css(`
     }
 
     button {
+        height: 1.5rem;
         background: var(--secondaryBackground);
         color: inherit;
         font-size: 1em;
@@ -20,11 +21,12 @@ components.css(`
     }
 
     button img.icon {
-        height: 1em;
+        height: 100%;
         vertical-align: middle;
     }
 
     input {
+        min-height: 1.5rem;
         background: var(--primaryBackground);
         color: inherit;
         font-size: 1em;

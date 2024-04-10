@@ -35,7 +35,12 @@ components.css(`
     }
 
     mixpipe-tab button:last-child {
-        padding-inline-start: 0.2rem;
+        padding-inline-start: 0.1rem;
+        padding-inline-end: 0.2rem;
+    }
+
+    mixpipe-tab button:last-child img {
+        padding: 0.1rem;
     }
 
     mixpipe-tab.active {
@@ -58,6 +63,10 @@ components.css(`
         padding: 0.2rem;
         gap: 0.2rem;
         border-block-end: 0.2rem solid var(--secondaryBackground);
+    }
+
+    mixpipe-toolbar button {
+        height: 100%;
     }
 
     mixpipe-toolbar button:has(img.icon) {
