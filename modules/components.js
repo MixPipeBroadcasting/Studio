@@ -55,7 +55,9 @@ export class Component extends events.EventDrivenObject {
 
             try {
                 this.childContainerElement.removeChild(child.element);
-            } catch (e) {}
+            } catch (e) {
+                console.warn(e);
+            }
 
             this.events.childRemoved.emit({child}, this);
         }

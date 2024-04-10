@@ -10,7 +10,7 @@ export class SceneObject extends projects.ProjectModel {
         this.registerProperty("y", 0, "moved");
         this.registerProperty("width", 0, "resized");
         this.registerProperty("height", 0, "resized");
-        this.registerReferenceProperty("parentObject", SceneObject);
+        this.registerReferenceProperty("parentObject");
     }
 
     draw(context) {}

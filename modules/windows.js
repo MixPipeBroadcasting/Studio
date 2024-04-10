@@ -3,7 +3,11 @@ import * as workspaces from "./workspaces.js";
 
 export function handleMessage(data) {
     if (data.type == "incomingTransaction") {
-        projects.getOrCreateProjectById(data.projectId).addTransaction(projects.Transaction.deserialise(data.transaction));
+        var transaction = projects.Transaction.deserialise(data.transaction);
+
+        transaction.createdExternally = true;
+
+        projects.getOrCreateProjectById(data.projectId).addTransaction(transaction, true);
 
         return;
     }
@@ -11,15 +15,27 @@ export function handleMessage(data) {
     if (data.type == "loadProject") {
         var project = new projects.Project(data.projectId);
 
+        project.events.transactionAdded.connect(function(event) {
+            if (event.transaction.createdExternally) {
+                return;
+            }
+
+            parent.postMessage({
+                type: "incomingTransaction",
+                projectId: project.id,
+                transaction: event.transaction.serialise()
+            }, window.location.origin);
+        });
+
         project.data = data.projectData;
+
+        project.sync();
 
         if (data.panel != null) {
             var panel = workspaces.Panel.deserialise(data.panel);
 
             workspaces.mainWorkspace.add(panel);
         }
-
-        project.sync();
 
         return;
     }
@@ -29,6 +45,10 @@ export function open(project, panelToOpen = null) {
     var childWindow = window.open(window.location.href, "newwindow", "popup");
 
     project.events.transactionAdded.connect(function(event) {
+        if (event.transaction.createdExternally) {
+            return;
+        }
+
         childWindow.postMessage({
             type: "incomingTransaction",
             projectId: project.id,
@@ -67,5 +87,7 @@ export function init() {
         handleMessage(event.data);
     });
 
-    parent.postMessage({type: "ready"}, window.location.origin);
+    if (opener) {
+        parent.postMessage({type: "ready"}, window.location.origin);
+    }
 }

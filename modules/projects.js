@@ -12,6 +12,7 @@ export class Transaction {
         this.path = path;
 
         this.performedAt = Date.now();
+        this.createdExternally = false;
     }
 
     static deserialise(data) {
@@ -91,14 +92,17 @@ export class Project extends events.EventDrivenObject {
         this.createdAt = Date.now();
         this.unregisteredModels = [];
         this.models = [];
+        this.modelPropertyEventAssociations = {};
+        this.modelReferencePropertyEventAssociations = {};
 
         this.events.transactionAdded = new events.EventType(this);
         this.events.modelAdded = new events.EventType(this);
+        this.events.modelReparented = new events.EventType(this);
 
         projectsById[this.id] = this;
     }
 
-    applyTransaction(transaction) {
+    applyTransaction(transaction, emitEvents = false) {
         var path = [...transaction.path];
         var currentObject = this.data;
         var shouldSync = false;
@@ -116,6 +120,10 @@ export class Project extends events.EventDrivenObject {
         if (transaction instanceof SetDataTransaction) {
             shouldSync ||= !(path[0] in currentObject);
             currentObject[path[0]] = transaction.value;
+
+            if (emitEvents) {
+                this.emitTransactionEvents(transaction);
+            }
         }
 
         if (transaction instanceof DeleteDataTransaction) {
@@ -125,14 +133,23 @@ export class Project extends events.EventDrivenObject {
         return shouldSync;
     }
 
-    applyTransactions(transactions) {
+    emitTransactionEvents(transaction) {
+        var pathHash = transaction.path.join(".");
+
+        if (transaction instanceof SetDataTransaction) {
+            this.modelPropertyEventAssociations[pathHash]?.emit({value: transaction.value});
+            this.modelReferencePropertyEventAssociations[pathHash]?.emit({value: transaction.value != null ? this.getOrCreateModel(transaction.value) : null});
+        }
+    }
+
+    applyTransactions(transactions, external = false) {
         var shouldSync = false;
 
         for (var transaction of transactions) {
-            shouldSync ||= this.applyTransaction(transaction);
+            shouldSync ||= this.applyTransaction(transaction, external);
         }
 
-        if (shouldSync) {
+        if (external && shouldSync) {
             this.sync();
         }
     }
@@ -140,7 +157,7 @@ export class Project extends events.EventDrivenObject {
     addTransaction(transaction) {
         this.timeline.push(transaction);
 
-        this.applyTransaction(transaction);
+        this.applyTransactions([transaction], transaction.createdExternally);
 
         if (this.timeline.length > 0 && this.timeline.length % TIMELINE_TRIM_COUNT_TRIGGER == 0) {
             this.trimTimeline();
@@ -231,6 +248,27 @@ export class Project extends events.EventDrivenObject {
     }
 
     associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
+        var thisScope = this;
+
+        // FIXME: Buggy behaviour when reparenting objects and syncing between windows
+        // Maybe we should just clear and update the whole view when reparenting
+
+        function associate(model, instance) {
+            var reparentedConnection = model.events.reparented.connect(function(event) {
+                model.events.reparented.disconnect(reparentedConnection);
+
+                if (!view.children.includes(instance)) {
+                    return;
+                }
+
+                view.remove(instance);
+
+                thisScope.events.modelReparented.emit({model});
+            });
+
+            return instance;
+        }
+
         for (var model of this.getModels([...modelViewMap.keys()], modelFilter)) {
             var modelClass = modelViewMap.get(model.constructor);
 
@@ -238,10 +276,10 @@ export class Project extends events.EventDrivenObject {
                 continue;
             }
 
-            view.add(new modelClass(model, ...args));
+            view.add(associate(model, new modelClass(model, ...args)));
         }
-        
-        this.events.modelAdded.connect(function(event) {
+
+        function parentEventListener(event) {
             if (!modelFilter(event.model)) {
                 return;
             }
@@ -252,20 +290,29 @@ export class Project extends events.EventDrivenObject {
                 return;
             }
 
-            view.add(new modelClass(event.model, ...args));
-        });
+            view.add(associate(event.model, new modelClass(event.model, ...args)));
+        }
+
+        this.events.modelAdded.connect(parentEventListener);
+        this.events.modelReparented.connect(parentEventListener);
     }
 
     getOrCreateModel(path) {
         for (var model of this.models) {
-            if (model.path == path) {
+            if (model.path.join(".") == path.join(".")) {
+                return model;
+            }
+        }
+
+        for (var model of this.unregisteredModels) {
+            if (model.path.join(".") == path.join(".")) {
                 return model;
             }
         }
 
         var data = this.get(path);
         var model = null;
-
+        
         for (var handler of modelSyncHandlers) {
             if (path.slice(0, -1).join(".") == handler.rootPath.join(".") && handler.condition(data)) {
                 model = new handler.modelType(this, path);
@@ -305,6 +352,8 @@ export class ProjectModel extends events.EventDrivenObject {
         this.project = project;
         this.path = path;
 
+        this.events.reparented = new events.EventType(this);
+
         this.project.softSet(this.path, {});
         this.project.unregisteredModels.push(this);
 
@@ -323,6 +372,7 @@ export class ProjectModel extends events.EventDrivenObject {
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
             this.propertyEventAssociations[name] = propertyEventName;
+            this.project.modelPropertyEventAssociations[[...this.path, name].join(".")] = this.events[propertyEventName];
         }
 
         Object.defineProperty(this, name, {
@@ -343,7 +393,7 @@ export class ProjectModel extends events.EventDrivenObject {
         }
     }
 
-    registerReferenceProperty(name, classType, defaultValue = null, propertyEventName = null) {
+    registerReferenceProperty(name, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
         var value = defaultValue;
 
@@ -356,6 +406,7 @@ export class ProjectModel extends events.EventDrivenObject {
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
             this.propertyEventAssociations[name] = propertyEventName;
+            this.project.modelReferencePropertyEventAssociations[[...this.path, name].join(".")] = this.events[propertyEventName];
         }
 
         Object.defineProperty(this, name, {
@@ -375,11 +426,11 @@ export class ProjectModel extends events.EventDrivenObject {
             set: function(newValue) {
                 value = newValue;
 
+                thisScope.project.set([...thisScope.path, name], newValue != null ? newValue.path : newValue);
+
                 if (propertyEventName != null) {
                     this.events[propertyEventName].emit({value: newValue});
                 }
-
-                return thisScope.project.set([...thisScope.path, name], newValue.path);
             }
         });
 

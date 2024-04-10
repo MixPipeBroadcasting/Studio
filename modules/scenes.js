@@ -9,7 +9,7 @@ export class StoryboardObject extends projects.ProjectModel {
         this.registerProperty("y", 100, "moved");
         this.registerProperty("width", 600, "resized");
         this.registerProperty("height", 400, "resized");
-        this.registerReferenceProperty("parentGroup", SceneGroup);
+        this.registerReferenceProperty("parentGroup", null, "reparented");
     }
 }
 
@@ -38,7 +38,7 @@ export class Scene extends StoryboardObject {
         this.registerProperty("name", "", "renamed");
         this.registerProperty("scale", 1);
 
-        this.events.resized.connect((event) => this.canvas = new OffscreenCanvas(event.value.width, event.value.height));
+        this.events.resized.connect(() => this.canvas = new OffscreenCanvas(this.width, this.height));
     }
 
     get canvasContext() {

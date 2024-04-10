@@ -214,10 +214,14 @@ export class StoryboardObjectView extends components.Component {
                 newPosition.x = objectRect.x - groupRect.x - parentSceneGroupView.element.clientLeft;
                 newPosition.y = objectRect.y - groupRect.y - parentSceneGroupView.element.clientTop;
 
-                thisScope.model.parentGroup = parentSceneGroupView.model;
-
                 thisScope.parent.remove(thisScope);
                 parentSceneGroupView.add(thisScope);
+
+                if (thisScope.model.parentGroup != parentSceneGroupView.model) {
+                    thisScope.model.parentGroup = parentSceneGroupView.model;
+                }
+            } else if (thisScope.model.parentGroup != null) {
+                thisScope.model.parentGroup = null;
             }
 
             thisScope.model.x = newPosition.x;
@@ -341,7 +345,8 @@ export class SceneGroupView extends StoryboardObjectView {
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         model.project.associateChildModels(this, new Map([
-            [scenes.Scene, SceneView]
+            [scenes.Scene, SceneView],
+            [scenes.SceneGroup, SceneGroupView]
         ]), [storyboard], function(childModel) {
             if (childModel.parentGroup != model) {
                 return false;
