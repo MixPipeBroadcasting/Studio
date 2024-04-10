@@ -15,7 +15,7 @@ components.css(`
 
     mixpipe-tabs {
         ${components.styleMixins.HORIZONTAL_STACK}
-        min-height: 1.45rem;
+        height: 2rem;
         background-color: var(--secondaryBackground);
         padding: 0.2rem;
         gap: 0.2rem;
@@ -27,7 +27,9 @@ components.css(`
     }
 
     mixpipe-tab button {
+        height: 100%;
         background-color: transparent;
+        vertical-align: middle;
     }
 
     mixpipe-tab button:first-child {
@@ -41,6 +43,7 @@ components.css(`
 
     mixpipe-tab button:last-child img {
         padding: 0.1rem;
+        vertical-align: top;
     }
 
     mixpipe-tab.active {

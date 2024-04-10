@@ -22,7 +22,7 @@ components.css(`
 
     button img.icon {
         height: 100%;
-        vertical-align: middle;
+        vertical-align: bottom;
     }
 
     input {
