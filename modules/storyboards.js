@@ -214,9 +214,6 @@ export class StoryboardObjectView extends components.Component {
                 newPosition.x = objectRect.x - groupRect.x - parentSceneGroupView.element.clientLeft;
                 newPosition.y = objectRect.y - groupRect.y - parentSceneGroupView.element.clientTop;
 
-                thisScope.parent.remove(thisScope);
-                parentSceneGroupView.add(thisScope);
-
                 if (thisScope.model.parentGroup != parentSceneGroupView.model) {
                     thisScope.model.parentGroup = parentSceneGroupView.model;
                 }

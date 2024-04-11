@@ -250,18 +250,11 @@ export class Project extends events.EventDrivenObject {
     associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
         var thisScope = this;
 
-        // FIXME: Buggy behaviour when reparenting objects and syncing between windows
-        // Maybe we should just clear and update the whole view when reparenting
-
         function associate(model, instance) {
             var reparentedConnection = model.events.reparented.connect(function(event) {
                 model.events.reparented.disconnect(reparentedConnection);
 
-                if (!view.children.includes(instance)) {
-                    return;
-                }
-
-                view.remove(instance);
+                instance.parent?.remove(instance);
 
                 thisScope.events.modelReparented.emit({model});
             });
@@ -280,6 +273,10 @@ export class Project extends events.EventDrivenObject {
         }
 
         function parentEventListener(event) {
+            if (!view.parent) {
+                return;
+            }
+
             if (!modelFilter(event.model)) {
                 return;
             }
@@ -395,7 +392,6 @@ export class ProjectModel extends events.EventDrivenObject {
 
     registerReferenceProperty(name, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
-        var value = defaultValue;
 
         if (this.hasOwnProperty(name)) {
             this[name] = defaultValue.path;
@@ -411,21 +407,15 @@ export class ProjectModel extends events.EventDrivenObject {
 
         Object.defineProperty(this, name, {
             get: function() {
-                if (value != null) {
-                    return value;
-                }
-
                 var path = thisScope.project.get([...thisScope.path, name]);
 
-                if (path == undefined) {
-                    return undefined;
+                if (path == undefined || path == null) {
+                    return path;
                 }
 
                 return thisScope.project.getOrCreateModel(path);
             },
             set: function(newValue) {
-                value = newValue;
-
                 thisScope.project.set([...thisScope.path, name], newValue != null ? newValue.path : newValue);
 
                 if (propertyEventName != null) {
