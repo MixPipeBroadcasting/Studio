@@ -1,6 +1,8 @@
 import * as projects from "./projects.js";
 import * as workspaces from "./workspaces.js";
 
+export var allWindows = [];
+
 export function handleMessage(data) {
     if (data.type == "incomingTransaction") {
         var transaction = projects.Transaction.deserialise(data.transaction);
@@ -42,7 +44,9 @@ export function handleMessage(data) {
 }
 
 export function open(project, panelToOpen = null) {
-    var childWindow = window.open(window.location.href, "newwindow", "popup");
+    var childWindow = window.open(window.location.href, "_blank", "popup");
+
+    allWindows.push(childWindow);
 
     project.events.transactionAdded.connect(function(event) {
         if (event.transaction.createdExternally) {
@@ -59,6 +63,14 @@ export function open(project, panelToOpen = null) {
     childWindow.addEventListener("message", function(event) {
         if (event.origin != window.location.origin || event.source.window == window) {
             return;
+        }
+
+        for (var otherWindow of allWindows) {
+            if (otherWindow == childWindow) {
+                continue;
+            }
+
+            otherWindow.postMessage(event.data, window.location.origin);
         }
 
         if (event.data.type == "ready") {

@@ -51,6 +51,7 @@ components.css(`
         background-color: var(--primaryBackground);
         border: 0.15rem solid var(--secondaryForeground);
         border-radius: 0.25rem;
+        z-index: 0;
     }
 
     mixpipe-scenegroup > input {
@@ -216,6 +217,9 @@ export class StoryboardObjectView extends components.Component {
 
                 if (thisScope.model.parentGroup != parentSceneGroupView.model) {
                     thisScope.model.parentGroup = parentSceneGroupView.model;
+                } else {
+                    thisScope.parent.remove(thisScope);
+                    parentSceneGroupView.add(thisScope);
                 }
             } else if (thisScope.model.parentGroup != null) {
                 thisScope.model.parentGroup = null;
@@ -386,8 +390,8 @@ export class SceneGroupView extends StoryboardObjectView {
 
             resizingObject = false;
 
-            thisScope.width = objectRect.width;
-            thisScope.height = objectRect.height;
+            thisScope.model.width = objectRect.width;
+            thisScope.model.height = objectRect.height;
         });
     }
 
