@@ -3,11 +3,11 @@ import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as windows from "./windows.js";
 import * as workspaces from "./workspaces.js";
-import * as scenes from "./scenes.js";
+import * as storyboardObjects from "./storyboardobjects.js";
 import * as sceneEditor from "./sceneeditor.js";
 
 const OBJECT_MOVE_Z_INDEX = 2;
-const SCENE_GROUP_RESIZE_HANDLE_Z_INDEX = 1;
+const STORYBOARD_GROUP_RESIZE_HANDLE_Z_INDEX = 1;
 
 components.css(`
     mixpipe-storyboard {
@@ -16,7 +16,7 @@ components.css(`
         overflow: auto;
     }
 
-    mixpipe-scene, mixpipe-scenegroup {
+    mixpipe-scene, mixpipe-storyboardgroup {
         position: absolute;
     }
 
@@ -46,7 +46,7 @@ components.css(`
         zoom: var(--zoom);
     }
 
-    mixpipe-scenegroup {
+    mixpipe-storyboardgroup {
         overflow: hidden;
         background-color: var(--primaryBackground);
         border: 0.15rem solid var(--secondaryForeground);
@@ -54,7 +54,7 @@ components.css(`
         z-index: 0;
     }
 
-    mixpipe-scenegroup > input {
+    mixpipe-storyboardgroup > input {
         width: 100%;
         padding: 0.2rem;
         background-color: transparent;
@@ -63,14 +63,14 @@ components.css(`
         border: none;
     }
 
-    mixpipe-scenegroup > .resizeHandle {
+    mixpipe-storyboardgroup > .resizeHandle {
         position: absolute;
         bottom: 0;
         right: 0;
         width: 10px;
         height: 10px;
         background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--secondaryBackground) 50%, var(--secondaryBackground) 100%);
-        z-index: ${SCENE_GROUP_RESIZE_HANDLE_Z_INDEX};
+        z-index: ${STORYBOARD_GROUP_RESIZE_HANDLE_Z_INDEX};
         cursor: nwse-resize;
     }
 `);
@@ -93,11 +93,11 @@ export class StoryboardObjectView extends components.Component {
         var moveOffset = null;
 
         this.element.addEventListener("pointerdown", function(event) {
-            if (!event.target.matches("mixpipe-scene, mixpipe-scene *:not(input), mixpipe-scenegroup > input")) {
+            if (!event.target.matches("mixpipe-scene, mixpipe-scene *:not(input), mixpipe-storyboardgroup > input")) {
                 return;
             }
 
-            if (thisScope instanceof SceneGroupView && event.target != thisScope.nameInput.element) {
+            if (thisScope instanceof StoryboardGroupView && event.target != thisScope.nameInput.element) {
                 return;
             }
 
@@ -192,7 +192,7 @@ export class StoryboardObjectView extends components.Component {
 
             var parentSceneGroupView = null;
 
-            for (var object of thisScope.storyboard.descendentsOfTypes([SceneGroupView])) {
+            for (var object of thisScope.storyboard.descendentsOfTypes([StoryboardGroupView])) {
                 if (object == thisScope) {
                     continue;
                 }
@@ -327,9 +327,9 @@ export class SceneView extends StoryboardObjectView {
     }
 }
 
-export class SceneGroupView extends StoryboardObjectView {
+export class StoryboardGroupView extends StoryboardObjectView {
     constructor(model, storyboard) {
-        super("mixpipe-scenegroup", model, storyboard);
+        super("mixpipe-storyboardgroup", model, storyboard);
 
         var thisScope = this;
 
@@ -346,8 +346,8 @@ export class SceneGroupView extends StoryboardObjectView {
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         model.project.associateChildModels(this, new Map([
-            [scenes.Scene, SceneView],
-            [scenes.SceneGroup, SceneGroupView]
+            [storyboardObjects.Scene, SceneView],
+            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
         ]), [storyboard], function(childModel) {
             if (childModel.parentGroup != model) {
                 return false;
@@ -412,8 +412,8 @@ export class Storyboard extends components.Component {
         this.slowlyScrollCallback = null;
 
         project.associateChildModels(this, new Map([
-            [scenes.Scene, SceneView],
-            [scenes.SceneGroup, SceneGroupView]
+            [storyboardObjects.Scene, SceneView],
+            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
         ]), [this], function(model) {
             if (model.parentGroup) {
                 return false;
@@ -434,7 +434,7 @@ export class Storyboard extends components.Component {
     }
 
     createScene() {
-        var scene = new scenes.Scene(this.project);
+        var scene = new storyboardObjects.Scene(this.project);
 
         this.project.registerNewModels();
 
@@ -442,7 +442,7 @@ export class Storyboard extends components.Component {
     }
 
     createSceneGroup() {
-        var scene = new scenes.SceneGroup(this.project);
+        var scene = new storyboardObjects.StoryboardGroup(this.project);
 
         this.project.registerNewModels();
 

@@ -2,7 +2,7 @@ import * as windows from "./modules/windows.js";
 import * as workspaces from "./modules/workspaces.js";
 import * as projects from "./modules/projects.js";
 import * as animations from "./modules/animations.js";
-import * as scenes from "./modules/scenes.js";
+import * as storyboardObjects from "./modules/storyboardobjects.js";
 import * as sceneObjects from "./modules/sceneobjects.js";
 import * as storyboards from "./modules/storyboards.js";
 
@@ -17,15 +17,15 @@ if (!opener) {
 
     workspaces.mainWorkspace.add(storyboardPanel);
 
-    var scene = new scenes.Scene(project);
-    var scene2 = new scenes.Scene(project);
-    var scene3 = new scenes.Scene(project);
-    var sceneGroup = new scenes.SceneGroup(project);
+    var scene = new storyboardObjects.Scene(project);
+    var scene2 = new storyboardObjects.Scene(project);
+    var scene3 = new storyboardObjects.Scene(project);
+    var storyboardGroup = new storyboardObjects.StoryboardGroup(project);
     
     scene.name = "Scene 1";
     scene.x = 16;
     scene.y = 24;
-    scene.parentGroup = sceneGroup;
+    scene.parentGroup = storyboardGroup;
     
     for (var i = 0; i < 16; i++) {
         var rectangle = new sceneObjects.Rectangle(project);
@@ -123,9 +123,9 @@ if (!opener) {
     
     scene3.objects.addModel(compositedScene2);
     
-    sceneGroup.name = "Scene group";
-    sceneGroup.width = 280;
-    sceneGroup.height = 200;
+    storyboardGroup.name = "Storyboard group";
+    storyboardGroup.width = 280;
+    storyboardGroup.height = 200;
     
     project.registerNewModels();
     

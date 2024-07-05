@@ -1,7 +1,7 @@
 import * as common from "./common.js";
 import * as events from "./events.js";
 import * as projects from "./projects.js";
-import * as scenes from "./scenes.js";
+import * as storyboardObjects from "./storyboardobjects.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";

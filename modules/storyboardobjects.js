@@ -13,8 +13,8 @@ export class StoryboardObject extends projects.ProjectModel {
     }
 }
 
-export class SceneGroup extends StoryboardObject {
-    constructor(project, path = ["sceneGroups", projects.generateKey()]) {
+export class StoryboardGroup extends StoryboardObject {
+    constructor(project, path = ["storyboardGroups", projects.generateKey()]) {
         super(project, path);
 
         this.registerProperty("name", "", "renamed");
@@ -75,5 +75,5 @@ export class Scene extends StoryboardObject {
     }
 }
 
-projects.registerModelSyncHandler(["sceneGroups"], SceneGroup);
+projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);
 projects.registerModelSyncHandler(["scenes"], Scene);
