@@ -75,5 +75,31 @@ export class Scene extends StoryboardObject {
     }
 }
 
+export class AnimationController extends StoryboardObject {
+    constructor(project, path = ["animationControllers", projects.generateKey()]) {
+        super(project, path);
+
+        this.registerProperty("name", "", "renamed");
+        this.registerProperty("startTime", null, "stateChanged");
+    }
+
+    get duration() {
+        return 5000;
+    }
+
+    get state() {
+        if (this.startTime == null) {
+            return "stopped";
+        }
+
+        if (Date.now() - this.startTime < this.duration) {
+            return "running";
+        }
+
+        return "finished";
+    }
+}
+
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);
 projects.registerModelSyncHandler(["scenes"], Scene);
+projects.registerModelSyncHandler(["animationControllers"], AnimationController);

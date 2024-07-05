@@ -4,7 +4,8 @@ export const styleMixins = {
     GROW: `min-width: 0; min-height: 0; flex-grow: 1;`,
     VERTICAL_STACK: `display: flex; flex-direction: column;`,
     HORIZONTAL_STACK: `display: flex; flex-direction: row;`,
-    ICON_INVERT: `filter: contrast(0.5) brightness(10);`
+    ICON_INVERT: `filter: contrast(0.5) brightness(10);`,
+    NO_SELECT: `user-select: none; cursor: default;`
 };
 
 export class Component extends events.EventDrivenObject {

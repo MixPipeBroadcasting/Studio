@@ -8,6 +8,12 @@ components.css(`
         ${components.styleMixins.ICON_INVERT}
     }
 
+    img.icon[src='icons/reset.svg'] {
+        position: relative;
+        bottom: 0.05rem;
+        right: 0.05rem;
+    }
+
     button {
         height: 1.5rem;
         background: var(--secondaryBackground);
@@ -21,6 +27,7 @@ components.css(`
     }
 
     button img.icon {
+        width: 100%;
         height: 100%;
         vertical-align: bottom;
     }

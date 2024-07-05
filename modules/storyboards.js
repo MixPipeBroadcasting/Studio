@@ -16,34 +16,8 @@ components.css(`
         overflow: auto;
     }
 
-    mixpipe-scene, mixpipe-storyboardgroup {
+    mixpipe-storyboardgroup, mixpipe-scene, mixpipe-animationcontroller {
         position: absolute;
-    }
-
-    mixpipe-scene {
-        ${components.styleMixins.VERTICAL_STACK}
-        background-color: var(--secondaryBackground);
-        border-radius: 0.25rem;
-    }
-
-    mixpipe-scene .title {
-        padding: 0.2rem;
-        padding-block-end: 0;
-        font-size: 1rem;
-    }
-
-    mixpipe-scene .title input {
-        width: 100%;
-        background: transparent;
-        border: none;
-    }
-
-    mixpipe-scene canvas {
-        --zoom: 0.1;
-        margin: calc(0.2rem / var(--zoom));
-        margin-block-start: 0;
-        background: repeating-conic-gradient(var(--primaryBackground) 0% 25%, var(--secondaryBackground) 0% 50%) 50% / 128px 128px;
-        zoom: var(--zoom);
     }
 
     mixpipe-storyboardgroup {
@@ -73,6 +47,63 @@ components.css(`
         z-index: ${STORYBOARD_GROUP_RESIZE_HANDLE_Z_INDEX};
         cursor: nwse-resize;
     }
+
+    mixpipe-scene {
+        ${components.styleMixins.VERTICAL_STACK}
+        background-color: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+
+    mixpipe-scene .title {
+        padding: 0.2rem;
+        padding-block-end: 0;
+        font-size: 1rem;
+    }
+
+    mixpipe-scene .title input {
+        width: 100%;
+        background: transparent;
+        border: none;
+    }
+
+    mixpipe-scene canvas {
+        --zoom: 0.1;
+        margin: calc(0.2rem / var(--zoom));
+        margin-block-start: 0;
+        background: repeating-conic-gradient(var(--primaryBackground) 0% 25%, var(--secondaryBackground) 0% 50%) 50% / 128px 128px;
+        zoom: var(--zoom);
+    }
+
+    mixpipe-animationcontroller {
+        display: grid;
+        grid-template-rows: repeat(2, min-content);
+        grid-template-columns: 3rem 1fr;
+        align-items: center;
+        padding: 10px;
+        gap: 0.5rem;
+        background: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+
+    mixpipe-animationcontroller button {
+        grid-row: 1 / 3;
+        grid-column: 1;
+        width: 3rem;
+        height: 3rem;
+        background: var(--primaryBackground);
+        border-radius: 50%;
+    }
+
+    mixpipe-animationcontroller .timer {
+        ${components.styleMixins.NO_SELECT}
+        width: 6rem;
+        margin: auto;
+        font-size: 1.5rem;
+    }
+
+    mixpipe-animationcontroller.running {
+        background: var(--live);
+    }
 `);
 
 export class StoryboardObjectView extends components.Component {
@@ -93,7 +124,11 @@ export class StoryboardObjectView extends components.Component {
         var moveOffset = null;
 
         this.element.addEventListener("pointerdown", function(event) {
-            if (!event.target.matches("mixpipe-scene, mixpipe-scene *:not(input), mixpipe-storyboardgroup > input")) {
+            if (!event.target.matches([
+                "mixpipe-storyboardgroup > input",
+                "mixpipe-scene, mixpipe-scene *:not(input)",
+                "mixpipe-animationcontroller, mixpipe-animationcontroller *:not(button, button *, input)"
+            ].join(", "))) {
                 return;
             }
 
@@ -268,8 +303,9 @@ export class StoryboardGroupView extends StoryboardObjectView {
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         model.project.associateChildModels(this, new Map([
+            [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
-            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
+            [storyboardObjects.AnimationController, AnimationControllerView]
         ]), [storyboard], function(childModel) {
             if (childModel.parentGroup != model) {
                 return false;
@@ -400,6 +436,88 @@ export class SceneView extends StoryboardObjectView {
     }
 }
 
+export class AnimationControllerView extends StoryboardObjectView {
+    constructor(model, storyboard) {
+        super("mixpipe-animationcontroller", model, storyboard);
+
+        var thisScope = this;
+
+        this.sizeUnconstrained = true;
+
+        this.triggerButton = new ui.IconButton("icons/play.svg", "Trigger animation");
+        this.nameInput = new ui.Input("Untitled animation");
+
+        this.timerElement = components.element("div", [components.className("timer"), components.text("--.---")]);
+
+        this.add(this.triggerButton, this.nameInput);
+
+        this.element.append(this.timerElement);
+
+        this.updatePositioning();
+
+        this.model.events.renamed.connect(this.updateInfo, this);
+        this.updateInfo();
+
+        this.triggerButton.events.activated.connect((event) => this.startOrReset());
+        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
+
+        requestAnimationFrame(function update() {
+            thisScope.updateTimer();
+
+            requestAnimationFrame(update);
+        });
+    }
+
+    updateInfo() {
+        this.nameInput.value = this.model.name;
+    }
+
+    updateTimer() {
+        var currentTime = Date.now() - this.model.startTime;
+        var durationToShow = this.model.duration;
+        var isCountdown = false;
+
+        if (this.model.state == "running") {
+            durationToShow = this.model.duration - currentTime;
+            isCountdown = true;
+        } else if (this.model.state == "finished") {
+            durationToShow = 0;
+            isCountdown = true;
+        }
+
+        this.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
+
+        this.triggerButton.element.style.background = (
+            this.model.state == "running" ?
+            `conic-gradient(var(--liveProgressForeground) 0 ${(currentTime / this.model.duration) * 100}%, var(--liveProgressBackground) 0)` :
+            null
+        );
+
+        if (this.model.state == "running") {
+            this.element.classList.add("running");
+        } else {
+            this.element.classList.remove("running");
+        }
+
+        this.timerElement.textContent = (
+            (isCountdown ? "-" : "") +
+            String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
+            "." +
+            String(durationToShow % 1000).padStart(3, "0")
+        );
+    }
+
+    startOrReset() {
+        if (this.model.state != "stopped") {
+            this.model.startTime = null;
+
+            return;
+        }
+        
+        this.model.startTime = Date.now();
+    }
+}
+
 export class Storyboard extends components.Component {
     constructor(project) {
         super("mixpipe-storyboard");
@@ -412,8 +530,9 @@ export class Storyboard extends components.Component {
         this.slowlyScrollCallback = null;
 
         project.associateChildModels(this, new Map([
+            [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
-            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
+            [storyboardObjects.AnimationController, AnimationControllerView]
         ]), [this], function(model) {
             if (model.parentGroup) {
                 return false;
@@ -433,6 +552,14 @@ export class Storyboard extends components.Component {
         }, 20);
     }
 
+    createStoryboardGroup() {
+        var scene = new storyboardObjects.StoryboardGroup(this.project);
+
+        this.project.registerNewModels();
+
+        return scene;
+    }
+
     createScene() {
         var scene = new storyboardObjects.Scene(this.project);
 
@@ -441,8 +568,8 @@ export class Storyboard extends components.Component {
         return scene;
     }
 
-    createSceneGroup() {
-        var scene = new storyboardObjects.StoryboardGroup(this.project);
+    createAnimationController() {
+        var scene = new storyboardObjects.AnimationController(this.project);
 
         this.project.registerNewModels();
 
@@ -458,13 +585,20 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.storyboard = this.storyboardPanel.storyboard;
 
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
-        this.createSceneGroupButton = new ui.IconButton("icons/group.svg", "Create scene group");
+        this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
+        this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
 
-        this.add(this.createSceneButton, this.createSceneGroupButton, this.newWindowButton);
+        this.add(
+            this.createSceneButton,
+            this.createStoryboardGroupButton,
+            this.createAnimationControllerButton,
+            this.newWindowButton
+        );
 
         this.createSceneButton.events.activated.connect(() => this.storyboard.createScene());
-        this.createSceneGroupButton.events.activated.connect(() => this.storyboard.createSceneGroup());
+        this.createStoryboardGroupButton.events.activated.connect(() => this.storyboard.createStoryboardGroup());
+        this.createAnimationControllerButton.events.activated.connect(() => this.storyboard.createAnimationController());
         this.newWindowButton.events.activated.connect(() => windows.open(this.storyboard.project, this.storyboardPanel));
     }
 }

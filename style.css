@@ -5,6 +5,9 @@
     --secondaryForeground: #666666;
     --selectedBackground: #4444ff;
     --selectedForeground: white;
+    --live: #ff0000;
+    --liveProgressForeground: #ff6666;
+    --liveProgressBackground: #bb0000;
 }
 
 @font-face {
