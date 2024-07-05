@@ -32,10 +32,6 @@ export class Scene extends StoryboardObject {
 
         this.objects = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "objects"], sceneObjects.SceneObject);
 
-        for (var type in sceneObjects.SCENE_OBJECT_TYPES) {
-            this.objects.associateCustomModel(sceneObjects.SCENE_OBJECT_TYPES[type], (data) => data.type == type);
-        }
-
         this.registerProperty("name", "", "renamed");
         this.registerProperty("scale", 1);
 
@@ -84,15 +80,6 @@ export class AnimationController extends StoryboardObject {
 
         this.registerProperty("name", "", "renamed");
         this.registerProperty("startTime", null, "stateChanged");
-
-        var timeline = new animations.TimelineSource(project);
-
-        this.timelines.addModel(timeline);
-
-        timeline.keyframes = [
-            {t: 0, value: 0},
-            {t: 5000, value: 1}
-        ];
     }
 
     get duration() {

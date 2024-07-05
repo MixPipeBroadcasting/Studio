@@ -126,7 +126,21 @@ if (!opener) {
     storyboardGroup.name = "Storyboard group";
     storyboardGroup.width = 280;
     storyboardGroup.height = 200;
-    
+
+    var animationController = new storyboardObjects.AnimationController(project);
+
+    animationController.x = 180;
+    animationController.y = 350;
+
+    var timeline = new animations.TimelineSource(project);
+
+    timeline.keyframes = [
+        {t: 0, value: 0},
+        {t: 5000, value: 1}
+    ];
+
+    animationController.timelines.addModel(timeline);
+
     project.registerNewModels();
     
     console.log(project);

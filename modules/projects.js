@@ -512,13 +512,7 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
         super(project, path);
 
         this.baseModel = baseModel;
-
-        this.customModelMatchers = [];
         this.modelCache = {};
-    }
-
-    associateCustomModel(type, matcher) {
-        this.customModelMatchers.push({type, matcher});
     }
 
     getModels() {

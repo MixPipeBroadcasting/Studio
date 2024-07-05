@@ -21,11 +21,9 @@ export class TimelineSource extends projects.ProjectModel {
     constructor(project, path = ["timelines", projects.generateKey()]) {
         super(project, path);
 
-        this.registerReferenceProperty("sceneObject");
+        this.registerReferenceProperty("scene");
         this.registerProperty("property");
         this.registerProperty("keyframes", []);
-
-        this.registerReferenceProperty("parentObject");
     }
 
     get duration() {
@@ -63,3 +61,5 @@ export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION
         BezierEasing(...(toKeyframe.easing || EASING_METHODS.linear))(boundedT)
     );
 }
+
+projects.registerModelSyncHandler(["timelines"], TimelineSource);

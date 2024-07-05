@@ -5,6 +5,7 @@ import * as windows from "./windows.js";
 import * as workspaces from "./workspaces.js";
 import * as storyboardObjects from "./storyboardobjects.js";
 import * as sceneEditor from "./sceneeditor.js";
+import * as animationEditor from "./animationeditor.js";
 
 const OBJECT_MOVE_Z_INDEX = 2;
 const STORYBOARD_GROUP_RESIZE_HANDLE_Z_INDEX = 1;
@@ -444,7 +445,7 @@ export class AnimationControllerView extends StoryboardObjectView {
 
         this.sizeUnconstrained = true;
 
-        this.triggerButton = new ui.IconButton("icons/play.svg", "Trigger animation");
+        this.triggerButton = new ui.IconButton("icons/play.svg", "Start/reset animation");
         this.nameInput = new ui.Input("Untitled animation");
 
         this.timerElement = components.element("div", [components.className("timer"), components.text("--.---")]);
@@ -458,8 +459,30 @@ export class AnimationControllerView extends StoryboardObjectView {
         this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
-        this.triggerButton.events.activated.connect((event) => this.startOrReset());
+        this.triggerButton.events.activated.connect(() => this.startOrReset());
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
+
+        var lastClicked = null;
+
+        this.element.addEventListener("pointerdown", function(event) {
+            if (event.target.matches("button, button *, input")) {
+                return;
+            }
+
+            event.preventDefault();
+        });
+
+        this.element.addEventListener("pointermove", function() {
+            lastClicked = null;
+        });
+
+        this.element.addEventListener("pointerup", function() {
+            if (lastClicked != null && Date.now() - lastClicked <= ui.DOUBLE_CLICK_DURATION) {
+                thisScope.openEditor();
+            }
+
+            lastClicked = Date.now();
+        });
 
         requestAnimationFrame(function update() {
             thisScope.updateTimer();
@@ -515,6 +538,12 @@ export class AnimationControllerView extends StoryboardObjectView {
         }
         
         this.model.startTime = Date.now();
+    }
+
+    openEditor() {
+        var workspace = this.ancestor(workspaces.Workspace);
+
+        workspace.add(new animationEditor.AnimationEditorPanel(this.model));
     }
 }
 
