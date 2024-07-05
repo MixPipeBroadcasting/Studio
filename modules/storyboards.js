@@ -249,6 +249,79 @@ export class StoryboardObjectView extends components.Component {
     }
 }
 
+export class StoryboardGroupView extends StoryboardObjectView {
+    constructor(model, storyboard) {
+        super("mixpipe-storyboardgroup", model, storyboard);
+
+        var thisScope = this;
+
+        this.nameInput = new ui.Input("Untitled group");
+        this.resizeHandleElement = components.element("div", [components.className("resizeHandle")]);
+
+        this.add(this.nameInput);
+
+        this.element.append(this.resizeHandleElement);
+
+        this.model.events.renamed.connect(this.updateInfo, this);
+        this.updateInfo();
+
+        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
+
+        model.project.associateChildModels(this, new Map([
+            [storyboardObjects.Scene, SceneView],
+            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
+        ]), [storyboard], function(childModel) {
+            if (childModel.parentGroup != model) {
+                return false;
+            }
+
+            return true;
+        });
+
+        var resizingObject = false;
+        var resizeOffset = null;
+
+        this.resizeHandleElement.addEventListener("pointerdown", function(event) {
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            resizingObject = true;
+
+            resizeOffset = {
+                x: event.clientX - objectRect.width,
+                y: event.clientY - objectRect.height
+            };
+        });
+
+        document.body.addEventListener("pointermove", function(event) {
+            if (!resizingObject) {
+                return;
+            }
+
+            thisScope.element.style.width = `${event.clientX - resizeOffset.x}px`;
+            thisScope.element.style.height = `${event.clientY - resizeOffset.y}px`;
+
+            event.preventDefault();
+        });
+
+        document.body.addEventListener("pointerup", function(event) {
+            if (!resizingObject) {
+                return;
+            }
+
+            var objectRect = thisScope.element.getBoundingClientRect();
+
+            resizingObject = false;
+
+            thisScope.model.width = objectRect.width;
+            thisScope.model.height = objectRect.height;
+        });
+    }
+
+    updateInfo() {
+        this.nameInput.value = this.model.name;
+    }
+}
+
 export class SceneView extends StoryboardObjectView {
     constructor(model, storyboard) {
         super("mixpipe-scene", model, storyboard);
@@ -324,79 +397,6 @@ export class SceneView extends StoryboardObjectView {
         var workspace = this.ancestor(workspaces.Workspace);
 
         workspace.add(new sceneEditor.SceneEditorPanel(this.model));
-    }
-}
-
-export class StoryboardGroupView extends StoryboardObjectView {
-    constructor(model, storyboard) {
-        super("mixpipe-storyboardgroup", model, storyboard);
-
-        var thisScope = this;
-
-        this.nameInput = new ui.Input("Untitled group");
-        this.resizeHandleElement = components.element("div", [components.className("resizeHandle")]);
-
-        this.add(this.nameInput);
-
-        this.element.append(this.resizeHandleElement);
-
-        this.model.events.renamed.connect(this.updateInfo, this);
-        this.updateInfo();
-
-        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
-
-        model.project.associateChildModels(this, new Map([
-            [storyboardObjects.Scene, SceneView],
-            [storyboardObjects.StoryboardGroup, StoryboardGroupView]
-        ]), [storyboard], function(childModel) {
-            if (childModel.parentGroup != model) {
-                return false;
-            }
-
-            return true;
-        });
-
-        var resizingObject = false;
-        var resizeOffset = null;
-
-        this.resizeHandleElement.addEventListener("pointerdown", function(event) {
-            var objectRect = thisScope.element.getBoundingClientRect();
-
-            resizingObject = true;
-
-            resizeOffset = {
-                x: event.clientX - objectRect.width,
-                y: event.clientY - objectRect.height
-            };
-        });
-
-        document.body.addEventListener("pointermove", function(event) {
-            if (!resizingObject) {
-                return;
-            }
-
-            thisScope.element.style.width = `${event.clientX - resizeOffset.x}px`;
-            thisScope.element.style.height = `${event.clientY - resizeOffset.y}px`;
-
-            event.preventDefault();
-        });
-
-        document.body.addEventListener("pointerup", function(event) {
-            if (!resizingObject) {
-                return;
-            }
-
-            var objectRect = thisScope.element.getBoundingClientRect();
-
-            resizingObject = false;
-
-            thisScope.model.width = objectRect.width;
-            thisScope.model.height = objectRect.height;
-        });
-    }
-
-    updateInfo() {
-        this.nameInput.value = this.model.name;
     }
 }
 
