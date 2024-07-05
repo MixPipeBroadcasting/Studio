@@ -1,6 +1,7 @@
 import * as windows from "./modules/windows.js";
 import * as workspaces from "./modules/workspaces.js";
 import * as projects from "./modules/projects.js";
+import * as animations from "./modules/animations.js";
 import * as scenes from "./modules/scenes.js";
 import * as sceneObjects from "./modules/sceneobjects.js";
 import * as storyboards from "./modules/storyboards.js";
@@ -33,6 +34,16 @@ if (!opener) {
         rectangle.y = 0;
         rectangle.width = scene.width / 8;
         rectangle.height = scene.height;
+
+        rectangle.y_timeline = {
+            start: Date.now() + 3000 + (i * 100),
+            keyframes: [
+                {t: 0, value: 1080},
+                {t: 500, value: 0, easing: animations.EASING_METHODS.ease},
+                {t: 2000, value: 540, easing: animations.EASING_METHODS.ease},
+                {t: 2500, value: 0, easing: animations.EASING_METHODS.ease}
+            ]
+        };
     
         rectangle.backgroundFill = [
             "rgb(255, 255, 255)",
@@ -93,6 +104,22 @@ if (!opener) {
     compositedScene2.y = 0;
     compositedScene2.width = 1920;
     compositedScene2.height = 1080;
+
+    compositedScene2.x_timeline = {
+        start: Date.now() + 6000,
+        keyframes: [
+            {t: 0, value: -1920},
+            {t: 1500, value: 0, easing: animations.EASING_METHODS.easeOut}
+        ]
+    };
+    
+    compositedScene2.width_timeline = {
+        start: Date.now() + 6500,
+        keyframes: [
+            {t: 0, value: 2880},
+            {t: 1000, value: 1920, easing: animations.EASING_METHODS.easeOut}
+        ]
+    };
     
     scene3.objects.addModel(compositedScene2);
     

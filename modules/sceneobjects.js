@@ -1,16 +1,38 @@
 import * as projects from "./projects.js";
+import * as animations from "./animations.js";
 
 export class SceneObject extends projects.ProjectModel {
     constructor(project, path = ["sceneObjects", projects.generateKey()]) {
         super(project, path);
 
+        this.animationInterpolationMethods = {};
+        this.currentAnimations = {};
+
         this.registerProperty("type", null);
         this.registerProperty("name", "Object");
-        this.registerProperty("x", 0, "moved");
-        this.registerProperty("y", 0, "moved");
-        this.registerProperty("width", 0, "resized");
-        this.registerProperty("height", 0, "resized");
+        this.registerAnimationProperty("x", "number", 0, "moved");
+        this.registerAnimationProperty("y", "number", 0, "moved");
+        this.registerAnimationProperty("width", "number", 0, "resized");
+        this.registerAnimationProperty("height", "number", 0, "resized");
         this.registerReferenceProperty("parentObject");
+    }
+
+    registerAnimationProperty(name, interpolationMethod, ...options) {
+        this.registerProperty(name, ...options);
+
+        this.registerProperty(`${name}_timeline`, null);
+
+        this.animationInterpolationMethods[name] = interpolationMethod;
+    }
+
+    getAnimatedValue(name) {
+        var timeline = this[`${name}_timeline`];
+
+        if (!timeline) {
+            return this[name];
+        }
+
+        return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
     }
 
     draw(context) {}
@@ -23,13 +45,20 @@ export class Rectangle extends SceneObject {
         this.registerProperty("type", "rectangle");
         this.registerProperty("name", "Rectangle");
         this.registerProperty("backgroundFill");
-        this.registerProperty("borderWidth", 0);
+        this.registerAnimationProperty("borderWidth", "number", 0);
         this.registerProperty("borderFill");
     }
 
     draw(context) {
         context.beginPath();
-        context.rect(this.x, this.y, this.width, this.height);
+
+        context.rect(
+            this.getAnimatedValue("x"),
+            this.getAnimatedValue("y"),
+            this.getAnimatedValue("width"),
+            this.getAnimatedValue("height")
+        );
+
         context.closePath();
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
@@ -39,7 +68,7 @@ export class Rectangle extends SceneObject {
         }
 
         if (this.borderWidth && this.borderWidth > 0) {
-            context.lineWidth = String(this.borderWidth);
+            context.lineWidth = String(this.getAnimatedValue("borderWidth"));
             context.strokeStyle = this.borderFill;
 
             context.stroke();
@@ -64,9 +93,12 @@ export class CompositedScene extends SceneObject {
         context.drawImage(
             this.scene.canvas,
             0, 0,
-            this.scene.width, this.scene.height,
-            this.x, this.y,
-            this.width, this.height
+            this.scene.width,
+            this.scene.height,
+            this.getAnimatedValue("x"),
+            this.getAnimatedValue("y"),
+            this.getAnimatedValue("width"),
+            this.getAnimatedValue("height")
         );
     }
 }
@@ -89,19 +121,22 @@ export class Text extends SceneObject {
             return;
         }
 
+        var x = this.getAnimatedValue("x");
+        var y = this.getAnimatedValue("y");
+
         context.font = this.font || "100px system-ui, sans-serif";
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;
 
-            context.fillText(this.text || "", this.x, this.y);
+            context.fillText(this.text || "", x, y);
         }
 
         if (this.borderWidth && this.borderWidth > 0) {
-            context.lineWidth = String(this.borderWidth);
+            context.lineWidth = String(this.getAnimatedValue("borderWidth"));
             context.strokeStyle = this.borderFill;
 
-            context.strokeText(this.text || "", this.x, this.y);
+            context.strokeText(this.text || "", x, y);
         }
     }
 }
