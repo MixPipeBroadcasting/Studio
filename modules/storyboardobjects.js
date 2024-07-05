@@ -1,5 +1,6 @@
 import * as projects from "./projects.js";
 import * as sceneObjects from "./sceneobjects.js";
+import * as animations from "./animations.js";
 
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
@@ -79,12 +80,31 @@ export class AnimationController extends StoryboardObject {
     constructor(project, path = ["animationControllers", projects.generateKey()]) {
         super(project, path);
 
+        this.timelines = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "timelines"], animations.TimelineSource);
+
         this.registerProperty("name", "", "renamed");
         this.registerProperty("startTime", null, "stateChanged");
+
+        var timeline = new animations.TimelineSource(project);
+
+        this.timelines.addModel(timeline);
+
+        timeline.keyframes = [
+            {t: 0, value: 0},
+            {t: 5000, value: 1}
+        ];
     }
 
     get duration() {
-        return 5000;
+        var longestDuration = 0;
+
+        for (var timeline of this.timelines.getModelList()) {
+            if (timeline.duration > longestDuration) {
+                longestDuration = timeline.duration;
+            }
+        }
+
+        return longestDuration;
     }
 
     get state() {
