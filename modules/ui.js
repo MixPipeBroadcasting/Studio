@@ -172,7 +172,7 @@ export class Dialog extends components.Component {
 
         this.events.blurred = new events.EventType(this);
 
-        this.element.addEventListener("click", function(event) {
+        this.element.addEventListener("pointerdown", function(event) {
             if (!event.target.matches("dialog > div, dialog > div *")) {
                 thisScope.events.blurred.emit();
             }

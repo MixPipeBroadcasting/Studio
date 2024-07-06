@@ -125,7 +125,7 @@ export class Property {
                     }
 
                     if (thisScope.type == "number") {
-                        model[thisScope.name] = Number(event.value);
+                        model[thisScope.name] = parseFloat(event.value);
                     } else {
                         model[thisScope.name] = event.value;
                     }
