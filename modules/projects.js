@@ -446,6 +446,10 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getValue(name) {
+        if (!this[`${name}_canTemplate`]) {
+            return this[name];
+        }
+
         return templates.evaluateTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`);
     }
 

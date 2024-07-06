@@ -103,7 +103,7 @@ export class Property {
                 function updateInputComputationIndicator() {
                     updateComputationStatus();
 
-                    if (computationStatus != null) {
+                    if (computationStatus != null && model[`${thisScope.name}_canTemplate`]) {
                         input.enabled = false;
 
                         input.element.setAttribute("mixpipe-computed", computationStatus);
