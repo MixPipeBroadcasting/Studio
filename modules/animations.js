@@ -1,6 +1,7 @@
 import BezierEasing from "../lib/bezier-easing.min.js";
 
 import * as common from "./common.js";
+import * as templates from "./templates.js";
 
 export const EASING_METHODS = {
     linear: [0, 0, 1, 1],
@@ -25,16 +26,20 @@ export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION
         fromKeyframe = toKeyframe;
         toKeyframe = keyframe;
 
-        if (dt < keyframe.t) {
+        if (dt < templates.evaluateNumericTemplate(keyframe.t)) {
             break;
         }
     }
 
-    var boundedT = common.clamp(common.invLerp(fromKeyframe.t, toKeyframe.t, dt), 0, 1);
+    var boundedT = common.clamp(common.invLerp(
+        templates.evaluateNumericTemplate(fromKeyframe.t),
+        templates.evaluateNumericTemplate(toKeyframe.t),
+        dt
+    ), 0, 1);
 
     return interpolationMethod(
-        fromKeyframe.value,
-        toKeyframe.value,
-        BezierEasing(...(toKeyframe.easing || EASING_METHODS.linear))(boundedT)
+        templates.evaluateNumericTemplate(fromKeyframe.value),
+        templates.evaluateNumericTemplate(toKeyframe.value),
+        BezierEasing(...(toKeyframe.easing?.map((value) => templates.evaluateNumericTemplate(value)) || EASING_METHODS.linear))(boundedT)
     );
 }

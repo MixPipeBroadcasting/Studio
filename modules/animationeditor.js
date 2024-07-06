@@ -12,7 +12,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
 
         this.add(this.triggerButton, this.createTimelineButton);
 
-        this.triggerButton.events.activated.connect(() => this.animationEditor.startOrReset());
+        this.triggerButton.events.activated.connect(() => this.animationEditor.animation.startOrReset());
     }
 }
 
@@ -53,17 +53,7 @@ export class AnimationEditorPanel extends workspaces.Panel {
     render() {
         this.toolbar.triggerButton.icon.source = this.animation.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
 
-        this.toolbar.triggerButton.element.style.background = this.animation.state == "running" ? `var(--live)` : null;
-    }
-
-    startOrReset() {
-        if (this.animation.state != "stopped") {
-            this.animation.startTime = null;
-
-            return;
-        }
-        
-        this.animation.startTime = Date.now();
+        this.toolbar.triggerButton.element.style.background = this.animation.state == "running" ? `var(--animatedBackground)` : null;
     }
 }
 

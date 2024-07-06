@@ -460,7 +460,7 @@ export class AnimationControllerView extends StoryboardObjectView {
         this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
-        this.triggerButton.events.activated.connect(() => this.startOrReset());
+        this.triggerButton.events.activated.connect(() => this.model.startOrReset());
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
         var lastClicked = null;
@@ -529,16 +529,6 @@ export class AnimationControllerView extends StoryboardObjectView {
             "." +
             String(durationToShow % 1000).padStart(3, "0")
         );
-    }
-
-    startOrReset() {
-        if (this.model.state != "stopped") {
-            this.model.startTime = null;
-
-            return;
-        }
-        
-        this.model.startTime = Date.now();
     }
 
     openEditor() {

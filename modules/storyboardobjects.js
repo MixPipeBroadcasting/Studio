@@ -108,6 +108,32 @@ export class AnimationController extends StoryboardObject {
 
         return "finished";
     }
+
+    start(time = Date.now()) {
+        this.startTime = time;
+
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.startTime = this.startTime;
+        }
+    }
+
+    reset() {
+        this.startTime = null;
+
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.startTime = null;
+        }
+    }
+
+    startOrReset() {
+        if (this.state != "stopped") {
+            this.reset();
+
+            return;
+        }
+        
+        this.start();
+    }
 }
 
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);

@@ -101,26 +101,10 @@ if (!opener) {
     var compositedScene2 = new sceneObjects.CompositedScene(project);
 
     compositedScene2.scene = scene2;
-    compositedScene2.x = 0;
+    compositedScene2.x = -1920;
     compositedScene2.y = 0;
     compositedScene2.width = 1920;
     compositedScene2.height = 1080;
-
-    compositedScene2.x_timeline = {
-        start: Date.now() + 6000,
-        keyframes: [
-            {t: 0, value: -1920},
-            {t: 1500, value: 0, easing: animations.EASING_METHODS.easeOut}
-        ]
-    };
-
-    compositedScene2.width_timeline = {
-        start: Date.now() + 6500,
-        keyframes: [
-            {t: 0, value: 2880},
-            {t: 1000, value: 1920, easing: animations.EASING_METHODS.easeOut}
-        ]
-    };
 
     var clock = new sceneObjects.Text(project);
 
@@ -142,14 +126,29 @@ if (!opener) {
     animationController.x = 180;
     animationController.y = 350;
 
-    var timeline = new timelines.TimelineSource(project);
+    var xTimeline = new timelines.TimelineSource(project);
 
-    timeline.keyframes = [
-        {t: 0, value: 0},
-        {t: 5000, value: 1}
+    xTimeline.object = compositedScene2;
+    xTimeline.property = "x";
+
+    xTimeline.keyframes = [
+        {t: 0, value: -1920},
+        {t: 1500, value: 0, easing: animations.EASING_METHODS.easeOut}
     ];
 
-    animationController.timelines.addModel(timeline);
+    animationController.timelines.addModel(xTimeline);
+
+    var widthTimeline = new timelines.TimelineSource(project);
+
+    widthTimeline.object = compositedScene2;
+    widthTimeline.property = "width";
+
+    widthTimeline.keyframes = [
+        {t: 500, value: 2880},
+        {t: 1500, value: 1920, easing: animations.EASING_METHODS.easeOut}
+    ];
+
+    animationController.timelines.addModel(widthTimeline);
 
     project.registerNewModels();
 
