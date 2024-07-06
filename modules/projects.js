@@ -364,9 +364,7 @@ export class ProjectModel extends events.EventDrivenObject {
     registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true) {
         var thisScope = this;
 
-        if (canTemplate) {
-            this[`${name}_canTemplate`] = true;
-        }
+        this[`${name}_canTemplate`] = canTemplate;
 
         if (this.hasOwnProperty(name)) {
             this[name] = defaultValue;
@@ -400,6 +398,8 @@ export class ProjectModel extends events.EventDrivenObject {
 
     registerReferenceProperty(name, defaultValue = null, propertyEventName = null) {
         var thisScope = this;
+
+        this[`${name}_canTemplate`] = false;
 
         if (this.hasOwnProperty(name)) {
             this[name] = defaultValue.path;
@@ -440,7 +440,7 @@ export class ProjectModel extends events.EventDrivenObject {
     registerAnimationProperty(name, interpolationMethod, ...options) {
         this.registerProperty(name, ...options);
 
-        this.registerProperty(`${name}_timeline`, null);
+        this.registerProperty(`${name}_timeline`, null, null, false);
 
         this.animationInterpolationMethods[name] = interpolationMethod;
     }

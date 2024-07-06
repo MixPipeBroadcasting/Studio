@@ -61,8 +61,19 @@ export class Property {
         var returnElement = components.text("(Unknown)");
 
         var editTemplateButton = new ui.IconButton("icons/computed.svg", "Edit template");
+        var editTemplateDialog = new ui.ValueEditorDialog("Enter the template source to be rendered.");
+
+        editTemplateDialog.events.saved.connect(function(event) {
+            model[thisScope.name] = event.value;
+        })
 
         editTemplateButton.element.classList.add("editTemplateButton");
+
+        editTemplateButton.events.activated.connect(function() {
+            editTemplateDialog.input.value = model[thisScope.name];
+
+            editTemplateDialog.openBelowElement(editTemplateButton.element, true);
+        });
 
         editTemplateButton.setVisiblity(model[`${this.name}_canTemplate`]);
 
@@ -155,7 +166,7 @@ export class Property {
                 break;
         }
 
-        return components.element("div", [returnElement, editTemplateButton.element]);
+        return components.element("div", [returnElement, editTemplateButton.element, editTemplateDialog.element]);
     }
 }
 
