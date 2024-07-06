@@ -17,6 +17,14 @@ components.css(`
         width: 100%;
         min-width: 8rem;
     }
+
+    mixpipe-properties input[mixpipe-computed="animated"] {
+        border: 2px solid var(--animatedBackground);
+    }
+
+    mixpipe-properties input[mixpipe-computed="computed"] {
+        border: 2px solid var(--computedBackground);
+    }
 `);
 
 export class Property {
@@ -43,7 +51,7 @@ export class Property {
             case "string":
             case "number":
                 function getValue() {
-                    var currentValue = model[thisScope.name];
+                    var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
 
                     if (thisScope.type == "number" && thisScope.options.roundNumber) {
                         currentValue = Math.round(currentValue);
@@ -53,7 +61,20 @@ export class Property {
                 }
 
                 var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], getValue());
+                var computationStatus = null;
                 var ignoreNextValueChange = false;
+
+                function updateInputComputationIndicator() {
+                    computationStatus = model.getValueComputationStatus(thisScope.name);
+
+                    if (computationStatus != null) {
+                        input.element.setAttribute("mixpipe-computed", computationStatus);
+                    } else {
+                        input.element.removeAttribute("mixpipe-computed");
+                    }
+                }
+
+                updateInputComputationIndicator();
 
                 input.element.addEventListener("focus", () => input.element.select());
 
@@ -66,11 +87,11 @@ export class Property {
 
                     if (thisScope.type == "number") {
                         model[thisScope.name] = Number(event.value);
-
-                        return;
+                    } else {
+                        model[thisScope.name] = event.value;
                     }
 
-                    model[thisScope.name] = event.value;
+                    updateInputComputationIndicator();
                 });
 
                 var eventName = model.propertyEventAssociations[this.name];
@@ -83,8 +104,19 @@ export class Property {
 
                         ignoreNextValueChange = true;
                         input.value = getValue();
+
+                        updateInputComputationIndicator();
                     });
                 }
+
+                requestAnimationFrame(function updateComputed() {
+                    if (computationStatus != null) {
+                        ignoreNextValueChange = true;
+                        input.value = getValue();
+                    }
+
+                    requestAnimationFrame(updateComputed);
+                });
 
                 return input.element;
 

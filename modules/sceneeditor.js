@@ -454,14 +454,19 @@ export class SceneEditorPanel extends workspaces.Panel {
         }
 
         for (var object of this.selectedObjects) {
+            var x = object.getAnimatedValue("x");
+            var y = object.getAnimatedValue("y");
+            var width = object.getAnimatedValue("width");
+            var height = object.getAnimatedValue("height");
+
             if (draw) {
-                context.strokeRect(object.x, object.y, object.width, object.height);
+                context.strokeRect(x, y, width, height);
             }
 
-            boundingHalo.xMin = Math.min(boundingHalo.xMin, object.x);
-            boundingHalo.yMin = Math.min(boundingHalo.yMin, object.y);
-            boundingHalo.xMax = Math.max(boundingHalo.xMax, object.x + object.width);
-            boundingHalo.yMax = Math.max(boundingHalo.yMax, object.y + object.height);
+            boundingHalo.xMin = Math.min(boundingHalo.xMin, x);
+            boundingHalo.yMin = Math.min(boundingHalo.yMin, y);
+            boundingHalo.xMax = Math.max(boundingHalo.xMax, x + width);
+            boundingHalo.yMax = Math.max(boundingHalo.yMax, y + height);
         }
 
         this.boundingHalo = boundingHalo;

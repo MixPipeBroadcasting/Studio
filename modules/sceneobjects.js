@@ -1,12 +1,8 @@
 import * as projects from "./projects.js";
-import * as animations from "./animations.js";
 
 export class SceneObject extends projects.ProjectModel {
     constructor(project, path = ["sceneObjects", projects.generateKey()]) {
         super(project, path);
-
-        this.animationInterpolationMethods = {};
-        this.currentAnimations = {};
 
         this.registerProperty("type", null);
         this.registerProperty("name", "Object");
@@ -15,24 +11,6 @@ export class SceneObject extends projects.ProjectModel {
         this.registerAnimationProperty("width", "number", 0, "resized");
         this.registerAnimationProperty("height", "number", 0, "resized");
         this.registerReferenceProperty("parentObject");
-    }
-
-    registerAnimationProperty(name, interpolationMethod, ...options) {
-        this.registerProperty(name, ...options);
-
-        this.registerProperty(`${name}_timeline`, null);
-
-        this.animationInterpolationMethods[name] = interpolationMethod;
-    }
-
-    getAnimatedValue(name) {
-        var timeline = this[`${name}_timeline`];
-
-        if (!timeline) {
-            return this[name];
-        }
-
-        return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
     }
 
     draw(context) {}
@@ -61,15 +39,19 @@ export class Rectangle extends SceneObject {
 
         context.closePath();
 
-        if (![null, "transparent"].includes(context.backgroundFill)) {
-            context.fillStyle = this.backgroundFill;
+        var backgroundFill = this.getValue("backgroundFill");
+
+        if (![null, "transparent"].includes(backgroundFill)) {
+            context.fillStyle = backgroundFill;
 
             context.fill();
         }
 
-        if (this.borderWidth && this.borderWidth > 0) {
-            context.lineWidth = String(this.getAnimatedValue("borderWidth"));
-            context.strokeStyle = this.borderFill;
+        var borderWidth = this.getAnimatedValue("borderWidth");
+
+        if (borderWidth && borderWidth > 0) {
+            context.lineWidth = String(borderWidth);
+            context.strokeStyle = this.getValue("borderFill");
 
             context.stroke();
         }
@@ -123,20 +105,21 @@ export class Text extends SceneObject {
 
         var x = this.getAnimatedValue("x");
         var y = this.getAnimatedValue("y");
+        var text = this.getValue("text") || "";
 
-        context.font = this.font || "100px system-ui, sans-serif";
+        context.font = this.getValue("font") || "100px system-ui, sans-serif";
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;
 
-            context.fillText(this.text || "", x, y);
+            context.fillText(text, x, y);
         }
 
         if (this.borderWidth && this.borderWidth > 0) {
             context.lineWidth = String(this.getAnimatedValue("borderWidth"));
             context.strokeStyle = this.borderFill;
 
-            context.strokeText(this.text || "", x, y);
+            context.strokeText(text, x, y);
         }
     }
 }

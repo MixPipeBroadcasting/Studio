@@ -103,7 +103,8 @@ components.css(`
     }
 
     mixpipe-animationcontroller.running {
-        background: var(--live);
+        background: var(--animatedBackground);
+        color: var(--animatedForeground);
     }
 `);
 
@@ -512,7 +513,7 @@ export class AnimationControllerView extends StoryboardObjectView {
 
         this.triggerButton.element.style.background = (
             this.model.state == "running" ?
-            `conic-gradient(var(--liveProgressForeground) 0 ${(currentTime / this.model.duration) * 100}%, var(--liveProgressBackground) 0)` :
+            `conic-gradient(var(--animatedProgressForeground) 0 ${(currentTime / this.model.duration) * 100}%, var(--animatedProgressBackground) 0)` :
             null
         );
 

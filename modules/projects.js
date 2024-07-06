@@ -1,4 +1,6 @@
 import * as events from "./events.js";
+import * as animations from "./animations.js";
+import * as templates from "./templates.js";
 
 export var projectsById = {};
 export var modelSyncHandlers = [];
@@ -348,6 +350,8 @@ export class ProjectModel extends events.EventDrivenObject {
 
         this.project = project;
         this.path = path;
+        this.animationInterpolationMethods = {};
+        this.currentAnimations = {};
 
         this.events.reparented = new events.EventType(this);
 
@@ -427,6 +431,44 @@ export class ProjectModel extends events.EventDrivenObject {
         if (defaultValue != null) {
             this.project.softSet([...this.path, name], defaultValue.path);
         }
+    }
+
+    registerAnimationProperty(name, interpolationMethod, ...options) {
+        this.registerProperty(name, ...options);
+
+        this.registerProperty(`${name}_timeline`, null);
+
+        this.animationInterpolationMethods[name] = interpolationMethod;
+    }
+
+    getValue(name) {
+        return templates.evaluateTemplate(this[name], `path=${this.path.join(".")}`);
+    }
+
+    getNumericValue(name) {
+        return templates.evaluateNumericTemplate(this[name], `path=${this.path.join(".")}`);
+    }
+
+    getAnimatedValue(name, type = "number") {
+        var timeline = this[`${name}_timeline`];
+
+        if (!timeline) {
+            return type == "number" ? this.getNumericValue(name) : this.getValue(name);
+        }
+
+        return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
+    }
+
+    getValueComputationStatus(name) {
+        if (this[`${name}_timeline`]) {
+            return "animated";
+        }
+
+        if (String(this[name]).match(/{{.*}}/)) {
+            return "computed";
+        }
+
+        return null;
     }
 
     mutateProperty(name, value) {

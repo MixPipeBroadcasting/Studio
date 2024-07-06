@@ -1,7 +1,6 @@
 import BezierEasing from "../lib/bezier-easing.min.js";
 
 import * as common from "./common.js";
-import * as projects from "./projects.js";
 
 export const EASING_METHODS = {
     linear: [0, 0, 1, 1],
@@ -16,28 +15,6 @@ export const INTERPOLATION_METHODS = {
         return common.lerp(from, to, t);
     }
 };
-
-export class TimelineSource extends projects.ProjectModel {
-    constructor(project, path = ["timelines", projects.generateKey()]) {
-        super(project, path);
-
-        this.registerReferenceProperty("scene");
-        this.registerProperty("property");
-        this.registerProperty("keyframes", []);
-    }
-
-    get duration() {
-        var latestStartTime = 0;
-
-        for (var keyframe of this.keyframes) {
-            if (keyframe.t > latestStartTime) {
-                latestStartTime = keyframe.t;
-            }
-        }
-
-        return latestStartTime;
-    }
-}
 
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {
     var dt = atTime - timeline.start;
@@ -61,5 +38,3 @@ export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION
         BezierEasing(...(toKeyframe.easing || EASING_METHODS.linear))(boundedT)
     );
 }
-
-projects.registerModelSyncHandler(["timelines"], TimelineSource);

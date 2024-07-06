@@ -1,6 +1,6 @@
 import * as projects from "./projects.js";
 import * as sceneObjects from "./sceneobjects.js";
-import * as animations from "./animations.js";
+import * as timelines from "./timelines.js";
 
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
@@ -46,11 +46,14 @@ export class Scene extends StoryboardObject {
         var objectsAtPoint = [];
 
         for (var object of this.objects.getModelList()) {
+            var x = object.getAnimatedValue("x");
+            var y = object.getAnimatedValue("y");
+            var width = object.getAnimatedValue("width");
+            var height = object.getAnimatedValue("height");
+
             if (
-                object.x <= point.x &&
-                object.y <= point.y &&
-                object.x + object.width > point.x &&
-                object.y + object.height > point.y
+                x <= point.x && y <= point.y &&
+                x + width > point.x && y + height > point.y
             ) {
                 objectsAtPoint.push(object);
             }
@@ -76,7 +79,7 @@ export class AnimationController extends StoryboardObject {
     constructor(project, path = ["animationControllers", projects.generateKey()]) {
         super(project, path);
 
-        this.timelines = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "timelines"], animations.TimelineSource);
+        this.timelines = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "timelines"], timelines.TimelineSource);
 
         this.registerProperty("name", "", "renamed");
         this.registerProperty("startTime", null, "stateChanged");
