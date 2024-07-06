@@ -1,4 +1,3 @@
-import * as projects from "./projects.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
 
@@ -8,9 +7,20 @@ components.css(`
         overflow: auto;
     }
 
+    mixpipe-properties td > div {
+        display: flex;
+        align-items: center;
+    }
+    
     mixpipe-properties td:first-of-type {
         min-width: 8rem;
         vertical-align: top;
+    }
+
+    mixpipe-properties .editTemplateButton {
+        width: 1.5rem;
+        padding: 0.1rem;
+        flex-shrink: 0;
     }
 
     mixpipe-properties input {
@@ -47,29 +57,47 @@ export class Property {
             ]);
         }
 
+        var computationStatus = null;
+        var returnElement = components.text("(Unknown)");
+
+        var editTemplateButton = new ui.IconButton("icons/computed.svg", "Edit template");
+
+        editTemplateButton.element.classList.add("editTemplateButton");
+
+        editTemplateButton.setVisiblity(model[`${this.name}_canTemplate`]);
+
+        function getValue() {
+            var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
+
+            if (thisScope.type == "number" && thisScope.options.roundNumber) {
+                currentValue = Math.round(currentValue);
+            }
+
+            return currentValue;
+        }
+
+        function updateComputationStatus() {
+            computationStatus = model.getValueComputationStatus(thisScope.name);
+        }
+
+        updateComputationStatus();
+
         switch (this.type) {
             case "string":
             case "number":
-                function getValue() {
-                    var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
-
-                    if (thisScope.type == "number" && thisScope.options.roundNumber) {
-                        currentValue = Math.round(currentValue);
-                    }
-
-                    return currentValue;
-                }
-
                 var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], getValue());
-                var computationStatus = null;
                 var ignoreNextValueChange = false;
 
                 function updateInputComputationIndicator() {
-                    computationStatus = model.getValueComputationStatus(thisScope.name);
+                    updateComputationStatus();
 
                     if (computationStatus != null) {
+                        input.enabled = false;
+
                         input.element.setAttribute("mixpipe-computed", computationStatus);
                     } else {
+                        input.enabled = true;
+
                         input.element.removeAttribute("mixpipe-computed");
                     }
                 }
@@ -90,6 +118,10 @@ export class Property {
                     } else {
                         model[thisScope.name] = event.value;
                     }
+                });
+
+                input.events.valueCommitted.connect(function() {
+                    ignoreNextValueChange = true;
 
                     updateInputComputationIndicator();
                 });
@@ -118,12 +150,12 @@ export class Property {
                     requestAnimationFrame(updateComputed);
                 });
 
-                return input.element;
+                returnElement = input.element;
 
-            default:
-                return components.text("(Unknown)");
+                break;
         }
 
+        return components.element("div", [returnElement, editTemplateButton.element]);
     }
 }
 

@@ -361,8 +361,12 @@ export class ProjectModel extends events.EventDrivenObject {
         this.propertyEventAssociations = {};
     }
 
-    registerProperty(name, defaultValue = null, propertyEventName = null) {
+    registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true) {
         var thisScope = this;
+
+        if (canTemplate) {
+            this[`${name}_canTemplate`] = true;
+        }
 
         if (this.hasOwnProperty(name)) {
             this[name] = defaultValue;
@@ -442,11 +446,11 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getValue(name) {
-        return templates.evaluateTemplate(this[name], `path=${this.path.join(".")}`);
+        return templates.evaluateTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`);
     }
 
     getNumericValue(name) {
-        return templates.evaluateNumericTemplate(this[name], `path=${this.path.join(".")}`);
+        return templates.evaluateNumericTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`);
     }
 
     getAnimatedValue(name, type = "number") {

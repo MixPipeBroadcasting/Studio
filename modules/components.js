@@ -68,6 +68,10 @@ export class Component extends events.EventDrivenObject {
         this.remove(...this.children);
     }
 
+    setVisiblity(isVisible) {
+        this.element.style.display = isVisible ? null : "none";
+    }
+
     set(...children) {
         this.remove(...this.children);
 
