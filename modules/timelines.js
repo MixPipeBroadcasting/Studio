@@ -10,11 +10,13 @@ export class TimelineSource extends projects.ProjectModel {
         this.registerReferenceProperty("object");
         this.registerProperty("property");
         this.registerProperty("startTime", null, "stateChanged");
+        this.registerProperty("stepTime", null, "stateChanged");
         this.registerProperty("keyframes", []);
 
         this.events.stateChanged.connect(function() {
-            thisScope.object[`${thisScope.property}_timeline`] = thisScope.startTime != null ? {
+            thisScope.object[`${thisScope.property}_timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
                 start: thisScope.startTime,
+                step: thisScope.stepTime,
                 keyframes: thisScope.keyframes
             } : null;
         });

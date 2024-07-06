@@ -95,6 +95,15 @@ components.css(`
         border-radius: 50%;
     }
 
+    mixpipe-animationcontroller button[mixpipe-animated="true"] img.icon {
+        ${components.styleMixins.ICON_INVERT}
+    }
+
+    mixpipe-animationcontroller input {
+        color: var(--primaryForeground);
+        border: none;
+    }
+
     mixpipe-animationcontroller .timer {
         ${components.styleMixins.NO_SELECT}
         width: 6rem;
@@ -406,11 +415,7 @@ export class SceneView extends StoryboardObjectView {
             lastClicked = Date.now();
         });
 
-        requestAnimationFrame(function render() {
-            thisScope.render();
-
-            requestAnimationFrame(render);
-        });
+        this.always(this.render);
     }
 
     updateInfo() {
@@ -463,12 +468,17 @@ export class AnimationControllerView extends StoryboardObjectView {
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
 
+        var shouldOpenEditor = false;
         var lastClicked = null;
 
         this.element.addEventListener("pointerdown", function(event) {
             if (event.target.matches("button, button *, input")) {
+                shouldOpenEditor = false;
+
                 return;
             }
+
+            shouldOpenEditor = true;
 
             event.preventDefault();
         });
@@ -477,19 +487,15 @@ export class AnimationControllerView extends StoryboardObjectView {
             lastClicked = null;
         });
 
-        this.element.addEventListener("pointerup", function() {
-            if (lastClicked != null && Date.now() - lastClicked <= ui.DOUBLE_CLICK_DURATION) {
+        this.element.addEventListener("pointerup", function(event) {
+            if (shouldOpenEditor && lastClicked != null && Date.now() - lastClicked <= ui.DOUBLE_CLICK_DURATION) {
                 thisScope.openEditor();
             }
 
             lastClicked = Date.now();
         });
 
-        requestAnimationFrame(function update() {
-            thisScope.updateTimer();
-
-            requestAnimationFrame(update);
-        });
+        this.always(this.updateTimer);
     }
 
     updateInfo() {
@@ -497,25 +503,15 @@ export class AnimationControllerView extends StoryboardObjectView {
     }
 
     updateTimer() {
-        var currentTime = Date.now() - this.model.startTime;
-        var durationToShow = this.model.duration;
-        var isCountdown = false;
-
-        if (this.model.state == "running") {
-            durationToShow = this.model.duration - currentTime;
-            isCountdown = true;
-        } else if (this.model.state == "finished") {
-            durationToShow = 0;
-            isCountdown = true;
-        }
-
         this.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
 
         this.triggerButton.element.style.background = (
             this.model.state == "running" ?
-            `conic-gradient(var(--animatedProgressForeground) 0 ${(currentTime / this.model.duration) * 100}%, var(--animatedProgressBackground) 0)` :
+            `conic-gradient(var(--animatedProgressForeground) 0 ${(this.model.currentTime / this.model.duration) * 100}%, var(--animatedProgressBackground) 0)` :
             null
         );
+
+        this.triggerButton.element.setAttribute("mixpipe-animated", this.model.state == "running");
 
         if (this.model.state == "running") {
             this.element.classList.add("running");
@@ -523,12 +519,7 @@ export class AnimationControllerView extends StoryboardObjectView {
             this.element.classList.remove("running");
         }
 
-        this.timerElement.textContent = (
-            (isCountdown ? "-" : "") +
-            String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
-            "." +
-            String(durationToShow % 1000).padStart(3, "0")
-        );
+        this.timerElement.textContent = this.model.getDisplayTime();
     }
 
     openEditor() {
@@ -573,11 +564,11 @@ export class Storyboard extends components.Component {
     }
 
     createStoryboardGroup() {
-        var scene = new storyboardObjects.StoryboardGroup(this.project);
+        var group = new storyboardObjects.StoryboardGroup(this.project);
 
         this.project.registerNewModels();
 
-        return scene;
+        return group;
     }
 
     createScene() {
@@ -589,11 +580,11 @@ export class Storyboard extends components.Component {
     }
 
     createAnimationController() {
-        var scene = new storyboardObjects.AnimationController(this.project);
+        var controller = new storyboardObjects.AnimationController(this.project);
 
         this.project.registerNewModels();
 
-        return scene;
+        return controller;
     }
 }
 

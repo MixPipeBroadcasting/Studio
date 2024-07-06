@@ -123,6 +123,7 @@ if (!opener) {
 
     var animationController = new storyboardObjects.AnimationController(project);
 
+    animationController.name = "Animate logo in";
     animationController.x = 180;
     animationController.y = 350;
 

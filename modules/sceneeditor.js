@@ -7,7 +7,7 @@ import * as workspaces from "./workspaces.js";
 import * as propertyTables from "./propertytables.js";
 import * as sceneObjects from "./sceneobjects.js";
 
-const PROPERTIES = [
+export const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name"),
     new propertyTables.Property("x", "number", "X", {roundNumber: true}),
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
@@ -131,11 +131,7 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         this.scene.events.renamed.connect(() => this.name = scene.name);
 
-        requestAnimationFrame(function render() {
-            thisScope.render();
-
-            requestAnimationFrame(render);
-        });
+        this.always(this.render);
 
         var panning = false;
         var panOffset = null;

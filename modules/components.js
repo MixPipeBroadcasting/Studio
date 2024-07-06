@@ -140,6 +140,16 @@ export class Component extends events.EventDrivenObject {
 
         return this.element;
     }
+
+    always(callback) {
+        var thisScope = this;
+
+        requestAnimationFrame(function call() {
+            callback.apply(thisScope);
+
+            requestAnimationFrame(call);
+        });
+    }
 }
 
 export class ElementData {

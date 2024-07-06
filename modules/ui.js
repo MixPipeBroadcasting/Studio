@@ -32,6 +32,23 @@ components.css(`
         vertical-align: bottom;
     }
 
+    button[mixpipe-active="true"] {
+        background: var(--selectedBackground);
+        color: var(--selectedForeground);
+    }
+
+    button[mixpipe-active="true"] img.icon.active {
+        ${components.styleMixins.ICON_INVERT}
+    }
+
+    button[mixpipe-active="true"] .inactive {
+        display: none;
+    }
+
+    button:not([mixpipe-active="true"]) .active {
+        display: none;
+    }
+
     input {
         min-height: 1.5rem;
         background: var(--primaryBackground);
@@ -117,6 +134,16 @@ export class Button extends components.Component {
     }
 }
 
+export class ToggleButton extends Button {
+    constructor(text, value = false) {
+        super(text);
+
+        this.registerState("value", "valueChanged", value, (event) => this.element.setAttribute("mixpipe-active", !!event.value));
+
+        this.events.activated.connect(() => this.value = !this.value);
+    }
+}
+
 export class IconButton extends Button {
     constructor(source, alt) {
         super("");
@@ -125,6 +152,26 @@ export class IconButton extends Button {
         this.tooltip = alt;
 
         this.add(this.icon);
+    }
+}
+
+export class ToggleIconButton extends ToggleButton {
+    constructor(activeSource, activeAlt, inactiveSource = activeSource, inactiveAlt = activeAlt, value = false) {
+        super("", value);
+
+        this.activeIcon = new Icon(activeSource, activeAlt);
+        this.inactiveIcon = new Icon(inactiveSource, inactiveAlt);
+
+        this.activeTooltip = activeAlt;
+        this.inactiveTooltip = inactiveAlt;
+        this.tooltip = value ? this.activeTooltip : this.inactiveTooltip;
+
+        this.activeIcon.element.classList.add("active");
+        this.inactiveIcon.element.classList.add("inactive");
+
+        this.add(this.activeIcon, this.inactiveIcon);
+
+        this.events.valueChanged.connect((event) => this.tooltip = event.value ? this.activeTooltip : this.inactiveTooltip);
     }
 }
 

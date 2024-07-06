@@ -18,7 +18,7 @@ export const INTERPOLATION_METHODS = {
 };
 
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {
-    var dt = atTime - timeline.start;
+    var dt = timeline.step != null ? timeline.step : atTime - timeline.start;
     var fromKeyframe = null;
     var toKeyframe = timeline.keyframes[0];
 

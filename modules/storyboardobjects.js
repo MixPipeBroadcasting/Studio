@@ -83,6 +83,7 @@ export class AnimationController extends StoryboardObject {
 
         this.registerProperty("name", "", "renamed");
         this.registerProperty("startTime", null, "stateChanged");
+        this.registerProperty("stepTime", null, "stateChanged");
     }
 
     get duration() {
@@ -98,6 +99,10 @@ export class AnimationController extends StoryboardObject {
     }
 
     get state() {
+        if (this.stepTime != null) {
+            return "stepping";
+        }
+
         if (this.startTime == null) {
             return "stopped";
         }
@@ -109,19 +114,72 @@ export class AnimationController extends StoryboardObject {
         return "finished";
     }
 
+    get currentTime() {
+        if (this.stepTime != null) {
+            return this.stepTime;
+        }
+
+        if (this.startTime == null) {
+            return 0;
+        }
+
+        return Date.now() - this.startTime;
+    }
+
+    getDisplayTime(type = "general") {
+        var durationToShow = 0;
+        var isCountdown = false;
+
+        if (type == "progress") {
+            if (this.state == "running" || this.state == "stepping") {
+                durationToShow = this.currentTime;
+            } else if (this.state == "finished") {
+                durationToShow = this.duration;
+            }
+        } else {
+            if (this.state == "running" || this.state == "stepping") {
+                durationToShow = this.duration - this.currentTime;
+                isCountdown = true;
+            } else if (this.state == "finished") {
+                isCountdown = true;
+            }
+        }
+
+        return (
+            (isCountdown ? "-" : "") +
+            String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
+            "." +
+            String(durationToShow % 1000).padStart(3, "0")
+        );
+    }
+
     start(time = Date.now()) {
         this.startTime = time;
+        this.stepTime = null;
 
         for (var timeline of this.timelines.getModelList()) {
-            timeline.startTime = this.startTime;
+            timeline.startTime = time;
+            timeline.stepTime = null;
+        }
+    }
+
+    step(time = 0) {
+        this.startTime = null;
+        this.stepTime = time;
+
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.startTime = null;
+            timeline.stepTime = time;
         }
     }
 
     reset() {
         this.startTime = null;
+        this.stepTime = null;
 
         for (var timeline of this.timelines.getModelList()) {
             timeline.startTime = null;
+            timeline.stepTime = null;
         }
     }
 

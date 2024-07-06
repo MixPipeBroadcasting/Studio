@@ -10,6 +10,7 @@ components.css(`
     mixpipe-properties td > div {
         display: flex;
         align-items: center;
+        gap: 0.25rem;
     }
     
     mixpipe-properties td:first-of-type {
@@ -133,8 +134,6 @@ export class Property {
 
                 input.events.valueCommitted.connect(function() {
                     ignoreNextValueChange = true;
-
-                    updateInputComputationIndicator();
                 });
 
                 var eventName = model.propertyEventAssociations[this.name];
@@ -156,6 +155,10 @@ export class Property {
                     if (computationStatus != null) {
                         ignoreNextValueChange = true;
                         input.value = getValue();
+                    }
+
+                    if (document.activeElement != input.element) {
+                        updateInputComputationIndicator();
                     }
 
                     requestAnimationFrame(updateComputed);
