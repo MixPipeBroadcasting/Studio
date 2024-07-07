@@ -123,7 +123,16 @@ export class AnimationController extends StoryboardObject {
             return 0;
         }
 
-        return Date.now() - this.startTime;
+        return Math.min(Date.now() - this.startTime, this.duration);
+    }
+
+    static renderDisplayTime(durationToShow, isCountdown = false) {
+        return (
+            (isCountdown ? "-" : "") +
+            String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
+            "." +
+            String(Math.floor(durationToShow % 1000)).padStart(3, "0")
+        );
     }
 
     getDisplayTime(type = "general") {
@@ -145,12 +154,7 @@ export class AnimationController extends StoryboardObject {
             }
         }
 
-        return (
-            (isCountdown ? "-" : "") +
-            String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
-            "." +
-            String(durationToShow % 1000).padStart(3, "0")
-        );
+        return this.constructor.renderDisplayTime(durationToShow, isCountdown);
     }
 
     start(time = Date.now()) {
