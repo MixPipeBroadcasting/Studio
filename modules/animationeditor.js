@@ -155,25 +155,7 @@ export class AnimationControllerEditorView extends components.Component {
             [timelines.TimelineSource, TimelineSourceEditorView]
         ]), [this], (model) => this.model.timelines.hasModel(model));
 
-        this.scrubberElement.addEventListener("pointerdown", function(event) {
-            if (event.target == thisScope.playheadHandleElement) {
-                return;
-            }
-
-            scrubOffset = event.clientX;
-            thisScope.scrubStart = (event.clientX - thisScope.timeElement.getBoundingClientRect().width) / thisScope.timeScale;
-
-            event.preventDefault();
-        });
-
-        this.playheadHandleElement.addEventListener("pointerdown", function(event) {
-            scrubOffset = event.clientX;
-            thisScope.scrubStart = thisScope.model.currentTime;
-
-            event.preventDefault();
-        });
-
-        document.body.addEventListener("pointermove", function(event) {
+        function movePlayheadEvent(event) {
             if (thisScope.scrubStart == null) {
                 return;
             }
@@ -191,7 +173,29 @@ export class AnimationControllerEditorView extends components.Component {
             }
 
             thisScope.model.step(position);
+        }
+
+        this.scrubberElement.addEventListener("pointerdown", function(event) {
+            if (event.target == thisScope.playheadHandleElement) {
+                return;
+            }
+
+            scrubOffset = event.clientX;
+            thisScope.scrubStart = (event.clientX - thisScope.timeElement.getBoundingClientRect().width) / thisScope.timeScale;
+
+            movePlayheadEvent(event);
+
+            event.preventDefault();
         });
+
+        this.playheadHandleElement.addEventListener("pointerdown", function(event) {
+            scrubOffset = event.clientX;
+            thisScope.scrubStart = thisScope.model.currentTime;
+
+            event.preventDefault();
+        });
+
+        document.body.addEventListener("pointermove", movePlayheadEvent);
 
         document.body.addEventListener("pointerup", function() {
             thisScope.scrubStart = null;
