@@ -17,6 +17,10 @@ export const INTERPOLATION_METHODS = {
     }
 };
 
+export function compareEasingMethods(a, b) {
+    return (a || []).join(",") == (b || []).join(",");
+}
+
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {
     var dt = timeline.step != null ? timeline.step : atTime - timeline.start;
     var fromKeyframe = null;

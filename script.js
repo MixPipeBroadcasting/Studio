@@ -145,8 +145,8 @@ if (!opener) {
     widthTimeline.property = "width";
 
     widthTimeline.keyframes = [
-        {t: 500, value: 2880},
-        {t: 1500, value: 1920, easing: animations.EASING_METHODS.easeOut}
+        {t: 500, value: 2880, easing: animations.EASING_METHODS.linear},
+        {t: 1500, value: 1920, easing: animations.EASING_METHODS.linear}
     ];
 
     animationController.timelines.addModel(widthTimeline);

@@ -11,7 +11,7 @@ export class TimelineSource extends projects.ProjectModel {
         this.registerProperty("property");
         this.registerProperty("startTime", null, "stateChanged");
         this.registerProperty("stepTime", null, "stateChanged");
-        this.registerProperty("keyframes", []);
+        this.registerProperty("keyframes", [], "keyframesChanged");
 
         this.events.stateChanged.connect(function() {
             thisScope.object[`${thisScope.property}_timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
@@ -32,6 +32,10 @@ export class TimelineSource extends projects.ProjectModel {
         }
 
         return latestStartTime;
+    }
+
+    emitKeyframesChangedEvent() {
+        this.keyframes = this.keyframes;
     }
 }
 

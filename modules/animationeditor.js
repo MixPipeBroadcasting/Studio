@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as animations from "./animations.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as timelines from "./timelines.js";
@@ -66,6 +67,7 @@ components.css(`
     }
 
     mixpipe-timelineeditor {
+        position: relative;
         display: block;
         border-bottom: 2px solid var(--secondaryBackground);
     }
@@ -82,6 +84,30 @@ components.css(`
         z-index: 1;
     }
 
+    mixpipe-timelineeditor .keyframes {
+        position: absolute;
+        top: 0;
+        left: 10rem;
+        width: 100%;
+        height: 1.5rem;
+        padding-block: 0.25rem;
+    }
+
+    mixpipe-timelineeditor .keyframe {
+        position: absolute;
+        width: 1rem;
+        height: 1rem;
+        background: var(--bezierKeyframe);
+        border-radius: 50%;
+        transform: translateX(calc(-50% + 1px));
+    }
+
+    mixpipe-timelineeditor .keyframe.linear {
+        background: var(--linearKeyframe);
+        border-radius: 0;
+        clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    }
+
     mixpipe-timelineeditor .info > :is(strong, span) {
         overflow: hidden;
         white-space: nowrap;
@@ -90,10 +116,11 @@ components.css(`
 `);
 
 export class TimelineSourceEditorView extends components.Component {
-    constructor(model) {
+    constructor(model, animationControllerEditor) {
         super("mixpipe-timelineeditor");
 
         this.model = model;
+        this.animationControllerEditor = animationControllerEditor;
 
         this.objectNameElement = components.element("strong");
         this.objectPropertyElement = components.element("span");
@@ -104,14 +131,59 @@ export class TimelineSourceEditorView extends components.Component {
             this.objectPropertyElement
         ]);
 
-        this.element.append(this.infoColumnElement);
+        this.keyframesElement = components.element("div", [components.className("keyframes")]);
+
+        this.element.append(this.infoColumnElement, this.keyframesElement);
 
         this.always(this.updateInfo);
+
+        this.model.events.keyframesChanged.connect(this.updateKeyframes);
+        this.animationControllerEditor.events.timeScaleChanged.connect(this.updateKeyframes);
+
+        this.updateKeyframes();
     }
 
     updateInfo() {
         this.objectNameElement.textContent = this.model.object.name;
         this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property).displayName || this.model.property;
+    }
+
+    updateKeyframes() {
+        var keyframesToAdd = this.model.keyframes.length;
+        var keyframeElements = [];
+
+        this.keyframesElement.querySelectorAll(".keyframe").forEach(function(element) {
+            if (keyframesToAdd == 0) {
+                element.remove();
+
+                return;
+            }
+
+            keyframeElements.push(element);
+
+            keyframesToAdd--;
+        });
+
+        for (var i = 0; i < keyframesToAdd; i++) {
+            var element = components.element("div", [components.className("keyframe")]);
+
+            keyframeElements.push(element);
+
+            this.keyframesElement.append(element);
+        }
+
+        for (var i = 0; i < this.model.keyframes.length; i++) {
+            var keyframe = this.model.keyframes[i];
+            var element = keyframeElements[i];
+
+            element.style.left = `${keyframe.t * this.animationControllerEditor.timeScale}px`;
+
+            if (animations.compareEasingMethods(keyframe.easing, animations.EASING_METHODS.linear)) {
+                element.classList.add("linear");
+            } else {
+                element.classList.remove("linear");
+            }
+        }
     }
 }
 
@@ -208,6 +280,10 @@ export class AnimationControllerEditorView extends components.Component {
         new ResizeObserver(function() {
             thisScope.shouldRedrawCanvas = true;
         }).observe(this.element);
+
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function() {
+            thisScope.shouldRedrawCanvas = true;
+        });
 
         this.always(this.update);
     }
