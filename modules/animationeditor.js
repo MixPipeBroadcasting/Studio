@@ -34,6 +34,7 @@ components.css(`
 
     mixpipe-animationcontrollereditor .time {
         position: sticky;
+        flex-shrink: 0;
         left: 0;
         width: 10rem;
         height: calc(100% - 1px);
