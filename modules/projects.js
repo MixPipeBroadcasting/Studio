@@ -624,6 +624,14 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
 
         delete this.modelCache[key];
     }
+
+    clearModels() {
+        var keys = this.getModelKeys();
+
+        for (var key of keys) {
+            this.removeModel(key);
+        }
+    }
 }
 
 export function generateKey() {

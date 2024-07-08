@@ -132,10 +132,10 @@ if (!opener) {
     xTimeline.object = compositedScene2;
     xTimeline.property = "x";
 
-    xTimeline.keyframes = [
+    xTimeline.setFromSerialisedKeyframes([
         {t: 0, value: -1920},
         {t: 1500, value: 0, easing: animations.EASING_METHODS.easeOut}
-    ];
+    ]);
 
     animationController.timelines.addModel(xTimeline);
 
@@ -144,10 +144,10 @@ if (!opener) {
     widthTimeline.object = compositedScene2;
     widthTimeline.property = "width";
 
-    widthTimeline.keyframes = [
+    widthTimeline.setFromSerialisedKeyframes([
         {t: 500, value: 2880, easing: animations.EASING_METHODS.linear},
         {t: 1500, value: 1920, easing: animations.EASING_METHODS.linear}
-    ];
+    ]);
 
     animationController.timelines.addModel(widthTimeline);
 

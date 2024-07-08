@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as events from "./events.js";
 import * as animations from "./animations.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
@@ -88,21 +89,36 @@ components.css(`
         position: absolute;
         top: 0;
         left: 10rem;
-        width: 100%;
         height: 1.5rem;
         padding-block: 0.25rem;
     }
 
-    mixpipe-timelineeditor .keyframe {
+    mixpipe-keyframe, mixpipe-keyframe.selected::before {
         position: absolute;
         width: 1rem;
         height: 1rem;
         background: var(--bezierKeyframe);
         border-radius: 50%;
         transform: translateX(calc(-50% + 1px));
+        cursor: ew-resize;
     }
 
-    mixpipe-timelineeditor .keyframe.linear {
+    mixpipe-keyframe.selected, mixpipe-keyframe.linear.selected {
+        width: calc(1rem + 4px);
+        height: calc(1rem + 4px);
+        background: red;
+    }
+
+    mixpipe-keyframe.selected::before {
+        top: 2px;
+        left: 2px;
+        width: 1rem;
+        height: 1rem;
+        transform: none;
+        content: "";
+    }
+
+    mixpipe-keyframe.linear, mixpipe-keyframe.linear.selected::before {
         background: var(--linearKeyframe);
         border-radius: 0;
         clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
@@ -114,6 +130,93 @@ components.css(`
         text-overflow: ellipsis;
     }
 `);
+
+export class KeyframeView extends components.Component {
+    constructor(model, timelineEditor) {
+        super("mixpipe-keyframe");
+
+        var thisScope = this;
+        var moveOffset = null;
+        var wasMoved = false;
+
+        this.model = model;
+        this.timelineEditor = timelineEditor;
+
+        this.registerState("selected", "selectionChanged", false, () => this.update());
+
+        this.model.events.changed.connect(() => this.update());
+
+        this.update();
+
+        this.element.addEventListener("pointerdown", function(event) {
+            if (event.shiftKey) {
+                thisScope.selected = !thisScope.selected;
+            } else {
+                if (thisScope.animationControllerEditor.element.querySelectorAll("mixpipe-keyframe.selected").length == 1) {
+                    thisScope.animationControllerEditor.events.allKeyframesDeselected.emit();
+                }
+
+                thisScope.selected = true;
+            }
+
+            event.preventDefault();
+        });
+
+        this.element.addEventListener("pointerup", function(event) {
+            var wasSelected = thisScope.selected;
+
+            if (!wasMoved && !event.shiftKey) {
+                thisScope.animationControllerEditor.events.allKeyframesDeselected.emit();
+                thisScope.selected = wasSelected;
+            }
+
+            wasMoved = false;
+
+            event.preventDefault();
+        });
+
+        this.animationControllerEditor.events.allKeyframesDeselected.connect(() => this.selected = false);
+
+        this.animationControllerEditor.events.selectedKeyframesStartedMove.connect(function() {
+            if (!thisScope.selected) {
+                return;
+            }
+
+            moveOffset = thisScope.model.time;
+
+            thisScope.element.setAttribute("mixpipe-moveoffset", thisScope.model.time);
+        });
+
+        this.animationControllerEditor.events.selectedKeyframesMoved.connect(function(event) {
+            if (!thisScope.selected) {
+                return;
+            }
+
+            thisScope.model.time = moveOffset + event.relativePosition;
+            wasMoved = true;
+        });
+    }
+
+    get animationControllerEditor() {
+        return this.timelineEditor.animationControllerEditor;
+    }
+
+    update() {
+        this.element.style.left = `${this.model.time * this.animationControllerEditor.timeScale}px`;
+
+        if (animations.compareEasingMethods(this.model.easing, animations.EASING_METHODS.linear)) {
+            this.element.classList.add("linear");
+        } else {
+            this.element.classList.remove("linear");
+        }
+
+        if (this.selected) {
+            this.element.classList.add("selected");
+        } else {
+            this.element.classList.remove("selected");
+        }
+    }
+}
 
 export class TimelineSourceEditorView extends components.Component {
     constructor(model, animationControllerEditor) {
@@ -133,57 +236,20 @@ export class TimelineSourceEditorView extends components.Component {
 
         this.keyframesElement = components.element("div", [components.className("keyframes")]);
 
+        this.childContainerElement = this.keyframesElement;
+
         this.element.append(this.infoColumnElement, this.keyframesElement);
 
         this.always(this.updateInfo);
 
-        this.model.events.keyframesChanged.connect(this.updateKeyframes);
-        this.animationControllerEditor.events.timeScaleChanged.connect(this.updateKeyframes);
-
-        this.updateKeyframes();
+        this.model.project.associateChildModels(this, new Map([
+            [timelines.KeyframeSource, KeyframeView]
+        ]), [this], (model) => this.model.keyframes.hasModel(model));
     }
 
     updateInfo() {
         this.objectNameElement.textContent = this.model.object.name;
         this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property).displayName || this.model.property;
-    }
-
-    updateKeyframes() {
-        var keyframesToAdd = this.model.keyframes.length;
-        var keyframeElements = [];
-
-        this.keyframesElement.querySelectorAll(".keyframe").forEach(function(element) {
-            if (keyframesToAdd == 0) {
-                element.remove();
-
-                return;
-            }
-
-            keyframeElements.push(element);
-
-            keyframesToAdd--;
-        });
-
-        for (var i = 0; i < keyframesToAdd; i++) {
-            var element = components.element("div", [components.className("keyframe")]);
-
-            keyframeElements.push(element);
-
-            this.keyframesElement.append(element);
-        }
-
-        for (var i = 0; i < this.model.keyframes.length; i++) {
-            var keyframe = this.model.keyframes[i];
-            var element = keyframeElements[i];
-
-            element.style.left = `${keyframe.t * this.animationControllerEditor.timeScale}px`;
-
-            if (animations.compareEasingMethods(keyframe.easing, animations.EASING_METHODS.linear)) {
-                element.classList.add("linear");
-            } else {
-                element.classList.remove("linear");
-            }
-        }
     }
 }
 
@@ -192,6 +258,7 @@ export class AnimationControllerEditorView extends components.Component {
         super("mixpipe-animationcontrollereditor");
 
         var thisScope = this;
+        var keyframeMoveOffset = null;
         var scrubOffset = null;
 
         this.model = model;
@@ -200,6 +267,10 @@ export class AnimationControllerEditorView extends components.Component {
         this.shouldRedrawCanvas = true;
 
         this.registerState("timeScale", "timeScaleChanged", 1 / 10, () => this.shouldRedrawCanvas = true);
+
+        this.events.allKeyframesDeselected = new events.EventType(this);
+        this.events.selectedKeyframesStartedMove = new events.EventType(this);
+        this.events.selectedKeyframesMoved = new events.EventType(this);
 
         this.timeElement = components.element("div", [components.className("time"), components.text("--.---")]);
         this.timeMarkerCanvasElement = components.element("canvas", [components.className("markers")]);
@@ -228,13 +299,13 @@ export class AnimationControllerEditorView extends components.Component {
         ]), [this], (model) => this.model.timelines.hasModel(model));
 
         function movePlayheadEvent(event) {
-            if (thisScope.scrubStart == null) {
+            if (scrubOffset == null) {
                 return;
             }
 
             var position = Math.min(Math.max(thisScope.scrubStart + ((event.clientX - scrubOffset) / thisScope.timeScale), 0), thisScope.model.duration);
 
-            if (thisScope.element.scrollLeft > 0 && event.clientX < thisScope.timeElement.getBoundingClientRect().width) {
+            if (thisScope.element.scrollLeft > 0 && event.clientX < thisScope.timeElement.getBoundingClientRect().width + 40) {
                 thisScope.element.scrollLeft -= 5;
                 scrubOffset += 5;
             }
@@ -247,13 +318,31 @@ export class AnimationControllerEditorView extends components.Component {
             thisScope.model.step(position);
         }
 
+        this.element.addEventListener("pointerdown", function(event) {
+            if (event.target.matches("mixpipe-timelineeditor")) {
+                if (!event.shiftKey) {
+                    thisScope.events.allKeyframesDeselected.emit();
+                }
+
+                event.preventDefault();
+            }
+
+            if (event.target.matches("mixpipe-keyframe")) {
+                keyframeMoveOffset = event.clientX;
+
+                thisScope.events.selectedKeyframesStartedMove.emit();
+
+                event.preventDefault();
+            }
+        });
+
         this.scrubberElement.addEventListener("pointerdown", function(event) {
             if (event.target == thisScope.playheadHandleElement) {
                 return;
             }
 
             scrubOffset = event.clientX;
-            thisScope.scrubStart = (event.clientX - thisScope.timeElement.getBoundingClientRect().width) / thisScope.timeScale;
+            thisScope.scrubStart = (event.clientX - thisScope.timeElement.getBoundingClientRect().width + thisScope.element.scrollLeft) / thisScope.timeScale;
 
             movePlayheadEvent(event);
 
@@ -267,9 +356,34 @@ export class AnimationControllerEditorView extends components.Component {
             event.preventDefault();
         });
 
+        document.body.addEventListener("pointermove", function(event) {
+            if (keyframeMoveOffset == null) {
+                return;
+            }
+
+            var relativePosition = (event.clientX - keyframeMoveOffset) / thisScope.timeScale;
+            var anyKeyframesMightHitStart = false;
+
+            thisScope.element.querySelectorAll("mixpipe-keyframe.selected").forEach(function(element) {
+                if (parseFloat(element.getAttribute("mixpipe-moveoffset")) + relativePosition < 0) {
+                    anyKeyframesMightHitStart = true;
+                }
+            });
+
+            if (anyKeyframesMightHitStart) {
+                return;
+            }
+
+            thisScope.events.selectedKeyframesMoved.emit({relativePosition});
+
+            thisScope.model.step(thisScope.model.stepTime);
+        });
+
         document.body.addEventListener("pointermove", movePlayheadEvent);
 
         document.body.addEventListener("pointerup", function() {
+            keyframeMoveOffset = null;
+            scrubOffset = null;
             thisScope.scrubStart = null;
         });
 
