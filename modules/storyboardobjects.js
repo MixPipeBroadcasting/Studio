@@ -127,6 +127,10 @@ export class AnimationController extends StoryboardObject {
     }
 
     static renderDisplayTime(durationToShow, isCountdown = false) {
+        if (durationToShow < 0) {
+            durationToShow = 0;
+        }
+
         return (
             (isCountdown ? "-" : "") +
             String(Math.floor(durationToShow / 1000)).padStart(2, "0") +
