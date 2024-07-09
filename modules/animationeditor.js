@@ -107,6 +107,7 @@ components.css(`
     mixpipe-keyframe.selected, mixpipe-keyframe.linear.selected {
         width: calc(1rem + 4px);
         height: calc(1rem + 4px);
+        margin-top: -2px;
         background: red;
     }
 
@@ -363,17 +364,14 @@ export class AnimationControllerEditorView extends components.Component {
             }
 
             var relativePosition = (event.clientX - keyframeMoveOffset) / thisScope.timeScale;
-            var anyKeyframesMightHitStart = false;
 
             thisScope.element.querySelectorAll("mixpipe-keyframe.selected").forEach(function(element) {
-                if (parseFloat(element.getAttribute("mixpipe-moveoffset")) + relativePosition < 0) {
-                    anyKeyframesMightHitStart = true;
+                var newPosition = parseFloat(element.getAttribute("mixpipe-moveoffset")) + relativePosition;
+
+                if (newPosition < 0) {
+                    relativePosition -= newPosition;
                 }
             });
-
-            if (anyKeyframesMightHitStart) {
-                return;
-            }
 
             thisScope.events.selectedKeyframesMoved.emit({relativePosition});
 

@@ -151,6 +151,8 @@ export class AnimationController extends StoryboardObject {
                 isCountdown = true;
             } else if (this.state == "finished") {
                 isCountdown = true;
+            } else {
+                durationToShow = this.duration;
             }
         }
 
