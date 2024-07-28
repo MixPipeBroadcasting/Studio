@@ -94,7 +94,7 @@ components.css(`
     dialog .buttons {
         display: flex;
         margin-block: 0.2rem;
-        gap: 0.1rem;
+        gap: 0.2rem;
     }
 
     mixpipe-splitter {
