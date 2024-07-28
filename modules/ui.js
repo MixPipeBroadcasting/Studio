@@ -97,6 +97,21 @@ components.css(`
         gap: 0.1rem;
     }
 
+    mixpipe-splitter {
+        background: var(--secondaryForeground);
+        z-index: 1;
+    }
+
+    mixpipe-splitter.horizontal {
+        width: 0.25rem;
+        cursor: ew-resize;
+    }
+
+    mixpipe-splitter.vertical {
+        height: 0.25rem;
+        cursor: ns-resize;
+    }
+
     @media (prefers-color-scheme: dark) {
         img.icon {
             ${components.styleMixins.ICON_INVERT}
@@ -303,5 +318,50 @@ export class ValueEditorDialog extends Dialog {
         this.events.blurred.connect(save);
 
         this.cancelButton.events.activated.connect(() => this.close());
+    }
+}
+
+export class Splitter extends components.Component {
+    constructor(vertical) {
+        super("mixpipe-splitter");
+
+        var thisScope = this;
+
+        this.element.classList.add(vertical ? "vertical" : "horizontal");
+
+        var resizing = false;
+        var resizeOffset = null;
+        var previousElementSize = null;
+        var nextElementSize = null;
+
+        this.element.addEventListener("pointerdown", function(event) {
+            var previousElementRect = thisScope.element.previousSibling.getBoundingClientRect();
+            var nextElementRect = thisScope.element.nextSibling.getBoundingClientRect();
+
+            resizing = true;
+            resizeOffset = vertical ? event.clientY : event.clientX;
+            previousElementSize = vertical ? previousElementRect.height : previousElementRect.width;
+            nextElementSize = vertical ? nextElementRect.height : nextElementRect.width;
+
+            event.preventDefault();
+        });
+
+        document.body.addEventListener("pointermove", function(event) {
+            if (!resizing) {
+                return;
+            }
+
+            var currentPosition = vertical ? event.clientY : event.clientX;
+
+            thisScope.element.previousSibling.style[vertical ? "height" : "width"] = `${previousElementSize + (currentPosition - resizeOffset)}px`;
+            thisScope.element.nextSibling.style[vertical ? "height" : "width"] = `${nextElementSize - (currentPosition - resizeOffset)}px`;
+
+            thisScope.element.previousSibling.style.flexBasis = "unset";
+            thisScope.element.nextSibling.style.flexBasis = "unset";
+        });
+
+        document.body.addEventListener("pointerup", function() {
+            resizing = false;
+        });
     }
 }

@@ -9,7 +9,11 @@ import * as storyboards from "./modules/storyboards.js";
 
 windows.init();
 
-document.querySelector("#root").append(workspaces.mainWorkspace.element);
+document.querySelector("#root").append(
+    workspaces.mainWorkspace.element,
+    workspaces.mainSubSplitter.element,
+    workspaces.subWorkspace.element
+);
 
 if (!opener) {
     var project = new projects.Project();

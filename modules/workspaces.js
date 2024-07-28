@@ -3,12 +3,25 @@ import * as events from "./events.js";
 import * as ui from "./ui.js";
 
 export var mainWorkspace = null;
+export var subWorkspace = null;
+export var mainSubSplitter = null;
 export var panelTypes = {};
 
 components.css(`
     mixpipe-workspace {
         ${components.styleMixins.GROW}
         ${components.styleMixins.VERTICAL_STACK}
+        flex-basis: 0;
+        background: var(--primaryBackground);
+        z-index: 1;
+    }
+
+    mixpipe-workspace.hideWhenEmpty:has(.panels:empty) {
+        display: none;
+    }
+
+    mixpipe-splitter:has(+ mixpipe-workspace.hideWhenEmpty .panels:empty) {
+        display: none;
     }
 
     mixpipe-workspace .panels {
@@ -216,12 +229,16 @@ export class TabContainer extends components.Component {
 }
 
 export class Workspace extends components.Component {
-    constructor() {
+    constructor(hideWhenEmpty = false) {
         super("mixpipe-workspace");
 
         this.tabs = [];
         this.tabContainer = new TabContainer();
         this.childContainerElement = components.element("div", [components.className("panels")]);
+
+        if (hideWhenEmpty) {
+            this.element.classList.add("hideWhenEmpty");
+        }
 
         this.element.append(
             this.tabContainer.becomeChild(this),
@@ -350,3 +367,5 @@ export function registerPanelType(name, type) {
 }
 
 mainWorkspace = new Workspace();
+subWorkspace = new Workspace(true);
+mainSubSplitter = new ui.Splitter(true);

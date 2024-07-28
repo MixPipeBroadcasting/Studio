@@ -523,9 +523,7 @@ export class AnimationControllerView extends StoryboardObjectView {
     }
 
     openEditor() {
-        var workspace = this.ancestor(workspaces.Workspace);
-
-        workspace.add(new animationEditor.AnimationEditorPanel(this.model));
+        workspaces.subWorkspace.add(new animationEditor.AnimationEditorPanel(this.model));
     }
 }
 
