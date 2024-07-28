@@ -22,6 +22,10 @@ export function compareEasingMethods(a, b) {
 }
 
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {
+    if (timeline.length == 0) {
+        return null;
+    }
+
     var dt = timeline.step != null ? timeline.step : atTime - timeline.start;
     var fromKeyframe = null;
     var toKeyframe = timeline.keyframes[0];

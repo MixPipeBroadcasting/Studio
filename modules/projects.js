@@ -96,11 +96,13 @@ export class Project extends events.EventDrivenObject {
         this.models = [];
         this.modelPropertyEventAssociations = {};
         this.modelReferencePropertyEventAssociations = {};
+        this.localState = {};
 
         this.events.transactionAdded = new events.EventType(this);
         this.events.modelAdded = new events.EventType(this);
         this.events.modelReparented = new events.EventType(this);
         this.events.modelDeleted = new events.EventType(this);
+        this.events.localStateChanged = new events.EventType(this);
 
         projectsById[this.id] = this;
     }
@@ -369,6 +371,12 @@ export class Project extends events.EventDrivenObject {
 
         this.registerNewModels();
     }
+
+    setLocalProperty(property, value, setExternally = false) {
+        this.localState[property] = value;
+
+        this.events.localStateChanged.emit({property, value, setExternally});
+    }
 }
 
 export class ProjectModel extends events.EventDrivenObject {
@@ -491,7 +499,7 @@ export class ProjectModel extends events.EventDrivenObject {
     getAnimatedValue(name, type = "number") {
         var timeline = this[`${name}_timeline`];
 
-        if (!timeline) {
+        if (!timeline || timeline.keyframes.length == 0) {
             return type == "number" ? this.getNumericValue(name) : this.getValue(name);
         }
 

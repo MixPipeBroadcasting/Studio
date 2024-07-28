@@ -549,18 +549,60 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             this.model.state == "stepping"
         );
 
-        this.createTimelineButton = new ui.IconButton("icons/add.svg", "Create timeline");
+        this.createTimelineButton = new ui.ToggleIconButton("icons/add.svg", "Cancel creating a timeline", undefined, "Create a timeline");
 
         this.deleteTimelinesButton = new ui.IconButton("icons/delete.svg", "Delete selected timelines");
         this.deleteTimelinesButton.enabled = false;
 
-        this.add(this.triggerButton, this.stepModeButton, this.createTimelineButton, this.deleteTimelinesButton);
+        this.targetPropertyButton = new ui.ToggleIconButton("icons/group.svg", "Cancel selecting a property", undefined, "Select a property");
+        this.targetPropertyButton.enabled = false;
+
+        var targetPropertyEventConnection = null;
+
+        this.add(
+            this.triggerButton,
+            this.stepModeButton,
+            this.createTimelineButton,
+            this.deleteTimelinesButton,
+            this.targetPropertyButton
+        );
+
+        this.triggerButton.events.activated.connect(() => this.model.startOrReset());
 
         this.stepModeButton.events.activated.connect(function() {
             if (thisScope.stepModeButton.value) {
                 thisScope.model.step(Math.min(thisScope.model.currentTime, thisScope.model.duration));
             } else {
                 thisScope.model.reset();
+            }
+        });
+
+        this.createTimelineButton.events.valueChanged.connect(function(event) {
+            var project = thisScope.model.project;
+
+            if (event.value) {
+                thisScope.targetPropertyButton.value = false;
+            }
+
+            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
+
+            project.events.localStateChanged.disconnect(targetPropertyEventConnection);
+
+            if (event.value) {
+                targetPropertyEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedProperty") {
+                        thisScope.createTimelineButton.value = false;
+
+                        var timeline = new timelines.TimelineSource(project);
+
+                        timeline.object = project.getOrCreateModel(project.localState.targetedModelPath);
+                        timeline.property = event.value;
+
+                        thisScope.animationEditor.controllerEditor.model.timelines.addModel(timeline);
+
+                        project.registerNewModels();
+                    }
+                });
             }
         });
 
@@ -585,12 +627,46 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             }
         });
 
-        this.triggerButton.events.activated.connect(() => this.model.startOrReset());
+        this.targetPropertyButton.events.valueChanged.connect(function(event) {
+            var project = thisScope.model.project;
+
+            if (event.value) {
+                thisScope.createTimelineButton.value = false;
+            }
+
+            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
+
+            project.events.localStateChanged.disconnect(targetPropertyEventConnection);
+
+            if (event.value) {
+                targetPropertyEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedProperty") {
+                        thisScope.targetPropertyButton.value = false;
+
+                        var selectedTimelineView = thisScope.animationEditor.controllerEditor.children.find((timelineView) => timelineView.selected);
+
+                        if (!selectedTimelineView) {
+                            return;
+                        }
+
+                        thisScope.model.reset();
+
+                        selectedTimelineView.model.object = project.getOrCreateModel(project.localState.targetedModelPath);
+                        selectedTimelineView.model.property = event.value;
+                    }
+                });
+            }
+        });
 
         this.model.events.stateChanged.connect(() => this.stepModeButton.value = this.model.state == "stepping");
 
         this.animationEditor.controllerEditor.events.timelineSelectionChanged.connect(function() {
-            thisScope.deleteTimelinesButton.enabled = !!thisScope.animationEditor.controllerEditor.children.find((timelineView) => timelineView.selected);
+            var selected = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
+
+            thisScope.deleteTimelinesButton.enabled = selected.length > 0;
+
+            thisScope.targetPropertyButton.enabled = selected.length == 1;
+            thisScope.targetPropertyButton.value = false;
         });
     }
 

@@ -14,6 +14,12 @@ export function handleMessage(data) {
         return;
     }
 
+    if (data.type == "localStateChanged") {
+        projects.getOrCreateProjectById(data.projectId).setLocalProperty(data.property, data.value, data.setExternally);
+
+        return;
+    }
+
     if (data.type == "loadProject") {
         var project = new projects.Project(data.projectId);
 
@@ -29,7 +35,21 @@ export function handleMessage(data) {
             }, window.location.origin);
         });
 
+        project.events.localStateChanged.connect(function(event) {
+            if (event.setExternally) {
+                return;
+            }
+    
+            childWindow.postMessage({
+                type: "localStateChanged",
+                projectId: project.id,
+                property: event.property,
+                value: event.value
+            }, window.location.origin);
+        });
+
         project.data = data.projectData;
+        project.localState = data.projectLocalState;
 
         project.sync();
 
@@ -60,6 +80,19 @@ export function open(project, panelToOpen = null) {
         }, window.location.origin);
     });
 
+    project.events.localStateChanged.connect(function(event) {
+        if (event.setExternally) {
+            return;
+        }
+
+        childWindow.postMessage({
+            type: "localStateChanged",
+            projectId: project.id,
+            property: event.property,
+            value: event.value
+        }, window.location.origin);
+    });
+
     childWindow.addEventListener("message", function(event) {
         if (event.origin != window.location.origin || event.source.window == window) {
             return;
@@ -78,6 +111,7 @@ export function open(project, panelToOpen = null) {
                 type: "loadProject",
                 projectId: project.id,
                 projectData: project.data,
+                projectLocalState: project.localState,
                 panel: panelToOpen ? panelToOpen.serialise() : null
             }, window.location.origin);
 

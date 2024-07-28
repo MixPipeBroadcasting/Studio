@@ -36,6 +36,21 @@ components.css(`
     mixpipe-properties input[mixpipe-computed="computed"] {
         border: 2px solid var(--computedBackground);
     }
+
+    mixpipe-properties input.target {
+        animation: 1s propertyTarget infinite alternate-reverse;
+        cursor: cell;
+    }
+
+    @keyframes propertyTarget {
+        0% {
+            background: var(--targetStart);
+        }
+
+        100% {
+            background: var(--targetEnd);
+        }
+    }
 `);
 
 export class Property {
@@ -100,6 +115,10 @@ export class Property {
                 var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], getValue());
                 var ignoreNextValueChange = false;
 
+                function isTargetingProperty() {
+                    return ["any", thisScope.type].includes(model.project.localState.targetingProperty);
+                }
+
                 function updateInputComputationIndicator() {
                     updateComputationStatus();
 
@@ -114,9 +133,29 @@ export class Property {
                     }
                 }
 
+                function updateInputTargetState() {
+                    if (isTargetingProperty()) {
+                        input.element.classList.add("target");
+                    } else {
+                        input.element.classList.remove("target");
+                    }
+                }
+
                 updateInputComputationIndicator();
+                updateInputTargetState();
+
+                input.element.addEventListener("pointerdown", function(event) {
+                    if (isTargetingProperty()) {
+                        model.project.setLocalProperty("targetedModelPath", model.path);
+                        model.project.setLocalProperty("targetedProperty", thisScope.name);
+
+                        event.preventDefault();
+                    }
+                });
 
                 input.element.addEventListener("focus", () => input.element.select());
+
+                model.project.events.localStateChanged.connect(updateInputTargetState);
 
                 input.events.valueChanged.connect(function(event) {
                     if (ignoreNextValueChange) {
