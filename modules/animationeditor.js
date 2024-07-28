@@ -83,7 +83,13 @@ components.css(`
         padding: 0.5rem;
         background: var(--secondaryBackground);
         border-bottom: 1px solid var(--primaryBackground);
+        cursor: default;
         z-index: 1;
+    }
+
+    mixpipe-timelineeditor.selected .info {
+        background: var(--selectedBackground);
+        color: var(--selectedForeground);
     }
 
     mixpipe-timelineeditor .keyframes {
@@ -224,8 +230,16 @@ export class TimelineSourceEditorView extends components.Component {
     constructor(model, animationControllerEditor) {
         super("mixpipe-timelineeditor");
 
+        var thisScope = this;
+
         this.model = model;
         this.animationControllerEditor = animationControllerEditor;
+    
+        this.registerState("selected", "selectionChanged", false, function() {
+            thisScope.animationControllerEditor.events.timelineSelectionChanged.emit();
+
+            thisScope.updateInfo();
+        });
 
         this.objectNameElement = components.element("strong");
         this.objectPropertyElement = components.element("span");
@@ -247,11 +261,37 @@ export class TimelineSourceEditorView extends components.Component {
         this.model.project.associateChildModels(this, new Map([
             [timelines.KeyframeSource, KeyframeView]
         ]), [this], (model) => this.model.keyframes.hasModel(model));
+
+        this.infoColumnElement.addEventListener("pointerdown", function(event) {
+            if (event.shiftKey) {
+                thisScope.selected = !thisScope.selected;
+            } else {
+                thisScope.animationControllerEditor.events.allTimelinesDeselected.emit();
+
+                thisScope.selected = true;
+            }
+
+            event.preventDefault();
+        });
+
+        this.animationControllerEditor.events.allTimelinesDeselected.connect(() => this.selected = false);
     }
 
     updateInfo() {
+        if (!this.model.exists) {
+            this.removeAlways(this.updateInfo);
+
+            return;
+        }
+
         this.objectNameElement.textContent = this.model.object.name;
         this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property).displayName || this.model.property;
+
+        if (this.selected) {
+            this.element.classList.add("selected");
+        } else {
+            this.element.classList.remove("selected");
+        }
     }
 }
 
@@ -273,6 +313,8 @@ export class AnimationControllerEditorView extends components.Component {
         this.events.allKeyframesDeselected = new events.EventType(this);
         this.events.selectedKeyframesStartedMove = new events.EventType(this);
         this.events.selectedKeyframesMoved = new events.EventType(this);
+        this.events.allTimelinesDeselected = new events.EventType(this);
+        this.events.timelineSelectionChanged = new events.EventType(this);
 
         this.timeElement = components.element("div", [components.className("time"), components.text("--.---")]);
         this.timeMarkerCanvasElement = components.element("canvas", [components.className("markers")]);
@@ -299,6 +341,8 @@ export class AnimationControllerEditorView extends components.Component {
         this.project.associateChildModels(this, new Map([
             [timelines.TimelineSource, TimelineSourceEditorView]
         ]), [this], (model) => this.model.timelines.hasModel(model));
+
+        this.events.childRemoved.connect(() => this.events.allTimelinesDeselected.emit());
 
         function movePlayheadEvent(event) {
             if (scrubOffset == null) {
@@ -507,7 +551,10 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
 
         this.createTimelineButton = new ui.IconButton("icons/add.svg", "Create timeline");
 
-        this.add(this.triggerButton, this.stepModeButton, this.createTimelineButton);
+        this.deleteTimelinesButton = new ui.IconButton("icons/delete.svg", "Delete selected timelines");
+        this.deleteTimelinesButton.enabled = false;
+
+        this.add(this.triggerButton, this.stepModeButton, this.createTimelineButton, this.deleteTimelinesButton);
 
         this.stepModeButton.events.activated.connect(function() {
             if (thisScope.stepModeButton.value) {
@@ -517,9 +564,34 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             }
         });
 
+        this.deleteTimelinesButton.events.activated.connect(function() {
+            thisScope.model.reset();
+
+            var controllerEditor = thisScope.animationEditor.controllerEditor;
+            var timelines = controllerEditor.model.timelines;
+
+            var selectedTimelineViews = controllerEditor.children.filter((child) => child.selected);
+
+            for (var timelineView of selectedTimelineViews) {
+                var key = timelines.getModelKey(timelineView.model);
+
+                if (key == null) {
+                    continue;
+                }
+
+                timelines.removeModel(key);
+
+                controllerEditor.project.deleteModel(timelineView.model);
+            }
+        });
+
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());
 
         this.model.events.stateChanged.connect(() => this.stepModeButton.value = this.model.state == "stepping");
+
+        this.animationEditor.controllerEditor.events.timelineSelectionChanged.connect(function() {
+            thisScope.deleteTimelinesButton.enabled = !!thisScope.animationEditor.controllerEditor.children.find((timelineView) => timelineView.selected);
+        });
     }
 
     get model() {
@@ -533,9 +605,9 @@ export class AnimationEditorPanel extends workspaces.Panel {
 
         this.model = model;
 
+        this.controllerEditor = new AnimationControllerEditorView(model);
         this.toolbar = new AnimationEditorToolbar(this);
         this.workArea = new workspaces.WorkArea();
-        this.controllerEditor = new AnimationControllerEditorView(model);
 
         this.workArea.documentArea.add(this.controllerEditor);
 

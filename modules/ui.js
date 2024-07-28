@@ -112,6 +112,11 @@ components.css(`
         cursor: ns-resize;
     }
 
+    [disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (prefers-color-scheme: dark) {
         img.icon {
             ${components.styleMixins.ICON_INVERT}

@@ -100,6 +100,7 @@ export class Project extends events.EventDrivenObject {
         this.events.transactionAdded = new events.EventType(this);
         this.events.modelAdded = new events.EventType(this);
         this.events.modelReparented = new events.EventType(this);
+        this.events.modelDeleted = new events.EventType(this);
 
         projectsById[this.id] = this;
     }
@@ -233,6 +234,18 @@ export class Project extends events.EventDrivenObject {
         this.unregisteredModels = [];
     }
 
+    deleteModel(model) {
+        var modelIndex = this.models.indexOf(model);
+
+        if (modelIndex >= 0) {
+            this.models.splice(modelIndex, 1);
+        }
+
+        this.delete(model.path);
+
+        this.events.modelDeleted.emit({model});
+    }
+
     getModels(types, modelFilter = (model) => true) {
         return this.models.filter(function(model) {
             if (!modelFilter(model)) {
@@ -294,6 +307,14 @@ export class Project extends events.EventDrivenObject {
 
         this.events.modelAdded.connect(parentEventListener);
         this.events.modelReparented.connect(parentEventListener);
+
+        this.events.modelDeleted.connect(function(event) {
+            var child = view.children.find((child) => child.model == event.model);
+
+            if (child != null) {
+                view.remove(child);
+            }
+        });
     }
 
     getOrCreateModel(path) {
@@ -324,6 +345,12 @@ export class Project extends events.EventDrivenObject {
     }
 
     sync() {
+        for (var model of this.models) {
+            if (!this.get(model.path)) {
+                this.deleteModel(model);
+            }
+        }
+
         var syncedPathHashes = this.models.map((model) => model.path.join("."));
 
         for (var handler of modelSyncHandlers) {
@@ -359,6 +386,10 @@ export class ProjectModel extends events.EventDrivenObject {
         this.project.unregisteredModels.push(this);
 
         this.propertyEventAssociations = {};
+    }
+
+    get exists() {
+        return !!this.project.get(this.path);
     }
 
     registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true) {

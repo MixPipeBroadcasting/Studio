@@ -17,6 +17,7 @@ export class Component extends events.EventDrivenObject {
         this.parent = null;
         this.children = [];
         this.childContainerElement = this.element;
+        this.alwaysCallbacks = [];
 
         this.events = {
             childAdded: new events.EventType(this),
@@ -144,11 +145,19 @@ export class Component extends events.EventDrivenObject {
     always(callback) {
         var thisScope = this;
 
+        this.alwaysCallbacks.push(callback);
+
         requestAnimationFrame(function call() {
             callback.apply(thisScope);
 
-            requestAnimationFrame(call);
+            if (thisScope.alwaysCallbacks.includes(callback)) {
+                requestAnimationFrame(call);
+            }
         });
+    }
+
+    removeAlways(callback) {
+        this.alwaysCallbacks = this.alwaysCallbacks.filter((currentCallback) => currentCallback != callback);
     }
 }
 
