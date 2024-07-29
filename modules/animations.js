@@ -26,11 +26,13 @@ export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION
         return null;
     }
 
+    var sortedKeyframes = [...timeline.keyframes].sort((a, b) => a.t - b.t);
+
     var dt = timeline.step != null ? timeline.step : atTime - timeline.start;
     var fromKeyframe = null;
-    var toKeyframe = timeline.keyframes[0];
+    var toKeyframe = sortedKeyframes[0];
 
-    for (var keyframe of timeline.keyframes) {
+    for (var keyframe of sortedKeyframes) {
         fromKeyframe = toKeyframe;
         toKeyframe = keyframe;
 

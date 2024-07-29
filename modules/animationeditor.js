@@ -148,6 +148,7 @@ export class KeyframeView extends components.Component {
         var wasMoved = false;
 
         this.model = model;
+        this.createdAt = Date.now();
         this.timelineEditor = timelineEditor;
 
         this.registerState("selected", "selectionChanged", false, () => this.update());
@@ -349,7 +350,7 @@ export class AnimationControllerEditorView extends components.Component {
                 return;
             }
 
-            var position = Math.min(Math.max(thisScope.scrubStart + ((event.clientX - scrubOffset) / thisScope.timeScale), 0), thisScope.model.duration);
+            var position = Math.max(thisScope.scrubStart + ((event.clientX - scrubOffset) / thisScope.timeScale), 0);
 
             if (thisScope.element.scrollLeft > 0 && event.clientX < thisScope.timeElement.getBoundingClientRect().width + 40) {
                 thisScope.element.scrollLeft -= 5;
@@ -461,7 +462,7 @@ export class AnimationControllerEditorView extends components.Component {
         this.playheadElement.style.height = `calc(${this.element.clientHeight}px - 1rem)`;
         this.playheadElement.style.visibility = playheadRect.x < timeRect.width ? "hidden" : null;
 
-        var minWidth = this.model.duration * this.timeScale;
+        var minWidth = Math.max(this.model.duration, this.model.currentTime) * this.timeScale;
 
         this.scrubberElement.style.minWidth = `calc(12rem + ${minWidth}px)`;
 
@@ -557,6 +558,8 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.targetPropertyButton = new ui.ToggleIconButton("icons/group.svg", "Cancel selecting a property", undefined, "Select a property");
         this.targetPropertyButton.enabled = false;
 
+        this.addKeyframeButton = new ui.IconButton("icons/add.svg", "Add new keyframe");
+
         var targetPropertyEventConnection = null;
 
         this.add(
@@ -564,7 +567,8 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             this.stepModeButton,
             this.createTimelineButton,
             this.deleteTimelinesButton,
-            this.targetPropertyButton
+            this.targetPropertyButton,
+            this.addKeyframeButton
         );
 
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());
@@ -658,14 +662,40 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             }
         });
 
+        this.addKeyframeButton.events.activated.connect(function() {
+            var project = thisScope.model.project;
+            var currentTime = Date.now();
+            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
+
+            for (var timelineView of selectedTimelineViews) {
+                var timeline = timelineView.model;
+
+                timeline.keyframes.addModel(timelines.KeyframeSource.deserialise(project, {
+                    t: thisScope.model.currentTime,
+                    value: 0
+                }));
+            }
+
+            project.registerNewModels();
+
+            thisScope.animationEditor.controllerEditor.events.allKeyframesDeselected.emit();
+
+            for (var keyframeView of thisScope.animationEditor.descendentsOfTypes([KeyframeView])) {
+                if (keyframeView.createdAt >= currentTime) {
+                    keyframeView.selected = true;
+                }
+            }
+        });
+
         this.model.events.stateChanged.connect(() => this.stepModeButton.value = this.model.state == "stepping");
 
         this.animationEditor.controllerEditor.events.timelineSelectionChanged.connect(function() {
-            var selected = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
+            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
 
-            thisScope.deleteTimelinesButton.enabled = selected.length > 0;
+            thisScope.deleteTimelinesButton.enabled = selectedTimelineViews.length > 0;
+            thisScope.addKeyframeButton.enabled = selectedTimelineViews.length > 0;
 
-            thisScope.targetPropertyButton.enabled = selected.length == 1;
+            thisScope.targetPropertyButton.enabled = selectedTimelineViews.length == 1;
             thisScope.targetPropertyButton.value = false;
         });
     }
