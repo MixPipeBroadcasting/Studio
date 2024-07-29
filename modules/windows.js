@@ -15,7 +15,7 @@ export function handleMessage(data) {
     }
 
     if (data.type == "localStateChanged") {
-        projects.getOrCreateProjectById(data.projectId).setLocalProperty(data.property, data.value, data.setExternally);
+        projects.getOrCreateProjectById(data.projectId).setLocalProperty(data.property, data.value, true);
 
         return;
     }
@@ -40,7 +40,7 @@ export function handleMessage(data) {
                 return;
             }
     
-            childWindow.postMessage({
+            parent.postMessage({
                 type: "localStateChanged",
                 projectId: project.id,
                 property: event.property,
