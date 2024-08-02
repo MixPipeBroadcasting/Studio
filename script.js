@@ -141,7 +141,7 @@ if (!opener) {
         {t: 1500, value: 0, easing: animations.EASING_METHODS.easeOut}
     ]);
 
-    animationController.timelines.addModel(xTimeline);
+    animationController.addTimeline(xTimeline);
 
     var widthTimeline = new timelines.TimelineSource(project);
 
@@ -153,7 +153,7 @@ if (!opener) {
         {t: 1500, value: 1920, easing: animations.EASING_METHODS.linear}
     ]);
 
-    animationController.timelines.addModel(widthTimeline);
+    animationController.addTimeline(widthTimeline);
 
     project.registerNewModels();
 

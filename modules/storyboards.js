@@ -317,13 +317,7 @@ export class StoryboardGroupView extends StoryboardObjectView {
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
             [storyboardObjects.AnimationController, AnimationControllerView]
-        ]), [storyboard], function(childModel) {
-            if (childModel.parentGroup != model) {
-                return false;
-            }
-
-            return true;
-        });
+        ]), [storyboard], (childModel) => childModel.parentGroup == model);
 
         var resizingObject = false;
         var resizeOffset = null;
@@ -542,13 +536,7 @@ export class Storyboard extends components.Component {
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
             [storyboardObjects.AnimationController, AnimationControllerView]
-        ]), [this], function(model) {
-            if (model.parentGroup) {
-                return false;
-            }
-
-            return true;
-        });
+        ]), [this], (model) => model.parentGroup == null);
 
         setInterval(function() {
             if (thisScope.slowlyScroll != null) {

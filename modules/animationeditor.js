@@ -213,7 +213,7 @@ export class KeyframeView extends components.Component {
     update() {
         this.element.style.left = `${this.model.time * this.animationControllerEditor.timeScale}px`;
 
-        if (animations.compareEasingMethods(this.model.easing, animations.EASING_METHODS.linear)) {
+        if (this.model.easing == null || animations.compareEasingMethods(this.model.easing, animations.EASING_METHODS.linear)) {
             this.element.classList.add("linear");
         } else {
             this.element.classList.remove("linear");
@@ -261,7 +261,7 @@ export class TimelineSourceEditorView extends components.Component {
 
         this.model.project.associateChildModels(this, new Map([
             [timelines.KeyframeSource, KeyframeView]
-        ]), [this], (model) => this.model.keyframes.hasModel(model));
+        ]), [this], (model) => model.parentTimeline == this.model);
 
         this.infoColumnElement.addEventListener("pointerdown", function(event) {
             if (event.shiftKey) {
@@ -341,7 +341,7 @@ export class AnimationControllerEditorView extends components.Component {
 
         this.project.associateChildModels(this, new Map([
             [timelines.TimelineSource, TimelineSourceEditorView]
-        ]), [this], (model) => this.model.timelines.hasModel(model));
+        ]), [this], (model) => model.parentAnimationController == this.model);
 
         this.events.childRemoved.connect(() => this.events.allTimelinesDeselected.emit());
 
@@ -602,7 +602,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                         timeline.object = project.getOrCreateModel(project.localState.targetedModelPath);
                         timeline.property = event.value;
 
-                        thisScope.animationEditor.controllerEditor.model.timelines.addModel(timeline);
+                        thisScope.animationEditor.controllerEditor.model.addTimeline(timeline);
 
                         project.registerNewModels();
                     }
@@ -670,7 +670,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             for (var timelineView of selectedTimelineViews) {
                 var timeline = timelineView.model;
 
-                timeline.keyframes.addModel(timelines.KeyframeSource.deserialise(project, {
+                timeline.addKeyframe(timelines.KeyframeSource.deserialise(project, {
                     t: thisScope.model.currentTime,
                     value: 0
                 }));

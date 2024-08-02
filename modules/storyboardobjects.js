@@ -202,6 +202,12 @@ export class AnimationController extends StoryboardObject {
         
         this.start();
     }
+
+    addTimeline(timeline) {
+        timeline.parentAnimationController = this;
+
+        this.timelines.addModel(timeline);
+    }
 }
 
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);

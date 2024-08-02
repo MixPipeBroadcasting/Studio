@@ -6,9 +6,10 @@ export class KeyframeSource extends projects.ProjectModel {
     constructor(project, path = ["keyframes", projects.generateKey()]) {
         super(project, path);
 
-        this.registerProperty("time", 0, "changed");
+        this.registerProperty("time", null, "changed");
         this.registerProperty("value", null, "changed");
-        this.registerProperty("easing", animations.EASING_METHODS.linear, "changed");
+        this.registerProperty("easing", null, "changed");
+        this.registerReferenceProperty("parentTimeline", null, "reparented");
     }
 
     static deserialise(project, keyframe) {
@@ -26,9 +27,9 @@ export class KeyframeSource extends projects.ProjectModel {
 
     serialise() {
         return {
-            t: this.time,
+            t: this.time ?? 0,
             value: this.value,
-            easing: this.easing
+            easing: this.easing ?? animations.EASING_METHODS.linear
         };
     }
 }
@@ -43,6 +44,7 @@ export class TimelineSource extends projects.ProjectModel {
         this.registerProperty("property");
         this.registerProperty("startTime", null, "stateChanged");
         this.registerProperty("stepTime", null, "stateChanged");
+        this.registerReferenceProperty("parentAnimationController", null, "reparented");
 
         this.keyframes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "keyframes"], KeyframeSource);
 
@@ -67,11 +69,17 @@ export class TimelineSource extends projects.ProjectModel {
         return latestStartTime;
     }
 
+    addKeyframe(keyframe) {
+        keyframe.parentTimeline = this;
+
+        this.keyframes.addModel(keyframe);
+    }
+
     setFromSerialisedKeyframes(keyframes) {
         this.keyframes.clearModels();
 
         for (var keyframe of keyframes) {
-            this.keyframes.addModel(KeyframeSource.deserialise(this.project, keyframe));
+            this.addKeyframe(KeyframeSource.deserialise(this.project, keyframe));
         }
     }
 }

@@ -132,6 +132,8 @@ export class Project extends events.EventDrivenObject {
         }
 
         if (transaction instanceof DeleteDataTransaction) {
+            shouldSync = true;
+
             delete currentObject[path[0]];
         }
 
@@ -227,13 +229,17 @@ export class Project extends events.EventDrivenObject {
     }
 
     registerNewModels() {
+        var thisScope = this;
+
         this.models.push(...this.unregisteredModels);
 
-        for (var model of this.unregisteredModels) {
-            this.events.modelAdded.emit({model});
-        }
-
-        this.unregisteredModels = [];
+        setTimeout(function() {
+            for (var model of thisScope.unregisteredModels) {
+                thisScope.events.modelAdded.emit({model});
+            }
+            
+            thisScope.unregisteredModels = [];
+        });
     }
 
     deleteModel(model) {
@@ -645,7 +651,15 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
     }
 
     getModelKey(model) {
-        return this.getItemKey(model.path);
+        var paths = this.getItems();
+
+        for (var key in paths) {
+            if (paths[key].join(".") == model.path.join(".")) {
+                return key;
+            }
+        }
+
+        return null;
     }
 
     setModel(key, model) {
