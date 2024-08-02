@@ -559,6 +559,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.targetPropertyButton.enabled = false;
 
         this.addKeyframeButton = new ui.IconButton("icons/add.svg", "Add new keyframe");
+        this.addKeyframeButton.enabled = false;
 
         var targetPropertyEventConnection = null;
 
