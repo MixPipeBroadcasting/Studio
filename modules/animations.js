@@ -22,8 +22,12 @@ export function compareEasingMethods(a, b) {
 }
 
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {
-    if (timeline.length == 0) {
+    if (timeline.keyframes.length == 0) {
         return null;
+    }
+
+    if (timeline.keyframes.length == 1) {
+        return timeline.keyframes[0].value;
     }
 
     var sortedKeyframes = [...timeline.keyframes].sort((a, b) => a.t - b.t);

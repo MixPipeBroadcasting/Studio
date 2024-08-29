@@ -13,6 +13,7 @@
     --computedForeground: black;
     --linearKeyframe: linear-gradient(90deg, #ffaa00 0%, #ffaa00 50%, #aa7700 50%, #aa7700 100%);
     --bezierKeyframe: linear-gradient(90deg, #009900 0%, #009900 50%, #006600 50%, #006600 100%);
+    --keyframePoint: #ffbbbb;
     --targetStart: rgba(68, 68, 255, 0.1);
     --targetEnd: rgba(68, 68, 255, 0.2);
 }

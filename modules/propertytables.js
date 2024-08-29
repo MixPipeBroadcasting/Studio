@@ -33,6 +33,10 @@ components.css(`
         border: 2px solid var(--animatedBackground);
     }
 
+    mixpipe-properties input[mixpipe-computed="animated"][mixpipe-computedpoint="keyframe"] {
+        background: var(--keyframePoint);
+    }
+
     mixpipe-properties input[mixpipe-computed="computed"] {
         border: 2px solid var(--computedBackground);
     }
@@ -123,13 +127,19 @@ export class Property {
                     updateComputationStatus();
 
                     if (computationStatus != null && model[`${thisScope.name}_canTemplate`]) {
-                        input.enabled = false;
+                        input.enabled = computationStatus == "animated";
 
                         input.element.setAttribute("mixpipe-computed", computationStatus);
                     } else {
                         input.enabled = true;
 
                         input.element.removeAttribute("mixpipe-computed");
+                    }
+
+                    if (model.propertyIsKeyframedNow(thisScope.name)) {
+                        input.element.setAttribute("mixpipe-computedpoint", "keyframe");
+                    } else {
+                        input.element.removeAttribute("mixpipe-computedpoint");
                     }
                 }
 
@@ -164,10 +174,18 @@ export class Property {
                         return;
                     }
 
+                    var newValue;
+
                     if (thisScope.type == "number") {
-                        model[thisScope.name] = parseFloat(event.value);
+                        newValue = parseFloat(event.value);
                     } else {
-                        model[thisScope.name] = event.value;
+                        newValue = event.value;
+                    }
+
+                    if (computationStatus == "animated") {
+                        model.addOrEditKeyframeNow(thisScope.name, newValue);
+                    } else {
+                        model[thisScope.name] = newValue;
                     }
                 });
 

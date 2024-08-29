@@ -50,6 +50,7 @@ export class TimelineSource extends projects.ProjectModel {
 
         this.events.stateChanged.connect(function() {
             thisScope.object[`${thisScope.property}_timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
+                model: thisScope,
                 start: thisScope.startTime,
                 step: thisScope.stepTime,
                 keyframes: thisScope.keyframes.getModelList().map((keyframe) => keyframe.serialise())
@@ -73,6 +74,12 @@ export class TimelineSource extends projects.ProjectModel {
         keyframe.parentTimeline = this;
 
         this.keyframes.addModel(keyframe);
+
+        this.parentAnimationController?.update();
+    }
+
+    addDeserialisedKeyframe(data) {
+        this.addKeyframe(KeyframeSource.deserialise(this.project, data));
     }
 
     setFromSerialisedKeyframes(keyframes) {

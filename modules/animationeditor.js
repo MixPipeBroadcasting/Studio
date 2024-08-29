@@ -388,6 +388,9 @@ export class AnimationControllerEditorView extends components.Component {
                 return;
             }
 
+
+            thisScope.scrubberElement.focus();
+
             scrubOffset = event.clientX;
             thisScope.scrubStart = (event.clientX - thisScope.timeElement.getBoundingClientRect().width + thisScope.element.scrollLeft) / thisScope.timeScale;
 
@@ -397,6 +400,8 @@ export class AnimationControllerEditorView extends components.Component {
         });
 
         this.playheadHandleElement.addEventListener("pointerdown", function(event) {
+            thisScope.scrubberElement.focus();
+
             scrubOffset = event.clientX;
             thisScope.scrubStart = thisScope.model.currentTime;
 
@@ -671,10 +676,10 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             for (var timelineView of selectedTimelineViews) {
                 var timeline = timelineView.model;
 
-                timeline.addKeyframe(timelines.KeyframeSource.deserialise(project, {
+                timeline.addDeserialisedKeyframe({
                     t: thisScope.model.currentTime,
-                    value: 0
-                }));
+                    value: timeline.object?.getAnimatedValue(timeline.property, "number") ?? 0
+                });
             }
 
             project.registerNewModels();

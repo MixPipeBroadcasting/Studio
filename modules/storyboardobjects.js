@@ -183,6 +183,10 @@ export class AnimationController extends StoryboardObject {
         }
     }
 
+    update() {
+        this.step(this.currentTime);
+    }
+
     reset() {
         this.startTime = null;
         this.stepTime = null;

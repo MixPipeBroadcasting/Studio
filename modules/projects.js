@@ -512,6 +512,45 @@ export class ProjectModel extends events.EventDrivenObject {
         return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
     }
 
+    propertyIsKeyframedNow(name) {
+        var timeline = this[`${name}_timeline`];
+        
+        if (!timeline) {
+            return false;
+        }
+
+        var dt = timeline.step != null ? timeline.step : Date.now() - timeline.start;
+
+        return timeline.keyframes.find((keyframe) => keyframe.t == dt) != null;
+    }
+
+    addOrEditKeyframeNow(name, value) {
+        var timeline = this[`${name}_timeline`];
+        
+        if (!timeline) {
+            return;
+        }
+
+        var dt = timeline.step != null ? timeline.step : Date.now() - timeline.start;
+
+        for (var keyframe of timeline.model.keyframes.getModelList()) {
+            if (keyframe.time == dt) {
+                keyframe.value = value;
+
+                timeline.model.parentAnimationController?.update();
+
+                return;
+            }
+        }
+
+        timeline.model.addDeserialisedKeyframe({
+            t: dt,
+            value: value
+        });
+
+        this.project.registerNewModels();
+    }
+
     getValueComputationStatus(name) {
         if (this[`${name}_timeline`]) {
             return "animated";
