@@ -207,28 +207,28 @@ export class SceneEditorPanel extends workspaces.Panel {
                 }
 
                 for (var object of thisScope.selectedObjects) {
-                    object.mutateProperty("x", common.lerp(
+                    object.addOrEditKeyframeNow("x", common.lerp(
                         newBoundingHalo.xMin,
                         newBoundingHalo.xMax,
                         common.invLerp(
                             lastBoundingHalo.xMin,
                             lastBoundingHalo.xMax,
-                            object.x
+                            object.getAnimatedValue("x")
                         )
                     ));
                     
-                    object.mutateProperty("y", common.lerp(
+                    object.addOrEditKeyframeNow("y", common.lerp(
                         newBoundingHalo.yMin,
                         newBoundingHalo.yMax,
                         common.invLerp(
                             lastBoundingHalo.yMin,
                             lastBoundingHalo.yMax,
-                            object.y
+                            object.getAnimatedValue("y")
                         )
                     ));
 
-                    object.mutateProperty("width", object.width * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)));
-                    object.mutateProperty("height", object.height * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin)));
+                    object.addOrEditKeyframeNow("width", object.getAnimatedValue("width") * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)));
+                    object.addOrEditKeyframeNow("height", object.getAnimatedValue("height") * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin)));
                 }
 
                 lastBoundingHalo = thisScope.checkHalos();
@@ -252,8 +252,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                 };
     
                 for (var object of thisScope.selectedObjects) {
-                    object.mutateProperty("x", object.x + moveDelta.x);
-                    object.mutateProperty("y", object.y + moveDelta.y);
+                    object.addOrEditKeyframeNow("x", object.getAnimatedValue("x") + moveDelta.x);
+                    object.addOrEditKeyframeNow("y", object.getAnimatedValue("y") + moveDelta.y);
                 }
 
                 event.preventDefault();

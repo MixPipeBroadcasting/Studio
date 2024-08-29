@@ -50,11 +50,12 @@ export class TimelineSource extends projects.ProjectModel {
 
         this.events.stateChanged.connect(function() {
             thisScope.object[`${thisScope.property}_timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
-                model: thisScope,
                 start: thisScope.startTime,
                 step: thisScope.stepTime,
                 keyframes: thisScope.keyframes.getModelList().map((keyframe) => keyframe.serialise())
             } : null;
+
+            thisScope.object[`${thisScope.property}_timelineModel`] = thisScope;
         });
     }
 

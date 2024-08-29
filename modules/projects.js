@@ -486,6 +486,7 @@ export class ProjectModel extends events.EventDrivenObject {
         this.registerProperty(name, ...options);
 
         this.registerProperty(`${name}_timeline`, null, null, false);
+        this.registerReferenceProperty(`${name}_timelineModel`);
 
         this.animationInterpolationMethods[name] = interpolationMethod;
     }
@@ -526,24 +527,33 @@ export class ProjectModel extends events.EventDrivenObject {
 
     addOrEditKeyframeNow(name, value) {
         var timeline = this[`${name}_timeline`];
+        var timelineModel = this[`${name}_timelineModel`];
         
-        if (!timeline) {
+        if (!timeline || !timelineModel) {
+            this[name] = value;
+
             return;
         }
 
-        var dt = timeline.step != null ? timeline.step : Date.now() - timeline.start;
+        var dt = timeline.step;
 
-        for (var keyframe of timeline.model.keyframes.getModelList()) {
+        if (dt == null) {
+            this[name] = value;
+
+            return;
+        }
+
+        for (var keyframe of timelineModel.keyframes.getModelList()) {
             if (keyframe.time == dt) {
                 keyframe.value = value;
 
-                timeline.model.parentAnimationController?.update();
+                timelineModel.parentAnimationController?.update();
 
                 return;
             }
         }
 
-        timeline.model.addDeserialisedKeyframe({
+        timelineModel.addDeserialisedKeyframe({
             t: dt,
             value: value
         });
@@ -561,18 +571,6 @@ export class ProjectModel extends events.EventDrivenObject {
         }
 
         return null;
-    }
-
-    mutateProperty(name, value) {
-        this.project.set([...this.path, `${name}:initial`], value);
-
-        this[name] = value;
-    }
-
-    resetProperty(name) {
-        this[name] = this.project.get([...this.path, `${name}:initial`]);
-
-        return this[name];
     }
 }
 

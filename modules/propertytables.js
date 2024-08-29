@@ -182,11 +182,7 @@ export class Property {
                         newValue = event.value;
                     }
 
-                    if (computationStatus == "animated") {
-                        model.addOrEditKeyframeNow(thisScope.name, newValue);
-                    } else {
-                        model[thisScope.name] = newValue;
-                    }
+                    model.addOrEditKeyframeNow(thisScope.name, newValue);
                 });
 
                 input.events.valueCommitted.connect(function() {
