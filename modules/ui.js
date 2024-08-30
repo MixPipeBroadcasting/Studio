@@ -200,6 +200,7 @@ export class Input extends components.Component {
         super("input");
 
         var thisScope = this;
+        var decimalPointTyped = false;
 
         this.element.placeholder = placeholder;
         this.element.type = type;
@@ -212,10 +213,35 @@ export class Input extends components.Component {
         this.events.valueCommitted = new events.EventType(this);
         this.events.confirmed = new events.EventType(this);
 
-        this.element.addEventListener("input", (event) => this.value = event.target.value);
+        this.element.addEventListener("input", function(event) {
+            var value = event.target.value;
+
+            if (type == "number") {
+                if (!event.target.validity.valid) {
+                    return;
+                }
+
+                if (decimalPointTyped) {
+                    decimalPointTyped = false;
+
+                    if (value.indexOf(".") < 0) {
+                        return;
+                    }
+                }
+            }
+
+            thisScope.value = value;
+        });
+
         this.element.addEventListener("change", (event) => this.events.valueCommitted.emit({value: event.target.value}));
 
         this.element.addEventListener("keydown", function(event) {
+            if (event.code == "Period") {
+                decimalPointTyped = true;
+
+                return;
+            }
+
             if (event.code == "Enter") {
                 thisScope.events.confirmed.emit({value: event.target.value});
 

@@ -165,6 +165,10 @@ export class Property {
 
                 input.element.addEventListener("focus", () => input.element.select());
 
+                input.element.addEventListener("blur", function() {
+                    input.value = getValue();
+                });
+
                 model.project.events.localStateChanged.connect(updateInputTargetState);
 
                 input.events.valueChanged.connect(function(event) {
@@ -178,6 +182,10 @@ export class Property {
 
                     if (thisScope.type == "number") {
                         newValue = parseFloat(event.value);
+
+                        if (Number.isNaN(newValue)) {
+                            return;
+                        }
                     } else {
                         newValue = event.value;
                     }
@@ -205,14 +213,18 @@ export class Property {
                 }
 
                 requestAnimationFrame(function updateComputed() {
+                    if (document.activeElement == input.element) {
+                        requestAnimationFrame(updateComputed);
+
+                        return;
+                    }
+
                     if (computationStatus != null) {
                         ignoreNextValueChange = true;
                         input.value = getValue();
                     }
 
-                    if (document.activeElement != input.element) {
-                        updateInputComputationIndicator();
-                    }
+                    updateInputComputationIndicator();
 
                     requestAnimationFrame(updateComputed);
                 });
