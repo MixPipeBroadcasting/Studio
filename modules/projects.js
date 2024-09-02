@@ -513,6 +513,18 @@ export class ProjectModel extends events.EventDrivenObject {
         return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
     }
 
+    getValueComputationStatus(name) {
+        if (this[`${name}_timeline`]) {
+            return "animated";
+        }
+
+        if (String(this[name]).match(/{{.*}}/)) {
+            return "computed";
+        }
+
+        return null;
+    }
+
     propertyIsKeyframedNow(name) {
         var timeline = this[`${name}_timeline`];
         
@@ -525,10 +537,18 @@ export class ProjectModel extends events.EventDrivenObject {
         return timeline.keyframes.find((keyframe) => keyframe.t == dt) != null;
     }
 
-    addOrEditKeyframeNow(name, value) {
+    addOrEditKeyframeNow(name, value, doNotChangeComputationStatus) {
         var timeline = this[`${name}_timeline`];
         var timelineModel = this[`${name}_timelineModel`];
-        
+
+        if (doNotChangeComputationStatus) {
+            var currentStatus = this.getValueComputationStatus(name);
+
+            if (currentStatus != null && currentStatus != "animated") {
+                return;
+            }
+        }
+
         if (!timeline || !timelineModel) {
             this[name] = value;
 
@@ -559,18 +579,6 @@ export class ProjectModel extends events.EventDrivenObject {
         });
 
         this.project.registerNewModels();
-    }
-
-    getValueComputationStatus(name) {
-        if (this[`${name}_timeline`]) {
-            return "animated";
-        }
-
-        if (String(this[name]).match(/{{.*}}/)) {
-            return "computed";
-        }
-
-        return null;
     }
 }
 

@@ -227,8 +227,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                         )
                     ));
 
-                    object.addOrEditKeyframeNow("width", object.getAnimatedValue("width") * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)));
-                    object.addOrEditKeyframeNow("height", object.getAnimatedValue("height") * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin)));
+                    object.addOrEditKeyframeNow("width", object.getAnimatedValue("width") * ((newBoundingHalo.xMax - newBoundingHalo.xMin) / (lastBoundingHalo.xMax - lastBoundingHalo.xMin)), true);
+                    object.addOrEditKeyframeNow("height", object.getAnimatedValue("height") * ((newBoundingHalo.yMax - newBoundingHalo.yMin) / (lastBoundingHalo.yMax - lastBoundingHalo.yMin)), true);
                 }
 
                 lastBoundingHalo = thisScope.checkHalos();
@@ -252,8 +252,8 @@ export class SceneEditorPanel extends workspaces.Panel {
                 };
     
                 for (var object of thisScope.selectedObjects) {
-                    object.addOrEditKeyframeNow("x", object.getAnimatedValue("x") + moveDelta.x);
-                    object.addOrEditKeyframeNow("y", object.getAnimatedValue("y") + moveDelta.y);
+                    object.addOrEditKeyframeNow("x", object.getAnimatedValue("x") + moveDelta.x, true);
+                    object.addOrEditKeyframeNow("y", object.getAnimatedValue("y") + moveDelta.y, true);
                 }
 
                 event.preventDefault();
