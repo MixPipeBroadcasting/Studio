@@ -49,5 +49,6 @@ body {
         --primaryForeground: white;
         --secondaryBackground: #333333;
         --secondaryForeground: #999999;
+        --keyframePoint: #440000;
     }
 }
