@@ -151,7 +151,11 @@ export class KeyframeView extends components.Component {
         this.createdAt = Date.now();
         this.timelineEditor = timelineEditor;
 
-        this.registerState("selected", "selectionChanged", false, () => this.update());
+        this.registerState("selected", "selectionChanged", false, function() {
+            thisScope.animationControllerEditor.events.keyframeSelectionChanged.emit();
+
+            thisScope.update();
+        });
 
         this.model.events.changed.connect(() => this.update());
 
@@ -285,8 +289,8 @@ export class TimelineSourceEditorView extends components.Component {
             return;
         }
 
-        this.objectNameElement.textContent = this.model.object.name;
-        this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property).displayName || this.model.property;
+        this.objectNameElement.textContent = this.model.object?.name;
+        this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property)?.displayName || this.model.property;
 
         if (this.selected) {
             this.element.classList.add("selected");
@@ -312,6 +316,7 @@ export class AnimationControllerEditorView extends components.Component {
         this.registerState("timeScale", "timeScaleChanged", 1 / 10, () => this.shouldRedrawCanvas = true);
 
         this.events.allKeyframesDeselected = new events.EventType(this);
+        this.events.keyframeSelectionChanged = new events.EventType(this);
         this.events.selectedKeyframesStartedMove = new events.EventType(this);
         this.events.selectedKeyframesMoved = new events.EventType(this);
         this.events.allTimelinesDeselected = new events.EventType(this);
@@ -342,8 +347,13 @@ export class AnimationControllerEditorView extends components.Component {
         this.project.associateChildModels(this, new Map([
             [timelines.TimelineSource, TimelineSourceEditorView]
         ]), [this], (model) => model.parentAnimationController == this.model);
-
-        this.events.childRemoved.connect(() => this.events.allTimelinesDeselected.emit());
+        
+        this.events.childRemoved.connect(function() {
+            thisScope.events.allKeyframesDeselected.emit();
+            thisScope.events.keyframeSelectionChanged.emit();
+            thisScope.events.allTimelinesDeselected.emit();
+            thisScope.events.timelineSelectionChanged.emit();
+        });
 
         function movePlayheadEvent(event) {
             if (scrubOffset == null) {
@@ -455,6 +465,14 @@ export class AnimationControllerEditorView extends components.Component {
         return this.model.project;
     }
 
+    get selectedTimelineViews() {
+        return this.children.filter((child) => child.selected);
+    }
+
+    get selectedKeyframeViews() {
+        return this.children.flatMap((timeline) => timeline.children.filter((keyframe) => keyframe.selected));
+    }
+
     update() {
         var elementRect = this.element.getBoundingClientRect();
         var scrubberRect = this.scrubberElement.getBoundingClientRect();
@@ -563,8 +581,11 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.targetPropertyButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a property", undefined, "Select a property");
         this.targetPropertyButton.enabled = false;
 
-        this.addKeyframeButton = new ui.IconButton("icons/addkeyframe.svg", "Add new keyframe");
+        this.addKeyframeButton = new ui.IconButton("icons/addkeyframe.svg", "Add new keyframes to selected timelines at current time");
         this.addKeyframeButton.enabled = false;
+
+        this.removeSelectedKeyframesButton = new ui.IconButton("icons/deletekeyframe.svg", "Remove selected keyframes from their timelines");
+        this.removeSelectedKeyframesButton.enabled = false;
 
         var targetPropertyEventConnection = null;
 
@@ -576,7 +597,8 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             this.deleteTimelinesButton,
             this.targetPropertyButton,
             new workspaces.ToolbarSpacer(),
-            this.addKeyframeButton
+            this.addKeyframeButton,
+            this.removeSelectedKeyframesButton
         );
 
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());
@@ -655,7 +677,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                     if (event.property == "targetedProperty") {
                         thisScope.targetPropertyButton.value = false;
 
-                        var selectedTimelineView = thisScope.animationEditor.controllerEditor.children.find((timelineView) => timelineView.selected);
+                        var selectedTimelineView = thisScope.animationEditor.controllerEditor.selectedTimelineViews[0];
 
                         if (!selectedTimelineView) {
                             return;
@@ -673,7 +695,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.addKeyframeButton.events.activated.connect(function() {
             var project = thisScope.model.project;
             var currentTime = Date.now();
-            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
+            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.selectedTimelineViews;
 
             for (var timelineView of selectedTimelineViews) {
                 var timeline = timelineView.model;
@@ -695,16 +717,45 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             }
         });
 
+        this.removeSelectedKeyframesButton.events.activated.connect(function() {
+            var project = thisScope.model.project;
+            var controllerEditor = thisScope.animationEditor.controllerEditor;
+            var timelines = controllerEditor.model.timelines;
+            var selectedKeyframes = controllerEditor.selectedKeyframeViews;
+
+            for (var keyframe of selectedKeyframes) {
+                for (var timeline of timelines.getModelList()) {
+                    var key = timeline.keyframes.getModelKey(keyframe.model);
+
+                    if (!key) {
+                        continue;
+                    }
+
+                    timeline.keyframes.removeModel(key);
+
+                    project.deleteModel(keyframe.model);
+
+                    thisScope.animationEditor.controllerEditor.events.keyframeSelectionChanged.emit();
+                }
+            }
+        });
+
         this.model.events.stateChanged.connect(() => this.stepModeButton.value = this.model.state == "stepping");
 
         this.animationEditor.controllerEditor.events.timelineSelectionChanged.connect(function() {
-            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.children.filter((timelineView) => timelineView.selected);
+            var selectedTimelineViews = thisScope.animationEditor.controllerEditor.selectedTimelineViews;
 
             thisScope.deleteTimelinesButton.enabled = selectedTimelineViews.length > 0;
             thisScope.addKeyframeButton.enabled = selectedTimelineViews.length > 0;
 
             thisScope.targetPropertyButton.enabled = selectedTimelineViews.length == 1;
             thisScope.targetPropertyButton.value = false;
+        });
+
+        this.animationEditor.controllerEditor.events.keyframeSelectionChanged.connect(function() {
+            var selectedKeyframes = thisScope.animationEditor.controllerEditor.selectedKeyframeViews;
+
+            thisScope.removeSelectedKeyframesButton.enabled = selectedKeyframes.length > 0;
         });
     }
 
