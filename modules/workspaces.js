@@ -97,6 +97,10 @@ components.css(`
         height: 100%;
     }
 
+    mixpipe-toolbarspacer {
+        width: 0.25rem;
+    }
+
     mixpipe-workarea {
         ${components.styleMixins.HORIZONTAL_STACK}
         ${components.styleMixins.GROW}
@@ -291,6 +295,12 @@ export class Workspace extends components.Component {
 export class Toolbar extends components.Component {
     constructor() {
         super("mixpipe-toolbar");
+    }
+}
+
+export class ToolbarSpacer extends components.Component {
+    constructor() {
+        super("mixpipe-toolbarspacer");
     }
 }
 

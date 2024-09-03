@@ -555,15 +555,15 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             this.model.state == "stepping"
         );
 
-        this.createTimelineButton = new ui.ToggleIconButton("icons/add.svg", "Cancel creating a timeline", undefined, "Create a timeline");
+        this.createTimelineButton = new ui.ToggleIconButton("icons/addtimeline.svg", "Cancel creating a timeline", undefined, "Create a timeline");
 
-        this.deleteTimelinesButton = new ui.IconButton("icons/delete.svg", "Delete selected timelines");
+        this.deleteTimelinesButton = new ui.IconButton("icons/deletetimeline.svg", "Delete selected timelines");
         this.deleteTimelinesButton.enabled = false;
 
-        this.targetPropertyButton = new ui.ToggleIconButton("icons/group.svg", "Cancel selecting a property", undefined, "Select a property");
+        this.targetPropertyButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a property", undefined, "Select a property");
         this.targetPropertyButton.enabled = false;
 
-        this.addKeyframeButton = new ui.IconButton("icons/add.svg", "Add new keyframe");
+        this.addKeyframeButton = new ui.IconButton("icons/addkeyframe.svg", "Add new keyframe");
         this.addKeyframeButton.enabled = false;
 
         var targetPropertyEventConnection = null;
@@ -571,9 +571,11 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.add(
             this.triggerButton,
             this.stepModeButton,
+            new workspaces.ToolbarSpacer(),
             this.createTimelineButton,
             this.deleteTimelinesButton,
             this.targetPropertyButton,
+            new workspaces.ToolbarSpacer(),
             this.addKeyframeButton
         );
 

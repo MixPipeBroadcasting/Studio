@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="48px"
+   viewBox="0 0 24 24"
+   width="48px"
+   fill="#000000"
+   version="1.1"
+   id="svg1373"
+   sodipodi:docname="deletetimeline.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1377" />
+  <sodipodi:namedview
+     id="namedview1375"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="9.4166667"
+     inkscape:cx="55.061947"
+     inkscape:cy="36.106195"
+     inkscape:window-width="1920"
+     inkscape:window-height="1026"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1373" />
+  <path
+     d="M0 0h24v24H0V0z"
+     fill="none"
+     id="path1369" />
+  <g
+     id="g303"
+     transform="matrix(0.88632031,0,0,0.88632031,-0.08155158,0.91281622)">
+    <g
+       id="g301">
+      <path
+         d="m 8.25,3 h 3.5 C 12.16,3 12.5,2.66 12.5,2.25 12.5,1.84 12.16,1.5 11.75,1.5 H 8.25 C 7.84,1.5 7.5,1.84 7.5,2.25 7.5,2.66 7.84,3 8.25,3 Z"
+         id="path297" />
+      <path
+         d="M 15.45,6.61 16,6.06 C 16.29,5.77 16.29,5.29 16,5 15.71,4.71 15.23,4.71 14.94,5 L 14.39,5.55 C 12.89,4.34 10.89,3.74 8.75,4.11 5.94,4.6 3.66,6.84 3.13,9.64 c -0.93,4.93 3.31,9.16 8.23,8.23 2.8,-0.53 5.04,-2.81 5.53,-5.62 0.37,-2.14 -0.23,-4.14 -1.44,-5.64 z m -4.7,4.64 C 10.75,11.66 10.41,12 10,12 9.59,12 9.25,11.66 9.25,11.25 V 7.75 C 9.25,7.34 9.59,7 10,7 c 0.41,0 0.75,0.34 0.75,0.75 z"
+         id="path299" />
+    </g>
+  </g>
+  <path
+     d="M 16.17197,21.018207 C 16.17197,21.558192 16.613777,22 17.153763,22 h 3.927171 c 0.539986,0 0.981793,-0.441808 0.981793,-0.981793 v -4.908963 c 0,-0.539986 -0.441807,-0.981793 -0.981793,-0.981793 h -3.927171 c -0.539986,0 -0.981793,0.441807 -0.981793,0.981793 z m 5.890757,-7.363444 H 20.835486 L 20.48695,13.306227 c -0.08836,-0.08836 -0.215995,-0.142361 -0.343628,-0.142361 h -2.051946 c -0.127633,0 -0.255267,0.054 -0.343628,0.142361 l -0.348536,0.348536 H 16.17197 c -0.269993,0 -0.490895,0.220903 -0.490895,0.490897 0,0.269991 0.220902,0.490894 0.490895,0.490894 h 5.890757 c 0.269994,0 0.490896,-0.220903 0.490896,-0.490894 0,-0.269993 -0.220902,-0.490897 -0.490896,-0.490897 z"
+     id="path1371"
+     style="stroke-width:0.490897" />
+</svg>
