@@ -56,6 +56,8 @@ components.css(`
     }
 
     mixpipe-scene .title {
+        display: flex;
+        align-items: center;
         padding: 0.2rem;
         padding-block-end: 0;
         font-size: 1rem;
@@ -65,6 +67,10 @@ components.css(`
         width: 100%;
         background: transparent;
         border: none;
+    }
+
+    mixpipe-scene .title .icon {
+        height: 1.25rem;
     }
 
     mixpipe-scene canvas {
@@ -316,6 +322,7 @@ export class StoryboardGroupView extends StoryboardObjectView {
         model.project.associateChildModels(this, new Map([
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
+            [storyboardObjects.Feed, FeedView],
             [storyboardObjects.AnimationController, AnimationControllerView]
         ]), [storyboard], (childModel) => childModel.parentGroup == model);
 
@@ -437,6 +444,20 @@ export class SceneView extends StoryboardObjectView {
     }
 }
 
+export class FeedView extends SceneView {
+    constructor(model, storyboard) {
+        super(model, storyboard);
+
+        this.nameInput.placeholder = "Untitled feed";
+
+        this.feedIcon = new ui.Icon("icons/input.svg", "Feed");
+
+        this.titleElement.append(this.feedIcon.becomeChild(this.titleElement));
+    }
+
+    openEditor() {}
+}
+
 export class AnimationControllerView extends StoryboardObjectView {
     constructor(model, storyboard) {
         super("mixpipe-animationcontroller", model, storyboard);
@@ -535,6 +556,7 @@ export class Storyboard extends components.Component {
         project.associateChildModels(this, new Map([
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
+            [storyboardObjects.Feed, FeedView],
             [storyboardObjects.AnimationController, AnimationControllerView]
         ]), [this], (model) => model.parentGroup == null);
 
@@ -549,28 +571,12 @@ export class Storyboard extends components.Component {
         }, 20);
     }
 
-    createStoryboardGroup() {
-        var group = new storyboardObjects.StoryboardGroup(this.project);
+    createObject(type) {
+        var group = new type(this.project);
 
         this.project.registerNewModels();
 
         return group;
-    }
-
-    createScene() {
-        var scene = new storyboardObjects.Scene(this.project);
-
-        this.project.registerNewModels();
-
-        return scene;
-    }
-
-    createAnimationController() {
-        var controller = new storyboardObjects.AnimationController(this.project);
-
-        this.project.registerNewModels();
-
-        return controller;
     }
 }
 
@@ -582,20 +588,23 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.storyboard = this.storyboardPanel.storyboard;
 
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
+        this.createFeedButton = new ui.IconButton("icons/input.svg", "Create feed");
         this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
         this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
 
         this.add(
             this.createSceneButton,
+            this.createFeedButton,
             this.createStoryboardGroupButton,
             this.createAnimationControllerButton,
             this.newWindowButton
         );
 
-        this.createSceneButton.events.activated.connect(() => this.storyboard.createScene());
-        this.createStoryboardGroupButton.events.activated.connect(() => this.storyboard.createStoryboardGroup());
-        this.createAnimationControllerButton.events.activated.connect(() => this.storyboard.createAnimationController());
+        this.createSceneButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Scene));
+        this.createFeedButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Feed));
+        this.createStoryboardGroupButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.StoryboardGroup));
+        this.createAnimationControllerButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.AnimationController));
         this.newWindowButton.events.activated.connect(() => windows.open(this.storyboard.project, this.storyboardPanel));
     }
 }

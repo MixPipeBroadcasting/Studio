@@ -75,6 +75,20 @@ export class Scene extends StoryboardObject {
     }
 }
 
+export class Feed extends Scene {
+    constructor(project, path = ["feeds", projects.generateKey()]) {
+        super(project, path);
+    }
+
+    render() {
+        this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.canvasContext.fillStyle = "black";
+
+        this.canvasContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
 export class AnimationController extends StoryboardObject {
     constructor(project, path = ["animationControllers", projects.generateKey()]) {
         super(project, path);
@@ -216,4 +230,5 @@ export class AnimationController extends StoryboardObject {
 
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);
 projects.registerModelSyncHandler(["scenes"], Scene);
+projects.registerModelSyncHandler(["feeds"], Feed);
 projects.registerModelSyncHandler(["animationControllers"], AnimationController);
