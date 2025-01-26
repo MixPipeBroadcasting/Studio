@@ -292,7 +292,6 @@ export class TimelineSourceEditorView extends components.Component {
         });
 
         this.animationControllerEditor.events.allTimelinesDeselected.connect(() => this.selected = false);
-        console.log(this.model);
         this.model.project.events.modelDeleted.connect(() => this.shouldRedrawCanvas = true);
 
         new ResizeObserver(function() {
