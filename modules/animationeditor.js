@@ -1,3 +1,4 @@
+import * as common from "./common.js";
 import * as components from "./components.js";
 import * as events from "./events.js";
 import * as animations from "./animations.js";
@@ -84,7 +85,7 @@ components.css(`
         background: var(--secondaryBackground);
         border-bottom: 1px solid var(--primaryBackground);
         cursor: default;
-        z-index: 1;
+        z-index: 2;
     }
 
     mixpipe-timelineeditor.selected .info {
@@ -98,6 +99,13 @@ components.css(`
         left: 10rem;
         height: 1.5rem;
         padding-block: 0.25rem;
+        z-index: 1;
+    }
+
+    mixpipe-timelineeditor .curve {
+        position: absolute;
+        bottom: 0;
+        left: 10rem;
     }
 
     mixpipe-keyframe, mixpipe-keyframe.selected::before {
@@ -228,6 +236,8 @@ export class KeyframeView extends components.Component {
         } else {
             this.element.classList.remove("selected");
         }
+
+        this.timelineEditor.shouldRedrawCanvas = true;
     }
 }
 
@@ -243,11 +253,12 @@ export class TimelineSourceEditorView extends components.Component {
         this.registerState("selected", "selectionChanged", false, function() {
             thisScope.animationControllerEditor.events.timelineSelectionChanged.emit();
 
-            thisScope.updateInfo();
+            thisScope.update();
         });
 
         this.objectNameElement = components.element("strong");
         this.objectPropertyElement = components.element("span");
+        this.shouldRedrawCanvas = true;
 
         this.infoColumnElement = components.element("div", [
             components.className("info"),
@@ -256,12 +267,13 @@ export class TimelineSourceEditorView extends components.Component {
         ]);
 
         this.keyframesElement = components.element("div", [components.className("keyframes")]);
+        this.curveCanvasElement = components.element("canvas", [components.className("curve")]);
 
         this.childContainerElement = this.keyframesElement;
 
-        this.element.append(this.infoColumnElement, this.keyframesElement);
+        this.element.append(this.infoColumnElement, this.keyframesElement, this.curveCanvasElement);
 
-        this.always(this.updateInfo);
+        this.always(this.update);
 
         this.model.project.associateChildModels(this, new Map([
             [timelines.KeyframeSource, KeyframeView]
@@ -280,11 +292,21 @@ export class TimelineSourceEditorView extends components.Component {
         });
 
         this.animationControllerEditor.events.allTimelinesDeselected.connect(() => this.selected = false);
+        console.log(this.model);
+        this.model.project.events.modelDeleted.connect(() => this.shouldRedrawCanvas = true);
+
+        new ResizeObserver(function() {
+            thisScope.shouldRedrawCanvas = true;
+        }).observe(this.element);
+
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function() {
+            thisScope.shouldRedrawCanvas = true;
+        });
     }
 
-    updateInfo() {
+    update() {
         if (!this.model.exists) {
-            this.removeAlways(this.updateInfo);
+            this.removeAlways(this.update);
 
             return;
         }
@@ -296,6 +318,37 @@ export class TimelineSourceEditorView extends components.Component {
             this.element.classList.add("selected");
         } else {
             this.element.classList.remove("selected");
+        }
+
+        if (this.shouldRedrawCanvas) {
+            var timelineRect = this.element.getBoundingClientRect();
+
+            this.curveCanvasElement.width = timelineRect.width - this.infoColumnElement.getBoundingClientRect().width;
+            this.curveCanvasElement.height = timelineRect.height - 1;
+
+            var curveContext = this.curveCanvasElement.getContext("2d");
+
+            curveContext.strokeStyle = getComputedStyle(document.body).getPropertyValue("--secondaryBackground");
+            curveContext.lineWidth = 1;
+
+            var lastY = 0;
+
+            for (var x = 0; x < this.curveCanvasElement.width; x++) {
+                var keyframes = this.model.keyframes.getModelList().map((keyframe) => keyframe.serialise());
+                var min = Math.min(...keyframes.map((keyframe) => keyframe.value));
+                var max = Math.max(...keyframes.map((keyframe) => keyframe.value));
+                var value = animations.getValueInTimeline({keyframes, step: x / this.animationControllerEditor.timeScale}, animations.INTERPOLATION_METHODS.number);
+                var y = common.invLerp(min, max, value);
+
+                curveContext.beginPath();
+                curveContext.moveTo(x, (1 - lastY) * this.curveCanvasElement.height);
+                curveContext.lineTo(x + 1, (1 - y) * this.curveCanvasElement.height);
+                curveContext.stroke();
+
+                lastY = y;
+            }
+
+            this.shouldRedrawCanvas = false;
         }
     }
 }
@@ -473,7 +526,12 @@ export class AnimationControllerEditorView extends components.Component {
         return this.children.flatMap((timeline) => timeline.children.filter((keyframe) => keyframe.selected));
     }
 
+    get timelineWidth() {
+        return Math.max(this.model.duration, this.model.currentTime) * this.timeScale;
+    }
+
     update() {
+        var thisScope = this;
         var elementRect = this.element.getBoundingClientRect();
         var scrubberRect = this.scrubberElement.getBoundingClientRect();
         var playheadRect = this.playheadElement.getBoundingClientRect();
@@ -485,45 +543,43 @@ export class AnimationControllerEditorView extends components.Component {
         this.playheadElement.style.height = `calc(${this.element.clientHeight}px - 1rem)`;
         this.playheadElement.style.visibility = playheadRect.x < timeRect.width ? "hidden" : null;
 
-        var minWidth = Math.max(this.model.duration, this.model.currentTime) * this.timeScale;
-
-        this.scrubberElement.style.minWidth = `calc(12rem + ${minWidth}px)`;
+        this.scrubberElement.style.minWidth = `calc(12rem + ${this.timelineWidth}px)`;
 
         this.timelinesElement.querySelectorAll("mixpipe-timelineeditor").forEach(function(element) {
-            element.style.minWidth = `calc(12rem + ${minWidth}px)`;
+            element.style.minWidth = `calc(12rem + ${thisScope.timelineWidth}px)`;
         });
 
         if (this.shouldRedrawCanvas) {
             this.timeMarkerCanvasElement.width = this.element.clientWidth - timeRect.width;
             this.timeMarkerCanvasElement.height = scrubberRect.height - 2;
-    
+
             var markersContext = this.timeMarkerCanvasElement.getContext("2d");
-    
+
             markersContext.font = "12px Overpass";
             markersContext.fillStyle = markersContext.strokeStyle = getComputedStyle(document.body).getPropertyValue("--secondaryBackground");
             markersContext.lineWidth = 2;
-    
+
             var smallestIncrement = 100;
-    
+
             if (this.timeScale > 1 / 2) {
                 smallestIncrement = 10;
             }
-    
+
             if (this.timeScale < 1 / 10) {
                 smallestIncrement = 1000;
             }
-    
+
             var minX = Math.floor(this.element.scrollLeft / smallestIncrement) * smallestIncrement;
             var maxX = minX + elementRect.width;
             var canvasHeight = this.timeMarkerCanvasElement.height;
-    
+
             for (var x = minX; x < maxX; x += this.timeScale * smallestIncrement) {
                 var time = x / this.timeScale;
-    
+
                 var relativeX = x - this.element.scrollLeft;
-    
+
                 var lineHeight = 4;
-    
+
                 if (time % (10 * smallestIncrement) == 0) {
                     lineHeight = 12;
 
@@ -535,7 +591,7 @@ export class AnimationControllerEditorView extends components.Component {
                 if (time == 0) {
                     continue;
                 }
-    
+
                 markersContext.beginPath();
                 markersContext.moveTo(relativeX + 1, canvasHeight - lineHeight - 1);
                 markersContext.lineTo(relativeX + 1, canvasHeight - 1);
