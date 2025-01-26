@@ -57,6 +57,7 @@ export function handleMessage(data) {
             var panel = workspaces.Panel.deserialise(data.panel);
 
             workspaces.mainWorkspace.add(panel);
+            workspaces.addEventListenersForProject(project);
         }
 
         return;

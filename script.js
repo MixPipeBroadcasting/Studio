@@ -12,7 +12,8 @@ windows.init();
 document.querySelector("#root").append(
     workspaces.mainWorkspace.element,
     workspaces.mainSubSplitter.element,
-    workspaces.subWorkspace.element
+    workspaces.subWorkspace.element,
+    workspaces.modeTooltipContainer.element
 );
 
 if (!opener) {
@@ -21,6 +22,7 @@ if (!opener) {
     var storyboardPanel = new storyboards.StoryboardPanel(project);
 
     workspaces.mainWorkspace.add(storyboardPanel);
+    workspaces.addEventListenersForProject(project);
 
     var scene = new storyboardObjects.Scene(project);
     var scene2 = new storyboardObjects.Scene(project);

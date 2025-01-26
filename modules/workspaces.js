@@ -5,6 +5,7 @@ import * as ui from "./ui.js";
 export var mainWorkspace = null;
 export var subWorkspace = null;
 export var mainSubSplitter = null;
+export var modeTooltipContainer = null;
 export var panelTypes = {};
 
 components.css(`
@@ -372,10 +373,40 @@ export class Sidebar extends components.Component {
     }
 }
 
+export class TooltipContainer extends components.Component {
+    constructor() {
+        super("mixpipe-tooltipcontainer");
+
+        this.element.style.zIndex = 1;
+    }
+}
+
 export function registerPanelType(name, type) {
     panelTypes[name] = type;
+}
+
+export function addEventListenersForProject(project) {
+    function checkProperty(property, value) {
+        if (property == "targetingProperty") {
+            modeTooltipContainer.clear();
+
+            if (value) {
+                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select a property of a scene object to target."));
+            }
+        }
+    }
+
+    project.events.localStateChanged.connect(function(event) {
+        checkProperty(event.property, event.value);
+    });
+
+    for (var key in project.localState) {
+        checkProperty(key, project.localState[key]);
+    }
 }
 
 mainWorkspace = new Workspace();
 subWorkspace = new Workspace(true);
 mainSubSplitter = new ui.Splitter(true);
+
+modeTooltipContainer = new TooltipContainer();

@@ -1,10 +1,13 @@
 :root {
     --primaryBackground: #eeeeee;
     --primaryForeground: black;
+    --primaryBorder: rgba(0, 0, 0, 0.2);
     --secondaryBackground: #cccccc;
     --secondaryForeground: #666666;
+    --secondaryBorder: rgba(0, 0, 0, 0.2);
     --selectedBackground: #4444ff;
     --selectedForeground: white;
+    --selectedBorder: rgba(255, 255, 255, 0.2);
     --animatedBackground: #ff0000;
     --animatedForeground: white;
     --animatedProgressForeground: #ff6666;

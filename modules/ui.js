@@ -3,6 +3,10 @@ import * as events from "./events.js";
 
 export const DOUBLE_CLICK_DURATION = 500; // 500 milliseconds
 
+export var lastPointerX = 0;
+export var lastPointerY = 0;
+export var pointerInWindow = true;
+
 components.css(`
     img.icon.invert {
         ${components.styleMixins.ICON_INVERT}
@@ -110,6 +114,23 @@ components.css(`
     mixpipe-splitter.vertical {
         height: 0.25rem;
         cursor: ns-resize;
+    }
+
+    mixpipe-tooltip {
+        position: fixed;
+        padding: 0.25rem;
+        background: var(--secondaryBackground);
+        color: var(--primaryForeground);
+        border: 0.1rem solid var(--secondaryBorder);
+        border-radius: 0.25rem;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    mixpipe-tooltip.mode {
+        background: var(--selectedBackground);
+        color: var(--selectedForeground);
+        border: 0.1rem solid var(--selectedBorder);
     }
 
     [disabled] {
@@ -396,3 +417,53 @@ export class Splitter extends components.Component {
         });
     }
 }
+
+export class Tooltip extends components.Component {
+    constructor(type) {
+        super("mixpipe-tooltip");
+
+        if (type) {
+            this.element.classList.add(type);
+        }
+
+        this.always(this.update);
+    }
+
+    static withText(type, text) {
+        var instance = new this(type);
+
+        instance.element.textContent = text;
+
+        return instance;
+    }
+
+    update() {
+        this.element.style.left = `calc(${lastPointerX}px + 1rem)`;
+        this.element.style.top = `calc(${lastPointerY}px + 0.5rem)`;
+        this.element.style.opacity = pointerInWindow ? "1" : "0";
+
+        var rect = this.element.getBoundingClientRect();
+        var windowRect = document.body.getBoundingClientRect();
+
+        if (rect.right >= windowRect.right) {
+            this.element.style.left = `calc(${lastPointerX - rect.width}px - 0.5rem)`;
+        }
+
+        if (rect.bottom >= windowRect.bottom) {
+            this.element.style.top = `calc(${lastPointerY - rect.height}px - 0.5rem)`;
+        }
+    }
+}
+
+window.addEventListener("pointermove", function(event) {
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+});
+
+document.body.addEventListener("pointerenter", function() {
+    pointerInWindow = true;
+});
+
+document.body.addEventListener("pointerleave", function() {
+    pointerInWindow = false;
+});
