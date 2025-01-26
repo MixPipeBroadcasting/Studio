@@ -455,6 +455,13 @@ export class FeedView extends SceneView {
         this.titleElement.append(this.feedIcon.becomeChild(this.titleElement));
     }
 
+    render() {
+        this.canvasElement.width = this.model.canvas.width;
+        this.canvasElement.height = this.model.canvas.height;
+
+        super.render();
+    }
+
     openEditor() {}
 }
 

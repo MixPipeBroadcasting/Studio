@@ -1,6 +1,7 @@
 import * as projects from "./projects.js";
 import * as sceneObjects from "./sceneobjects.js";
 import * as timelines from "./timelines.js";
+import * as sources from "./sources.js";
 
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
@@ -78,14 +79,54 @@ export class Scene extends StoryboardObject {
 export class Feed extends Scene {
     constructor(project, path = ["feeds", projects.generateKey()]) {
         super(project, path);
+
+        this.registerProperty("uri", "camera:video", "uriChanged");
+
+        this.connectCalled = false;
+        this.videoElement = document.createElement("video");
     }
 
     render() {
+        var thisScope = this;
+
         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.canvasContext.fillStyle = "black";
+        if (!this.uri) {
+            this.canvasContext.fillStyle = "black";
 
-        this.canvasContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.canvasContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            return;
+        }
+
+        var source = sources.get(this.uri);
+
+        if (!source.isConnected) {
+            if (!this.connectCalled) {
+                source.connect();
+
+                this.connectCalled = true;
+            }
+
+            return;
+        }
+
+        if (source instanceof sources.CameraSource) {
+            if (this.videoElement.srcObject != source.stream) {
+                this.videoElement.srcObject = source.stream;
+
+                this.videoElement.addEventListener("loadedmetadata", function() {
+                    thisScope.videoElement.play();
+                });
+            }
+
+            if (this.videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+                this.canvas.width = this.videoElement.videoWidth;
+                this.canvas.height = this.videoElement.videoHeight;
+
+                this.canvasContext.drawImage(this.videoElement, 0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
     }
 }
 
