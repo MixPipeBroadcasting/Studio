@@ -30,7 +30,7 @@ components.css(`
         height: 2rem;
         background: var(--primaryBackground);
         border-bottom: 2px solid var(--secondaryBackground);
-        z-index: 2;
+        z-index: 3;
     }
 
     mixpipe-animationcontrollereditor .time {
