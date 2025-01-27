@@ -662,7 +662,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             if (thisScope.stepModeButton.value) {
                 thisScope.model.step(Math.min(thisScope.model.currentTime, thisScope.model.duration));
             } else {
-                thisScope.model.reset();
+                thisScope.model.start(Date.now() - thisScope.model.stepTime);
             }
         });
 
