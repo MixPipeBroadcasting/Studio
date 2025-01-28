@@ -189,6 +189,10 @@ export function element(tagName, children = []) {
     var createdElement = document.createElement(tagName);
 
     for (var child of children) {
+        if (!child) {
+            continue;
+        }
+
         if (child instanceof ElementData && child.type == "attribute") {
             createdElement.setAttribute(child.key, child.value);
 

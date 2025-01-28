@@ -394,6 +394,14 @@ export function addEventListenersForProject(project) {
                 modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select a property of a scene object to target."));
             }
         }
+
+        if (property == "targetingScene") {
+            modeTooltipContainer.clear();
+
+            if (value) {
+                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select a scene on the storyboard to target."));
+            }
+        }
     }
 
     project.events.localStateChanged.connect(function(event) {

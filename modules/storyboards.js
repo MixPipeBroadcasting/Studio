@@ -81,6 +81,11 @@ components.css(`
         zoom: var(--zoom);
     }
 
+    mixpipe-scene.target {
+        animation: 1s sceneTarget infinite alternate-reverse;
+        cursor: cell;
+    }
+
     mixpipe-animationcontroller {
         display: grid;
         grid-template-rows: repeat(2, min-content);
@@ -120,6 +125,16 @@ components.css(`
     mixpipe-animationcontroller.running {
         background: var(--animatedBackground);
         color: var(--animatedForeground);
+    }
+
+    @keyframes sceneTarget {
+        0% {
+            background: var(--targetStart);
+        }
+
+        100% {
+            background: var(--targetEnd);
+        }
     }
 `);
 
@@ -400,6 +415,14 @@ export class SceneView extends StoryboardObjectView {
 
         var lastClicked = null;
 
+        this.element.addEventListener("pointerdown", function(event) {
+            if (model.project.localState.targetingScene) {
+                model.project.setLocalProperty("targetedScenePath", model.path);
+
+                event.preventDefault();
+            }
+        });
+
         this.canvasElement.addEventListener("pointerdown", function(event) {
             event.preventDefault();
         });
@@ -417,6 +440,16 @@ export class SceneView extends StoryboardObjectView {
         });
 
         this.always(this.render);
+
+        function updateInputTargetState() {
+            if (model.project.localState.targetingScene) {
+                thisScope.element.classList.add("target");
+            } else {
+                thisScope.element.classList.remove("target");
+            }
+        }
+
+        model.project.events.localStateChanged.connect(updateInputTargetState);
     }
 
     updateInfo() {

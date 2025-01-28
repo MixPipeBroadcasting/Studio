@@ -18,7 +18,7 @@ components.css(`
         vertical-align: top;
     }
 
-    mixpipe-properties .editTemplateButton {
+    mixpipe-properties .editTemplateButton, .targetButton {
         width: 1.5rem;
         padding: 0.1rem;
         flex-shrink: 0;
@@ -96,6 +96,8 @@ export class Property {
         });
 
         editTemplateButton.setVisiblity(model[`${this.name}_canTemplate`]);
+
+        var targetButton = null;
 
         function getValue() {
             var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
@@ -232,9 +234,69 @@ export class Property {
                 returnElement = input.element;
 
                 break;
+
+            case "scene":
+                var input = new ui.Input("");
+                var targetSceneEventConnection = null;
+
+                input.enabled = false;
+
+                targetButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a scene", undefined, "Select a scene");
+
+                function updateSelectedScene() {
+                    input.value = model[thisScope.name].name;
+
+                    sceneRenameEvent?.component.events.renamed.disconnect(sceneRenameEvent);
+
+                    sceneRenameEvent = model[thisScope.name].events.renamed.connect(function() {
+                        input.value = model[thisScope.name].name;
+                    });
+                }
+
+                targetButton.element.classList.add("targetButton");
+
+                targetButton.events.valueChanged.connect(function(event) {
+                    var project = model.project;
+
+                    project.setLocalProperty("targetingScene", event.value);
+
+                    project.events.localStateChanged.disconnect(targetSceneEventConnection);
+
+                    if (event.value) {
+                        targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
+                            if (event.property == "targetedScenePath") {
+                                targetButton.value = false;
+
+                                model[thisScope.name] = project.getOrCreateModel(event.value);
+
+                                updateSelectedScene();
+                            }
+                        });
+                    }
+                });
+
+                var eventName = model.propertyEventAssociations[this.name];
+                var sceneRenameEvent = null;
+
+                if (eventName != null) {
+                    model.events[eventName].connect(function() {
+                        if (document.activeElement == input.element) {
+                            return;
+                        }
+
+                        updateSelectedScene();
+                    });
+                }
+
+                updateSelectedScene();
+
+                returnElement = input.element;
+
+                break;
+
         }
 
-        return components.element("div", [returnElement, editTemplateButton.element, editTemplateDialog.element]);
+        return components.element("div", [returnElement, editTemplateButton.element, targetButton?.element, editTemplateDialog.element]);
     }
 }
 

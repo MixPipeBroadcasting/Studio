@@ -9,6 +9,7 @@ import * as sceneObjects from "./sceneobjects.js";
 
 export const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name"),
+    new propertyTables.Property("scene", "scene", "Scene"),
     new propertyTables.Property("x", "number", "X", {roundNumber: true}),
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
     new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
@@ -24,12 +25,16 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
     constructor(sceneEditor) {
         super();
 
+        var thisScope = this;
+        var targetSceneEventConnection = null;
+
         this.sceneEditor = sceneEditor;
 
         this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
+        this.createCompositedSceneButton = new ui.ToggleIconButton("icons/composite.svg", "Cancel creating a composited scene", undefined, "Create composited scene");
         this.deleteObjectsButton = new ui.IconButton("icons/delete.svg", "Delete selected objects");
 
-        this.add(this.createRectangleButton, this.deleteObjectsButton);
+        this.add(this.createRectangleButton, this.createCompositedSceneButton, this.deleteObjectsButton);
 
         this.createRectangleButton.events.activated.connect(function() {
             var rectangle = new sceneObjects.Rectangle(sceneEditor.scene.project);
@@ -44,6 +49,35 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             sceneEditor.scene.objects.addModel(rectangle);
 
             sceneEditor.setSelectedObjects([rectangle]);
+        });
+
+        this.createCompositedSceneButton.events.valueChanged.connect(function(event) {
+            var project = sceneEditor.scene.project;
+
+            project.setLocalProperty("targetingScene", event.value);
+
+            project.events.localStateChanged.disconnect(targetSceneEventConnection);
+
+            if (event.value) {
+                targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedScenePath") {
+                        thisScope.createCompositedSceneButton.value = false;
+
+                        var scene = project.getOrCreateModel(event.value);
+                        var compositedScene = new sceneObjects.CompositedScene(project);
+
+                        compositedScene.x = 0;
+                        compositedScene.y = 0;
+                        compositedScene.width = scene.width;
+                        compositedScene.height = scene.height;
+                        compositedScene.scene = scene;
+
+                        sceneEditor.scene.objects.addModel(compositedScene);
+
+                        sceneEditor.setSelectedObjects([compositedScene]);
+                    }
+                });
+            }
         });
 
         this.deleteObjectsButton.events.activated.connect(function() {
