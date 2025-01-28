@@ -124,6 +124,11 @@ export class Feed extends Scene {
                 this.canvas.width = this.videoElement.videoWidth;
                 this.canvas.height = this.videoElement.videoHeight;
 
+                if (this.width != this.videoElement.videoWidth || this.height != this.videoElement.videoHeight) {
+                    this.width = this.videoElement.videoWidth;
+                    this.height = this.videoElement.videoHeight;
+                }
+
                 this.canvasContext.drawImage(this.videoElement, 0, 0, this.canvas.width, this.canvas.height);
             }
         }
