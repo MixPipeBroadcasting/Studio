@@ -644,6 +644,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
 
         this.keyframeEasingInput = new ui.SelectionInput();
         this.keyframeEasingInput.loadObject(animations.EASING_NAMES);
+        this.keyframeEasingInput.key = "none";
 
         var targetPropertyEventConnection = null;
 
