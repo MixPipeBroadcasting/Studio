@@ -53,7 +53,7 @@ components.css(`
         display: none;
     }
 
-    input {
+    input, select {
         min-height: 1.5rem;
         background: var(--primaryBackground);
         color: inherit;
@@ -269,6 +269,62 @@ export class Input extends components.Component {
                 event.preventDefault();
             }
         });
+    }
+}
+
+export class SelectionInput extends components.Component {
+    constructor(options = [], selectedIndex = 0) {
+        super("select");
+
+        var thisScope = this;
+
+        this.internalKeys = [];
+
+        this.registerState("options", "optionsChanged", options, this.renderOptions);
+        this.registerState("selectedIndex", "selectionChanged", selectedIndex, this.renderOptions);
+
+        this.element.addEventListener("input", function(event) {
+            thisScope.selectedIndex = Number(event.target.value);
+        });
+
+        this.renderOptions();
+    }
+
+    renderOptions() {
+        this.element.innerHTML = "";
+
+        for (var i = 0; i < this.options.length; i++) {
+            var optionElement = document.createElement("option");
+
+            optionElement.value = i;
+            optionElement.textContent = this.options[i];
+
+            this.element.append(optionElement);
+        }
+
+        this.element.value = this.selectedIndex;
+    }
+
+    loadObject(object) {
+        var keys = Object.keys(object);
+        var options = [];
+
+        this.internalKeys = [];
+
+        for (var key of keys) {
+            options.push(object[key]);
+            this.internalKeys.push(key);
+        }
+
+        this.options = options;
+    }
+
+    get key() {
+        return this.internalKeys[this.selectedIndex];
+    }
+
+    set key(value) {
+        this.selectedIndex = this.internalKeys.indexOf(value);
     }
 }
 

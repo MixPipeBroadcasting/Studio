@@ -11,6 +11,15 @@ export const EASING_METHODS = {
     easeInOut: [0.42, 0, 0.58, 1]
 };
 
+export const EASING_NAMES = {
+    linear: "Linear",
+    ease: "Ease",
+    easeIn: "Ease in",
+    easeOut: "Ease out",
+    easeInOut: "Ease in-out",
+    custom: "Custom"
+};
+
 export const INTERPOLATION_METHODS = {
     number: function(from, to, t) {
         return common.lerp(from, to, t);
@@ -19,6 +28,16 @@ export const INTERPOLATION_METHODS = {
 
 export function compareEasingMethods(a, b) {
     return (a || []).join(",") == (b || []).join(",");
+}
+
+export function findEasingMethodKey(easing) {
+    for (var key of Object.keys(EASING_METHODS)) {
+        if (compareEasingMethods(easing, EASING_METHODS[key])) {
+            return key;
+        }
+    }
+
+    return null;
 }
 
 export function getValueInTimeline(timeline, interpolationMethod = INTERPOLATION_METHODS.number, atTime = Date.now()) {

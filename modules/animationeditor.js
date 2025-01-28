@@ -642,6 +642,9 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
         this.removeSelectedKeyframesButton = new ui.IconButton("icons/deletekeyframe.svg", "Remove selected keyframes from their timelines");
         this.removeSelectedKeyframesButton.enabled = false;
 
+        this.keyframeEasingInput = new ui.SelectionInput();
+        this.keyframeEasingInput.loadObject(animations.EASING_NAMES);
+
         var targetPropertyEventConnection = null;
 
         this.add(
@@ -653,7 +656,9 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             this.targetPropertyButton,
             new workspaces.ToolbarSpacer(),
             this.addKeyframeButton,
-            this.removeSelectedKeyframesButton
+            this.removeSelectedKeyframesButton,
+            new workspaces.ToolbarSpacer(),
+            this.keyframeEasingInput
         );
 
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());
@@ -795,6 +800,20 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             }
         });
 
+        this.keyframeEasingInput.events.selectionChanged.connect(function() {
+            var selectedKeyframes = thisScope.animationEditor.controllerEditor.selectedKeyframeViews;
+            var easingType = thisScope.keyframeEasingInput.key;
+
+            if (easingType == "custom") {
+                // TODO: Show a custom easing editor
+                easingType = "linear";
+            }
+
+            for (var keyframe of selectedKeyframes) {
+                keyframe.model.easing = animations.EASING_METHODS[easingType];
+            }
+        });
+
         this.model.events.stateChanged.connect(() => this.stepModeButton.value = this.model.state == "stepping");
 
         this.animationEditor.controllerEditor.events.timelineSelectionChanged.connect(function() {
@@ -811,6 +830,14 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             var selectedKeyframes = thisScope.animationEditor.controllerEditor.selectedKeyframeViews;
 
             thisScope.removeSelectedKeyframesButton.enabled = selectedKeyframes.length > 0;
+
+            if (selectedKeyframes.length == 1) {
+                var keyframe = selectedKeyframes[0].model;
+
+                thisScope.keyframeEasingInput.key = keyframe.easing ? animations.findEasingMethodKey(keyframe.easing) || "custom" : "linear";
+            } else {
+                thisScope.keyframeEasingInput.key = "multiple";
+            }
         });
     }
 
