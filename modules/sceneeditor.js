@@ -65,7 +65,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
             text.text = "Text";
             text.fontSize = 100;
-            this.backgroundFill = "black";
+            text.backgroundFill = "black";
 
             sceneEditor.scene.objects.addModel(text);
 

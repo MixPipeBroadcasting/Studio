@@ -92,7 +92,7 @@ export class Text extends SceneObject {
         this.registerProperty("name", "Text", "renamed", false);
         this.registerProperty("text");
         this.registerProperty("font");
-        this.registerProperty("fontSize", "number", 100);
+        this.registerProperty("fontSize", 100);
         this.registerProperty("backgroundFill");
         this.registerProperty("borderWidth");
         this.registerProperty("borderFill");
@@ -112,14 +112,7 @@ export class Text extends SceneObject {
 
         context.save();
         context.beginPath();
-
-        context.rect(
-            this.getAnimatedValue("x"),
-            this.getAnimatedValue("y"),
-            this.getAnimatedValue("width"),
-            this.getAnimatedValue("height")
-        );
-
+        context.rect(x, y, width, height);
         context.clip();
 
         context.font = `${fontSize}px ${this.getValue("font") || "system-ui, sans-serif"}`;
