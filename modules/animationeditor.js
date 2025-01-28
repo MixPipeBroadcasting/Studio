@@ -804,6 +804,10 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             var selectedKeyframes = thisScope.animationEditor.controllerEditor.selectedKeyframeViews;
             var easingType = thisScope.keyframeEasingInput.key;
 
+            if (!easingType) {
+                return;
+            }
+
             if (easingType == "custom") {
                 // TODO: Show a custom easing editor
                 easingType = "linear";
