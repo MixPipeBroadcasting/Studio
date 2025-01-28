@@ -118,7 +118,7 @@ export class Property {
         switch (this.type) {
             case "string":
             case "number":
-                var input = new ui.Input("", {"string": "text", "number": "number"}[this.type], getValue());
+                var input = new ui.Input(this.options.placeholder || "", {"string": "text", "number": "number"}[this.type], getValue());
                 var ignoreNextValueChange = false;
 
                 function isTargetingProperty() {
@@ -236,7 +236,7 @@ export class Property {
                 break;
 
             case "scene":
-                var input = new ui.Input("");
+                var input = new ui.Input(this.options.placeholder || "");
                 var targetSceneEventConnection = null;
 
                 input.enabled = false;

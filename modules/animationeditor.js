@@ -310,7 +310,7 @@ export class TimelineSourceEditorView extends components.Component {
             return;
         }
 
-        this.objectNameElement.textContent = this.model.object?.name;
+        this.objectNameElement.textContent = this.model.object?.name || "Untitled object";
         this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property)?.displayName || this.model.property;
 
         if (this.selected) {

@@ -8,9 +8,9 @@ import * as propertyTables from "./propertytables.js";
 import * as sceneObjects from "./sceneobjects.js";
 
 export const PROPERTIES = [
-    new propertyTables.Property("name", "string", "Name"),
+    new propertyTables.Property("name", "string", "Name", {placeholder: "Untitled object"}),
     new propertyTables.Property("text", "string", "Text"),
-    new propertyTables.Property("scene", "scene", "Scene"),
+    new propertyTables.Property("scene", "scene", "Scene", {placeholder: "Untitled scene"}),
     new propertyTables.Property("x", "number", "X", {roundNumber: true}),
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
     new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
@@ -184,7 +184,7 @@ export class SceneEditorPanel extends workspaces.Panel {
 
         this.add(this.toolbar, this.workArea);
 
-        this.scene.events.renamed.connect(() => this.name = scene.name);
+        this.scene.events.renamed.connect(() => this.name = scene.name || "Untitled scene");
 
         this.always(this.render);
 
