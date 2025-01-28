@@ -83,10 +83,13 @@ if (!opener) {
     var text = new sceneObjects.Text(project);
 
     text.text = "MPS";
-    text.font = "160px monospace";
+    text.font = "monospace";
+    text.fontSize = 160;
     text.backgroundFill = "white";
     text.x = 810;
-    text.y = `{{ 550 + (Math.sin(Date.now() * 0.01) * 100) }}`;
+    text.y = `{{ 400 + (Math.sin(Date.now() * 0.01) * 100) }}`;
+    text.width = 300;
+    text.height = 240;
 
     scene2.objects.addModel(text);
 
@@ -115,10 +118,13 @@ if (!opener) {
     var clock = new sceneObjects.Text(project);
 
     clock.text = `{{ new Date().toISOString() }}`;
-    clock.font = "120px monospace";
+    clock.font = "monospace";
+    clock.fontSize = 120;
     clock.backgroundFill = "black";
     clock.x = 10;
-    clock.y = 1080 - 10;
+    clock.y = 1080 - 120 - 10;
+    clock.width = 1920 - 20;
+    clock.height = 180;
 
     scene3.objects.addModel(clock);
     scene3.objects.addModel(compositedScene2);

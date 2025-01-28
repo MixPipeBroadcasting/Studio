@@ -92,6 +92,7 @@ export class Text extends SceneObject {
         this.registerProperty("name", "Text", "renamed", false);
         this.registerProperty("text");
         this.registerProperty("font");
+        this.registerProperty("fontSize", "number", 100);
         this.registerProperty("backgroundFill");
         this.registerProperty("borderWidth");
         this.registerProperty("borderFill");
@@ -104,22 +105,43 @@ export class Text extends SceneObject {
 
         var x = this.getAnimatedValue("x");
         var y = this.getAnimatedValue("y");
-        var text = this.getValue("text") || "";
+        var width = this.getAnimatedValue("width");
+        var height = this.getAnimatedValue("height");
+        var fontSize = this.getAnimatedValue("fontSize");
+        var lines = this.getValue("text").split("\n") || "";
 
-        context.font = this.getValue("font") || "100px system-ui, sans-serif";
+        context.save();
+        context.beginPath();
+
+        context.rect(
+            this.getAnimatedValue("x"),
+            this.getAnimatedValue("y"),
+            this.getAnimatedValue("width"),
+            this.getAnimatedValue("height")
+        );
+
+        context.clip();
+
+        context.font = `${fontSize}px ${this.getValue("font") || "system-ui, sans-serif"}`;
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;
 
-            context.fillText(text, x, y);
+            for (var i = 0; i < lines.length; i++) {
+                context.fillText(lines[i], x, y + (fontSize * (i + 1)));
+            }
         }
 
         if (this.borderWidth && this.borderWidth > 0) {
             context.lineWidth = String(this.getAnimatedValue("borderWidth"));
             context.strokeStyle = this.borderFill;
 
-            context.strokeText(text, x, y);
+            for (var i = 0; i < lines.length; i++) {
+                context.strokeText(lines[i], x, y + (fontSize * (i + 1)));
+            }
         }
+
+        context.restore();
     }
 }
 
