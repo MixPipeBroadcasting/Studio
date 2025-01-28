@@ -86,6 +86,10 @@ components.css(`
         cursor: cell;
     }
 
+    mixpipe-scene.target * {
+        cursor: cell;
+    }
+
     mixpipe-animationcontroller {
         display: grid;
         grid-template-rows: repeat(2, min-content);

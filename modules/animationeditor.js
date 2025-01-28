@@ -644,6 +644,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
 
         this.keyframeEasingInput = new ui.SelectionInput();
         this.keyframeEasingInput.loadObject(animations.EASING_NAMES);
+        this.keyframeEasingInput.enabled = false;
         this.keyframeEasingInput.key = "none";
 
         var targetPropertyEventConnection = null;
@@ -835,6 +836,7 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
             var selectedKeyframes = thisScope.animationEditor.controllerEditor.selectedKeyframeViews;
 
             thisScope.removeSelectedKeyframesButton.enabled = selectedKeyframes.length > 0;
+            thisScope.keyframeEasingInput.enabled = selectedKeyframes.length > 0;
 
             if (selectedKeyframes.length == 1) {
                 var keyframe = selectedKeyframes[0].model;
