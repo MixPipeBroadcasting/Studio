@@ -115,7 +115,7 @@ export class Text extends SceneObject {
         context.rect(x, y, width, height);
         context.clip();
 
-        context.font = `${fontSize}px ${this.getValue("font") || "system-ui, sans-serif"}`;
+        context.font = `${fontSize}px ${this.getValue("font") || "Overpass, system-ui, sans-serif"}`;
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;

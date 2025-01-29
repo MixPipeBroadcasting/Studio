@@ -858,6 +858,7 @@ export class AnimationEditorPanel extends workspaces.Panel {
         super(model.name || "Untitled animation");
 
         this.model = model;
+        this.lastState = null;
 
         this.controllerEditor = new AnimationControllerEditorView(model);
         this.toolbar = new AnimationEditorToolbar(this);
@@ -885,7 +886,10 @@ export class AnimationEditorPanel extends workspaces.Panel {
     }
 
     render() {
-        this.toolbar.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
+        if (this.model.state != this.lastState) {
+            this.toolbar.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
+            this.lastState = this.model.state;
+        }
 
         this.toolbar.triggerButton.element.setAttribute("mixpipe-animated", this.model.state == "running");
     }

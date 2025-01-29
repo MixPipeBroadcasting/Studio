@@ -509,6 +509,7 @@ export class AnimationControllerView extends StoryboardObjectView {
         var thisScope = this;
 
         this.sizeUnconstrained = true;
+        this.lastState = null;
 
         this.triggerButton = new ui.IconButton("icons/play.svg", "Start/reset animation");
         this.nameInput = new ui.Input("Untitled animation");
@@ -562,7 +563,10 @@ export class AnimationControllerView extends StoryboardObjectView {
     }
 
     updateTimer() {
-        this.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
+        if (this.model.state != this.lastState) {
+            this.triggerButton.icon.source = this.model.state != "stopped" ? "icons/reset.svg" : "icons/play.svg";
+            this.lastState = this.model.state;
+        }
 
         this.triggerButton.element.style.background = (
             this.model.state == "running" ?
