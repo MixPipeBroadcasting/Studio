@@ -9,7 +9,7 @@ import * as storyboardObjects from "./storyboardobjects.js";
 import * as sceneObjects from "./sceneobjects.js";
 
 components.css(`
-    mixpipe-panel.attributesList {
+    mixpipe-panel.attributesList mixpipe-documentarea {
         ${components.styleMixins.VERTICAL_STACK}
         padding: 0.5rem;
         gap: 0.5rem;
@@ -142,6 +142,9 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
         this.sceneEditor = sceneEditor;
         this.properties = null;
         this.propertyTableEventConnections = [];
+
+        sceneEditor.scene.project.events.modelAdded.connect(() => this.setPropertyTable(true));
+        sceneEditor.scene.project.events.modelDeleted.connect(() => this.setPropertyTable(true));
     }
 
     init() {
@@ -174,14 +177,19 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                     continue;
                 }
 
-                properties.push(new propertyTables.Property(`attr:${attributeType.id}`, attributeType.type, attributeType.name));
+                this.propertyTableEventConnections.push(
+                    attributeType.events.idChanged.connect(() => this.setPropertyTable(true)),
+                    attributeType.events.renamed.connect(() => this.setPropertyTable(true)),
+                    attributeType.events.typeChanged.connect(() => this.setPropertyTable(true))
+                );
+
                 addedAttributeIds.push(attributeType.id);
 
-                this.propertyTableEventConnections.push(
-                    attributeType.events.idChanged.connect(() => this.setPropertyTable()),
-                    attributeType.events.renamed.connect(() => this.setPropertyTable()),
-                    attributeType.events.typeChanged.connect(() => this.setPropertyTable())
-                );
+                if (!attributeType.id) {
+                    continue;
+                }
+
+                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name || "(Unnamed)"));
             }
         }
 
@@ -212,7 +220,7 @@ export class SceneEditorAttributeView extends components.Component {
             "number": "Number"
         });
 
-        this.typeInput.key = model.type;
+        this.typeInput.key = model.type || "string";
 
         this.add(this.idInput, this.nameInput, this.typeInput);
 
@@ -240,17 +248,24 @@ export class SceneEditorAttributeView extends components.Component {
 
         this.typeInput.events.selectionChanged.connect(() => this.model.type = this.typeInput.key);
     }
+}
 
-    get sceneEditor() {
-        return this.attributesPanel.sceneEditor;
-    }
+export class SceneEditorAttributesToolbar extends workspaces.Toolbar {
+    constructor(sceneEditor) {
+        super();
 
-    get scene() {
-        return this.sceneEditor.scene;
-    }
+        this.sceneEditor = sceneEditor;
 
-    get project() {
-        return this.scene.project;
+        this.addAttributeTypeButton = new ui.IconButton("icons/add.svg", "Create attribute type");
+
+        this.add(this.addAttributeTypeButton);
+
+        this.addAttributeTypeButton.events.activated.connect(function() {
+            var attributeType = new storyboardObjects.AttributeType(sceneEditor.scene.project);
+
+            sceneEditor.scene.addAttributeType(attributeType);
+            sceneEditor.scene.project.registerNewModels();
+        });
     }
 }
 
@@ -258,9 +273,15 @@ export class SceneEditorAttributesPanel extends workspaces.Panel {
     constructor(sceneEditor) {
         super("Attributes");
 
+        this.sceneEditor = sceneEditor;
+
+        this.toolbar = new SceneEditorAttributesToolbar(sceneEditor);
+        this.workArea = new workspaces.WorkArea();
+
+        this.add(this.toolbar, this.workArea);
         this.element.classList.add("attributesList");
 
-        this.sceneEditor = sceneEditor;
+        this.childContainerElement = this.workArea.documentArea.element;
 
         sceneEditor.scene.project.associateChildModels(this, new Map([
             [storyboardObjects.AttributeType, SceneEditorAttributeView]
@@ -280,6 +301,8 @@ export class SceneEditorPropertiesSidebar extends workspaces.Sidebar {
 
         this.workspace.add(this.propertiesPanel, this.attributesPanel);
         this.add(this.workspace);
+
+        this.workspace.activePanel = this.propertiesPanel;
     }
 
     init() {

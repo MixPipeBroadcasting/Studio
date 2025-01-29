@@ -12,6 +12,10 @@ export class AttributeType extends projects.ProjectModel {
         this.registerProperty("type", null, "typeChanged");
         this.registerReferenceProperty("parentStoryboardObject", null, "reparented");
     }
+
+    get sanitisedId() {
+        return this.id?.match(/([a-zA-Z_][a-zA-Z0-9_]*)/)?.[1] || "";
+    }
 }
 
 export class StoryboardObject extends projects.ProjectModel {
