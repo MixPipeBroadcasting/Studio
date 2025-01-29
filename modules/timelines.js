@@ -49,13 +49,13 @@ export class TimelineSource extends projects.ProjectModel {
         this.keyframes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "keyframes"], KeyframeSource);
 
         this.events.stateChanged.connect(function() {
-            thisScope.object[`${thisScope.property}_timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
+            thisScope.object[`${thisScope.property}:timeline`] = (thisScope.startTime != null || thisScope.stepTime != null) ? {
                 start: thisScope.startTime,
                 step: thisScope.stepTime,
                 keyframes: thisScope.keyframes.getModelList().map((keyframe) => keyframe.serialise())
             } : null;
 
-            thisScope.object[`${thisScope.property}_timelineModel`] = thisScope;
+            thisScope.object[`${thisScope.property}:timelineModel`] = thisScope;
         });
     }
 

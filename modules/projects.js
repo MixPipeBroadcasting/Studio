@@ -485,8 +485,8 @@ export class ProjectModel extends events.EventDrivenObject {
     registerAnimationProperty(name, interpolationMethod, ...options) {
         this.registerProperty(name, ...options);
 
-        this.registerProperty(`${name}_timeline`, null, null, false);
-        this.registerReferenceProperty(`${name}_timelineModel`);
+        this.registerProperty(`${name}:timeline`, null, null, false);
+        this.registerReferenceProperty(`${name}:timelineModel`);
 
         this.animationInterpolationMethods[name] = interpolationMethod;
     }
@@ -504,7 +504,7 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getAnimatedValue(name, type = "number") {
-        var timeline = this[`${name}_timeline`];
+        var timeline = this[`${name}:timeline`];
 
         if (!timeline || timeline.keyframes.length == 0) {
             return type == "number" ? this.getNumericValue(name) : this.getValue(name);
@@ -514,7 +514,7 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getValueComputationStatus(name) {
-        if (this[`${name}_timeline`]) {
+        if (this[`${name}:timeline`]) {
             return "animated";
         }
 
@@ -525,8 +525,27 @@ export class ProjectModel extends events.EventDrivenObject {
         return null;
     }
 
+    getAttribute(id, attributeTypeList = this.attributeTypes) {
+        var type = "string";
+
+        if (attributeTypeList) {
+            for (var attribute of attributeTypeList.getModelList()) {
+                if (attribute.id == id) {
+                    type = attribute.type;
+                    break;
+                }
+            }
+        }
+
+        this.getAnimatedValue(`attr:${id}`, type);
+    }
+
+    setAttribute(id, value) {
+        this[`attr:${id}`] = value;
+    }
+
     propertyIsKeyframedNow(name) {
-        var timeline = this[`${name}_timeline`];
+        var timeline = this[`${name}:timeline`];
         
         if (!timeline) {
             return false;
@@ -538,8 +557,8 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     addOrEditKeyframeNow(name, value, doNotChangeComputationStatus) {
-        var timeline = this[`${name}_timeline`];
-        var timelineModel = this[`${name}_timelineModel`];
+        var timeline = this[`${name}:timeline`];
+        var timelineModel = this[`${name}:timelineModel`];
 
         if (doNotChangeComputationStatus) {
             var currentStatus = this.getValueComputationStatus(name);

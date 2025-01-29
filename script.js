@@ -42,7 +42,7 @@ if (!opener) {
         rectangle.width = scene.width / 8;
         rectangle.height = scene.height;
 
-        rectangle.y_timeline = {
+        rectangle["y:timeline"] = {
             start: Date.now() + 3000 + (i * 100),
             keyframes: [
                 {t: 0, value: 1080},
@@ -69,6 +69,14 @@ if (!opener) {
     scene2.name = "Scene 2";
     scene2.x = 400;
     scene2.y = 180;
+
+    var testAttribute = new storyboardObjects.AttributeType(project);
+
+    testAttribute.id = "test";
+    testAttribute.name = "Test";
+    testAttribute.type = "number";
+
+    scene2.addAttributeType(testAttribute);
 
     var textBackground = new sceneObjects.Rectangle(project);
 

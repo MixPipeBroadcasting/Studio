@@ -3,6 +3,17 @@ import * as sceneObjects from "./sceneobjects.js";
 import * as timelines from "./timelines.js";
 import * as sources from "./sources.js";
 
+export class AttributeType extends projects.ProjectModel {
+    constructor(project, path = ["attributeTypes", projects.generateKey()]) {
+        super(project, path);
+
+        this.registerProperty("id", null, "idChanged");
+        this.registerProperty("name", null, "renamed");
+        this.registerProperty("type", null, "typeChanged");
+        this.registerReferenceProperty("parentStoryboardObject", null, "reparented");
+    }
+}
+
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
         super(project, path);
@@ -12,6 +23,14 @@ export class StoryboardObject extends projects.ProjectModel {
         this.registerProperty("width", 600, "resized");
         this.registerProperty("height", 400, "resized");
         this.registerReferenceProperty("parentGroup", null, "reparented");
+
+        this.attributeTypes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "attributeTypes"], AttributeType);
+    }
+
+    addAttributeType(attributeType) {
+        attributeType.parentStoryboardObject = this;
+
+        this.attributeTypes.addModel(attributeType);
     }
 }
 
@@ -274,6 +293,7 @@ export class AnimationController extends StoryboardObject {
     }
 }
 
+projects.registerModelSyncHandler(["attributeTypes"], AttributeType);
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);
 projects.registerModelSyncHandler(["scenes"], Scene);
 projects.registerModelSyncHandler(["feeds"], Feed);

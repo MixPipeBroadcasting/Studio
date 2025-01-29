@@ -1,11 +1,16 @@
 export class EventConnection {
-    constructor(component, callback) {
+    constructor(eventType, component, callback) {
+        this.eventType = eventType;
         this.component = component;
         this.callback = callback;
     }
 
     call(data) {
         this.callback.apply(this.component, [data]);
+    }
+
+    disconnect() {
+        this.eventType.disconnect(this);
     }
 }
 
@@ -17,7 +22,7 @@ export class EventType {
     }
 
     connect(callback, component = this.component) {
-        var connection = new EventConnection(component, callback);
+        var connection = new EventConnection(this, component, callback);
 
         this.connections.push(connection);
 

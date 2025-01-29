@@ -7,6 +7,10 @@ components.css(`
         overflow: auto;
     }
 
+    mixpipe-properties tr.spacer {
+        height: 1rem;
+    }
+
     mixpipe-properties td > div {
         display: flex;
         align-items: center;
@@ -68,7 +72,10 @@ export class Property {
     generateInputElementForModel(model) {
         var thisScope = this;
 
-        if (!model.hasOwnProperty(this.name)) {
+        if (!(
+            (this.name.startsWith("attr:") && model.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
+            model.hasOwnProperty(this.name)
+        )) {
             return components.element("span", [
                 components.style("display", "inline-block"),
                 components.style("width", "100%"),
@@ -79,6 +86,7 @@ export class Property {
 
         var computationStatus = null;
         var returnElement = components.text("(Unknown)");
+        var existenceCheckElement = components.element("span");
 
         var editTemplateButton = new ui.IconButton("icons/computed.svg", "Edit template");
         var editTemplateDialog = new ui.ValueEditorDialog("Enter the template source to be rendered.");
@@ -95,7 +103,7 @@ export class Property {
             editTemplateDialog.openBelowElement(editTemplateButton.element, true);
         });
 
-        editTemplateButton.setVisiblity(model[`${this.name}_canTemplate`]);
+        editTemplateButton.setVisiblity(this.name.startsWith("attr:") || model[`${this.name}_canTemplate`]);
 
         var targetButton = null;
 
@@ -128,7 +136,7 @@ export class Property {
                 function updateInputComputationIndicator() {
                     updateComputationStatus();
 
-                    if (computationStatus != null && model[`${thisScope.name}_canTemplate`]) {
+                    if (computationStatus != null && (thisScope.name.startsWith("attr:") || model[`${thisScope.name}_canTemplate`])) {
                         input.enabled = computationStatus == "animated";
 
                         input.element.setAttribute("mixpipe-computed", computationStatus);
@@ -176,7 +184,6 @@ export class Property {
                 input.events.valueChanged.connect(function(event) {
                     if (ignoreNextValueChange) {
                         ignoreNextValueChange = false;
-
                         return;
                     }
 
@@ -215,6 +222,10 @@ export class Property {
                 }
 
                 requestAnimationFrame(function updateComputed() {
+                    if (!document.body.contains(existenceCheckElement)) {
+                        return;
+                    }
+
                     if (document.activeElement == input.element) {
                         requestAnimationFrame(updateComputed);
 
@@ -296,7 +307,7 @@ export class Property {
 
         }
 
-        return components.element("div", [returnElement, editTemplateButton.element, targetButton?.element, editTemplateDialog.element]);
+        return components.element("div", [returnElement, editTemplateButton.element, targetButton?.element, editTemplateDialog.element, existenceCheckElement]);
     }
 }
 
@@ -323,6 +334,16 @@ export class PropertyTable extends components.Component {
         super("table");
 
         for (var property of properties) {
+            if (property == null) {
+                this.element.append(components.element("tr", [components.className("spacer")]));
+                continue;
+            }
+
+            if (property.name.startsWith("attr:")) {
+                this.add(new PropertyRow(property, models));
+                continue;
+            }
+
             var atLeastOneModelHasProperty = false;
 
             for (var model of models) {

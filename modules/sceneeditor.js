@@ -5,7 +5,25 @@ import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as propertyTables from "./propertytables.js";
+import * as storyboardObjects from "./storyboardobjects.js";
 import * as sceneObjects from "./sceneobjects.js";
+
+components.css(`
+    mixpipe-panel.attributesList {
+        ${components.styleMixins.VERTICAL_STACK}
+        padding: 0.5rem;
+        gap: 0.5rem;
+        overflow: auto;
+    }
+
+    mixpipe-attribute {
+        ${components.styleMixins.VERTICAL_STACK}
+        padding: 0.5rem;
+        gap: 0.5rem;
+        background: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+`);
 
 export const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name", {placeholder: "Untitled object"}),
@@ -122,6 +140,8 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
         super("Properties");
 
         this.sceneEditor = sceneEditor;
+        this.properties = null;
+        this.propertyTableEventConnections = [];
     }
 
     init() {
@@ -130,11 +150,121 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
         this.sceneEditor.events.selectionChanged.connect(() => this.setPropertyTable(), this);
     }
 
-    setPropertyTable() {
-        this.properties = new propertyTables.PropertyTableContainer(this.sceneEditor.selectedObjects, PROPERTIES);
+    setPropertyTable(updating = false) {
+        var properties = [...PROPERTIES, null];
+        var addedAttributeIds = [];
+
+        if (updating && this.properties && this.properties.element.contains(document.activeElement)) {
+            return;
+        }
+
+        for (var eventConnection of this.propertyTableEventConnections) {
+            eventConnection.disconnect();
+        }
+
+        this.propertyTableEventConnections = [];
+
+        for (var object of this.sceneEditor.selectedObjects) {
+            if (!(object instanceof sceneObjects.CompositedScene)) {
+                continue;
+            }
+
+            for (var attributeType of object.scene.attributeTypes.getModelList()) {
+                if (addedAttributeIds.includes(attributeType.id)) {
+                    continue;
+                }
+
+                properties.push(new propertyTables.Property(`attr:${attributeType.id}`, attributeType.type, attributeType.name));
+                addedAttributeIds.push(attributeType.id);
+
+                this.propertyTableEventConnections.push(
+                    attributeType.events.idChanged.connect(() => this.setPropertyTable()),
+                    attributeType.events.renamed.connect(() => this.setPropertyTable()),
+                    attributeType.events.typeChanged.connect(() => this.setPropertyTable())
+                );
+            }
+        }
+
+        this.properties = new propertyTables.PropertyTableContainer(this.sceneEditor.selectedObjects, properties);
 
         this.clear();
         this.add(this.properties);
+    }
+}
+
+export class SceneEditorAttributeView extends components.Component {
+    constructor(model, attributesPanel) {
+        super("mixpipe-attribute");
+
+        var thisScope = this;
+        var ignoreNextValueChange = false;
+
+        this.model = model;
+        this.attributesPanel = attributesPanel;
+
+        // TODO: Add labels
+        this.idInput = new ui.Input("", "string", model.id);
+        this.nameInput = new ui.Input("", "string", model.name);
+        this.typeInput = new ui.SelectionInput();
+
+        this.typeInput.loadObject({
+            "string": "String",
+            "number": "Number"
+        });
+
+        this.typeInput.key = model.type;
+
+        this.add(this.idInput, this.nameInput, this.typeInput);
+
+        this.idInput.events.valueChanged.connect(function(event) {
+            if (ignoreNextValueChange) {
+                ignoreNextValueChange = false;
+                return;
+            }
+
+            thisScope.model.id = event.value;
+        });
+
+        this.idInput.events.valueCommitted.connect(() => ignoreNextValueChange = true);
+
+        this.nameInput.events.valueChanged.connect(function(event) {
+            if (ignoreNextValueChange) {
+                ignoreNextValueChange = false;
+                return;
+            }
+
+            thisScope.model.name = event.value;
+        });
+
+        this.nameInput.events.valueCommitted.connect(() => ignoreNextValueChange = true);
+
+        this.typeInput.events.selectionChanged.connect(() => this.model.type = this.typeInput.key);
+    }
+
+    get sceneEditor() {
+        return this.attributesPanel.sceneEditor;
+    }
+
+    get scene() {
+        return this.sceneEditor.scene;
+    }
+
+    get project() {
+        return this.scene.project;
+    }
+}
+
+export class SceneEditorAttributesPanel extends workspaces.Panel {
+    constructor(sceneEditor) {
+        super("Attributes");
+
+        this.element.classList.add("attributesList");
+
+        this.sceneEditor = sceneEditor;
+
+        sceneEditor.scene.project.associateChildModels(this, new Map([
+            [storyboardObjects.AttributeType, SceneEditorAttributeView]
+        ]), [this], (model) => model.parentStoryboardObject == sceneEditor.scene);
     }
 }
 
@@ -146,8 +276,9 @@ export class SceneEditorPropertiesSidebar extends workspaces.Sidebar {
 
         this.workspace = new workspaces.Workspace();
         this.propertiesPanel = new SceneEditorPropertiesPanel(sceneEditor);
+        this.attributesPanel = new SceneEditorAttributesPanel(sceneEditor);
 
-        this.workspace.add(this.propertiesPanel);
+        this.workspace.add(this.propertiesPanel, this.attributesPanel);
         this.add(this.workspace);
     }
 
