@@ -333,7 +333,7 @@ export class StoryboardGroupView extends StoryboardObjectView {
 
         this.element.append(this.resizeHandleElement);
 
-        this.model.events.renamed.connect(this.updateInfo, this);
+        model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
         this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
@@ -409,7 +409,7 @@ export class SceneView extends StoryboardObjectView {
 
         this.updatePositioning();
 
-        this.model.events.renamed.connect(this.updateInfo, this);
+        model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
         this.connectPositioningUpdater(this.updateCanvasSize);
@@ -522,7 +522,7 @@ export class AnimationControllerView extends StoryboardObjectView {
 
         this.updatePositioning();
 
-        this.model.events.renamed.connect(this.updateInfo, this);
+        model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
         this.triggerButton.events.activated.connect(() => this.model.startOrReset());

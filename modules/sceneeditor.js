@@ -173,7 +173,7 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
             }
 
             for (var attributeType of object.scene.attributeTypes.getModelList()) {
-                object.scene.ensureAttributeProperty(attributeType.id);
+                object.ensureAttributeProperty(attributeType.id);
 
                 if (addedAttributeIds.includes(attributeType.id)) {
                     continue;
@@ -191,7 +191,7 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                     continue;
                 }
 
-                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name || "(Unnamed)", {accessor: "scene"}));
+                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name || "(Unnamed)"));
             }
         }
 
@@ -206,15 +206,12 @@ export class SceneEditorAttributeView extends components.Component {
     constructor(model, attributesPanel) {
         super("mixpipe-attribute");
 
-        var thisScope = this;
-        var ignoreNextValueChange = false;
-
         this.model = model;
         this.attributesPanel = attributesPanel;
 
         // TODO: Add labels
-        this.idInput = new ui.Input("", "string", model.id);
-        this.nameInput = new ui.Input("", "string", model.name);
+        this.idInput = new ui.Input("");
+        this.nameInput = new ui.Input("");
         this.typeInput = new ui.SelectionInput();
 
         this.typeInput.loadObject({
@@ -223,33 +220,22 @@ export class SceneEditorAttributeView extends components.Component {
             "scene": "Scene"
         });
 
-        this.typeInput.key = model.type || "string";
-
         this.add(this.idInput, this.nameInput, this.typeInput);
 
-        this.idInput.events.valueChanged.connect(function(event) {
-            if (ignoreNextValueChange) {
-                ignoreNextValueChange = false;
-                return;
-            }
+        model.events.idChanged.connect(this.updateInfo, this);
+        model.events.renamed.connect(this.updateInfo, this);
+        model.events.typeChanged.connect(this.updateInfo, this);
+        this.updateInfo();
 
-            thisScope.model.id = event.value;
-        });
+        this.idInput.events.valueCommitted.connect((event) => this.model.id = event.value);
+        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
+        this.typeInput.events.selectionCommitted.connect(() => this.model.type = this.typeInput.key);
+    }
 
-        this.idInput.events.valueCommitted.connect(() => ignoreNextValueChange = true);
-
-        this.nameInput.events.valueChanged.connect(function(event) {
-            if (ignoreNextValueChange) {
-                ignoreNextValueChange = false;
-                return;
-            }
-
-            thisScope.model.name = event.value;
-        });
-
-        this.nameInput.events.valueCommitted.connect(() => ignoreNextValueChange = true);
-
-        this.typeInput.events.selectionChanged.connect(() => this.model.type = this.typeInput.key);
+    updateInfo() {
+        this.idInput.value = this.model.id || "";
+        this.nameInput.value = this.model.name || "";
+        this.typeInput.key = this.model.type || "string";
     }
 }
 

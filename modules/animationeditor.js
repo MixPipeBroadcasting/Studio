@@ -303,6 +303,14 @@ export class TimelineSourceEditorView extends components.Component {
         });
     }
 
+    get propertyName() {
+        if (this.model.property.startsWith("attr:")) {
+            return this.model.object?.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.model.property)?.name || "(Unnamed)";
+        }
+
+        return sceneEditor.PROPERTIES.find((property) => property.name == this.model.property)?.displayName || this.model.property;
+    }
+
     update() {
         if (!this.model.exists) {
             this.removeAlways(this.update);
@@ -311,7 +319,7 @@ export class TimelineSourceEditorView extends components.Component {
         }
 
         this.objectNameElement.textContent = this.model.object?.name || "Untitled object";
-        this.objectPropertyElement.textContent = sceneEditor.PROPERTIES.find((property) => property.name == this.model.property)?.displayName || this.model.property;
+        this.objectPropertyElement.textContent = this.propertyName;
 
         if (this.selected) {
             this.element.classList.add("selected");

@@ -73,12 +73,8 @@ export class Property {
     generateInputElementForModel(model) {
         var thisScope = this;
 
-        if (this.options.accessor) {
-            model = model[this.options.accessor];
-        }
-
         if (!(
-            (this.name.startsWith("attr:") && model.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
+            (this.name.startsWith("attr:") && model.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
             model.hasOwnProperty(this.name)
         )) {
             return components.element("span", [
@@ -275,7 +271,7 @@ export class Property {
                     }
 
                     if (!(model[thisScope.name] instanceof storyboardObjects.Scene)) {
-                        input.value = "(Invalid)";
+                        input.value = "";
                         return;
                     }
 

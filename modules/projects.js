@@ -230,15 +230,16 @@ export class Project extends events.EventDrivenObject {
 
     registerNewModels() {
         var thisScope = this;
+        var unregisteredModels = [...this.unregisteredModels];
 
-        this.models.push(...this.unregisteredModels);
+        thisScope.unregisteredModels = [];
+
+        this.models.push(...unregisteredModels);
 
         setTimeout(function() {
-            for (var model of thisScope.unregisteredModels) {
+            for (var model of unregisteredModels) {
                 thisScope.events.modelAdded.emit({model});
             }
-            
-            thisScope.unregisteredModels = [];
         });
     }
 
@@ -524,7 +525,11 @@ export class ProjectModel extends events.EventDrivenObject {
         return null;
     }
 
-    getAttributeType(id, attributeTypeList = this.attributeTypes) {
+    get attributeTypeListOwner() {
+        return this;
+    }
+
+    getAttributeType(id, attributeTypeList = this.attributeTypeListOwner?.attributeTypes) {
         if (!attributeTypeList) {
             return "string";
         }
@@ -554,18 +559,6 @@ export class ProjectModel extends events.EventDrivenObject {
                 "number": animations.INTERPOLATION_METHODS.number
             }[this.getAttributeType(id)] ?? animations.INTERPOLATION_METHODS.number, null, "attributeChanged");
         }
-    }
-
-    getAttribute(id, attributeTypeList = this.attributeTypes) {
-        this.ensureAttributeProperty(id);
-
-        return this.getAnimatedValue(`attr:${id}`, this.getAttributeType(id, attributeTypeList));
-    }
-
-    setAttribute(id, value) {
-        this.ensureAttributeProperty(id);
-
-        this[`attr:${id}`] = value;
     }
 
     propertyIsKeyframedNow(name) {

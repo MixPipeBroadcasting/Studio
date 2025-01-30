@@ -284,9 +284,13 @@ export class SelectionInput extends components.Component {
         this.registerState("selectedIndex", "selectionChanged", selectedIndex, this.renderOptions);
         this.registerState("enabled", "interactionChanged", true, (event) => this.element.disabled = !event.value);
 
+        this.events.selectionCommitted = new events.EventType(this);
+
         this.element.addEventListener("input", function(event) {
             thisScope.selectedIndex = Number(event.target.value);
         });
+
+        this.element.addEventListener("change", (event) => this.events.selectionCommitted.emit({value: event.target.value}));
 
         this.renderOptions();
     }

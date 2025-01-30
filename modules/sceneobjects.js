@@ -66,6 +66,10 @@ export class CompositedScene extends SceneObject {
         this.registerReferenceProperty("scene", null, "sceneChanged", true);
     }
 
+    get attributeTypeListOwner() {
+        return this.scene;
+    }
+
     draw(context) {
         if (!this.scene) {
             return;
