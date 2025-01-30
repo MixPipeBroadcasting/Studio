@@ -305,7 +305,7 @@ export class TimelineSourceEditorView extends components.Component {
 
     get propertyName() {
         if (this.model.property.startsWith("attr:")) {
-            return this.model.object?.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.model.property)?.name || "(Unnamed)";
+            return this.model.object?.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.model.property)?.name.trim() || "(Unnamed)";
         }
 
         return sceneEditor.PROPERTIES.find((property) => property.name == this.model.property)?.displayName || this.model.property;
@@ -318,7 +318,7 @@ export class TimelineSourceEditorView extends components.Component {
             return;
         }
 
-        this.objectNameElement.textContent = this.model.object?.name || "Untitled object";
+        this.objectNameElement.textContent = this.model.object?.name.trim() || "Untitled object";
         this.objectPropertyElement.textContent = this.propertyName;
 
         if (this.selected) {
