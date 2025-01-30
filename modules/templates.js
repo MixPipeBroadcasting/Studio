@@ -31,7 +31,7 @@ export function evaluteDirectTemplate(template, id) {
         return template;
     }
 
-    var match = template.match(/{{(.*?)}}/g);
+    var match = template.match(/{{(.*?)}}/);
 
     if (!match) {
         return template;

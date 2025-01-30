@@ -103,7 +103,7 @@ export class Property {
         editTemplateButton.element.classList.add("editTemplateButton");
 
         editTemplateButton.events.activated.connect(function() {
-            var currentValue = model[thisScope.name];
+            var currentValue = model.project.get([...model.path, thisScope.name]);
 
             editTemplateDialog.input.value = ["string", "number"].includes(typeof(currentValue)) ? currentValue : "";
 
@@ -266,6 +266,14 @@ export class Property {
                 targetButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a scene", undefined, "Select a scene");
 
                 function updateSelectedScene() {
+                    var rawValue = model.project.get([...model.path, thisScope.name]);
+
+                    if (typeof(rawValue) == "string" && rawValue.match(/{{.*}}/)) {
+                        input.element.setAttribute("mixpipe-computed", "computed");
+                    } else {
+                        input.element.removeAttribute("mixpipe-computed");
+                    }
+
                     if (!(model[thisScope.name] instanceof storyboardObjects.Scene)) {
                         input.value = "(Invalid)";
                         return;
@@ -316,6 +324,16 @@ export class Property {
                 }
 
                 updateSelectedScene();
+
+                requestAnimationFrame(function updateComputed() {
+                    if (!document.body.contains(existenceCheckElement)) {
+                        return;
+                    }
+
+                    updateSelectedScene();
+
+                    requestAnimationFrame(updateComputed);
+                });
 
                 returnElement = input.element;
 
