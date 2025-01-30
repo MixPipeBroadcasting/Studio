@@ -63,7 +63,7 @@ export class CompositedScene extends SceneObject {
 
         this.registerProperty("type", "compositedScene");
         this.registerProperty("name", "Composited scene", "renamed", false);
-        this.registerReferenceProperty("scene");
+        this.registerReferenceProperty("scene", null, "sceneChanged", true);
     }
 
     draw(context) {

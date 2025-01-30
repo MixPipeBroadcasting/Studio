@@ -60,6 +60,8 @@ export function handleMessage(data) {
             workspaces.addEventListenersForProject(project);
         }
 
+        console.log(project);
+
         return;
     }
 }

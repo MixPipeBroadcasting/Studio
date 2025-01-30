@@ -4,7 +4,7 @@ function Send(result) {
     }
 
     return result.then(function(value) {
-        self.postMessage({status: "ok", value: String(value)});
+        self.postMessage({status: "ok", value});
     });
 }
 

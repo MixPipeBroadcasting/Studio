@@ -1,5 +1,6 @@
 import * as components from "./components.js";
 import * as ui from "./ui.js";
+import * as storyboardObjects from "./storyboardobjects.js";
 
 components.css(`
     mixpipe-properties {
@@ -72,8 +73,12 @@ export class Property {
     generateInputElementForModel(model) {
         var thisScope = this;
 
+        if (this.options.accessor) {
+            model = model[this.options.accessor];
+        }
+
         if (!(
-            (this.name.startsWith("attr:") && model.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
+            (this.name.startsWith("attr:") && model.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
             model.hasOwnProperty(this.name)
         )) {
             return components.element("span", [
@@ -98,7 +103,9 @@ export class Property {
         editTemplateButton.element.classList.add("editTemplateButton");
 
         editTemplateButton.events.activated.connect(function() {
-            editTemplateDialog.input.value = model[thisScope.name];
+            var currentValue = model[thisScope.name];
+
+            editTemplateDialog.input.value = ["string", "number"].includes(typeof(currentValue)) ? currentValue : "";
 
             editTemplateDialog.openBelowElement(editTemplateButton.element, true);
         });
@@ -107,8 +114,12 @@ export class Property {
 
         var targetButton = null;
 
-        function getValue() {
+        function getValue(textualOnly = false) {
             var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
+
+            if (textualOnly && !["string", "number"].includes(typeof(currentValue))) {
+                return "";
+            }
 
             if (thisScope.type == "number" && thisScope.options.roundNumber) {
                 currentValue = Math.round(currentValue);
@@ -126,7 +137,7 @@ export class Property {
         switch (this.type) {
             case "string":
             case "number":
-                var input = new ui.Input(this.options.placeholder || "", {"string": "text", "number": "number"}[this.type], getValue());
+                var input = new ui.Input(this.options.placeholder || "", {"string": "text", "number": "number"}[this.type], getValue(true));
                 var ignoreNextValueChange = false;
 
                 function isTargetingProperty() {
@@ -176,7 +187,7 @@ export class Property {
                 input.element.addEventListener("focus", () => input.element.select());
 
                 input.element.addEventListener("blur", function() {
-                    input.value = getValue();
+                    input.value = getValue(true);
                 });
 
                 model.project.events.localStateChanged.connect(updateInputTargetState);
@@ -215,7 +226,7 @@ export class Property {
                         }
 
                         ignoreNextValueChange = true;
-                        input.value = getValue();
+                        input.value = getValue(true);
 
                         updateInputComputationIndicator();
                     });
@@ -234,7 +245,7 @@ export class Property {
 
                     if (computationStatus != null) {
                         ignoreNextValueChange = true;
-                        input.value = getValue();
+                        input.value = getValue(true);
                     }
 
                     updateInputComputationIndicator();
@@ -255,6 +266,11 @@ export class Property {
                 targetButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a scene", undefined, "Select a scene");
 
                 function updateSelectedScene() {
+                    if (!(model[thisScope.name] instanceof storyboardObjects.Scene)) {
+                        input.value = "(Invalid)";
+                        return;
+                    }
+
                     input.value = model[thisScope.name].name;
 
                     sceneRenameEvent?.component.events.renamed.disconnect(sceneRenameEvent);
@@ -307,7 +323,7 @@ export class Property {
 
         }
 
-        return components.element("div", [returnElement, editTemplateButton.element, targetButton?.element, editTemplateDialog.element, existenceCheckElement]);
+        return components.element("div", [returnElement, targetButton?.element, editTemplateButton.element, editTemplateDialog.element, existenceCheckElement]);
     }
 }
 

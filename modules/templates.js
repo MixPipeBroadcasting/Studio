@@ -26,12 +26,22 @@ export function evaluateExpression(expression, id) {
     return cachedValues[id] || "";
 }
 
-export function evaluateTemplate(template, id) {
+export function evaluteDirectTemplate(template, id) {
     if (typeof(template) != "string") {
         return template;
     }
 
-    if (template.split("{{").length == 1) {
+    var match = template.match(/{{(.*?)}}/g);
+
+    if (!match) {
+        return template;
+    }
+
+    return evaluateExpression(match[1], `${id}|expr=0`);
+}
+
+export function evaluateTemplate(template, id) {
+    if (typeof(template) != "string" || template.split("{{").length == 1) {
         return template;
     }
 

@@ -173,6 +173,8 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
             }
 
             for (var attributeType of object.scene.attributeTypes.getModelList()) {
+                object.scene.ensureAttributeProperty(attributeType.id);
+
                 if (addedAttributeIds.includes(attributeType.id)) {
                     continue;
                 }
@@ -189,7 +191,7 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                     continue;
                 }
 
-                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name || "(Unnamed)"));
+                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name || "(Unnamed)", {accessor: "scene"}));
             }
         }
 
@@ -217,7 +219,8 @@ export class SceneEditorAttributeView extends components.Component {
 
         this.typeInput.loadObject({
             "string": "String",
-            "number": "Number"
+            "number": "Number",
+            "scene": "Scene"
         });
 
         this.typeInput.key = model.type || "string";

@@ -145,7 +145,7 @@ export class Project extends events.EventDrivenObject {
 
         if (transaction instanceof SetDataTransaction) {
             this.modelPropertyEventAssociations[pathHash]?.emit({value: transaction.value});
-            this.modelReferencePropertyEventAssociations[pathHash]?.emit({value: transaction.value != null ? this.getOrCreateModel(transaction.value) : null});
+            this.modelReferencePropertyEventAssociations[pathHash]?.emit({value: Array.isArray(transaction.value) ? this.getOrCreateModel(transaction.value) : null});
         }
     }
 
@@ -400,6 +400,7 @@ export class ProjectModel extends events.EventDrivenObject {
         this.project.unregisteredModels.push(this);
 
         this.propertyEventAssociations = {};
+        this.lastAttributeTypes = {};
     }
 
     get exists() {
@@ -411,12 +412,6 @@ export class ProjectModel extends events.EventDrivenObject {
 
         this[`${name}_canTemplate`] = canTemplate;
 
-        if (this.hasOwnProperty(name)) {
-            this[name] = defaultValue;
-
-            return;
-        }
-
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
             this.propertyEventAssociations[name] = propertyEventName;
@@ -424,6 +419,7 @@ export class ProjectModel extends events.EventDrivenObject {
         }
 
         Object.defineProperty(this, name, {
+            configurable: true,
             get: function() {
                 return thisScope.project.get([...thisScope.path, name]);
             },
@@ -441,16 +437,10 @@ export class ProjectModel extends events.EventDrivenObject {
         }
     }
 
-    registerReferenceProperty(name, defaultValue = null, propertyEventName = null) {
+    registerReferenceProperty(name, defaultValue = null, propertyEventName = null, canTemplate = false) {
         var thisScope = this;
 
-        this[`${name}_canTemplate`] = false;
-
-        if (this.hasOwnProperty(name)) {
-            this[name] = defaultValue.path;
-
-            return;
-        }
+        this[`${name}_canTemplate`] = canTemplate;
 
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
@@ -459,6 +449,7 @@ export class ProjectModel extends events.EventDrivenObject {
         }
 
         Object.defineProperty(this, name, {
+            configurable: true,
             get: function() {
                 var path = thisScope.project.get([...thisScope.path, name]);
 
@@ -466,10 +457,18 @@ export class ProjectModel extends events.EventDrivenObject {
                     return path;
                 }
 
+                if (typeof(path) == "string") {
+                    path = templates.evaluteDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`);
+                }
+
+                if (!Array.isArray(path)) {
+                    return null;
+                }
+
                 return thisScope.project.getOrCreateModel(path);
             },
             set: function(newValue) {
-                thisScope.project.set([...thisScope.path, name], newValue != null ? newValue.path : newValue);
+                thisScope.project.set([...thisScope.path, name], newValue?.path ?? newValue);
 
                 if (propertyEventName != null) {
                     this.events[propertyEventName].emit({value: newValue});
@@ -525,22 +524,47 @@ export class ProjectModel extends events.EventDrivenObject {
         return null;
     }
 
-    getAttribute(id, attributeTypeList = this.attributeTypes) {
-        var type = "string";
+    getAttributeType(id, attributeTypeList = this.attributeTypes) {
+        if (!attributeTypeList) {
+            return "string";
+        }
 
-        if (attributeTypeList) {
-            for (var attribute of attributeTypeList.getModelList()) {
-                if (attribute.id == id) {
-                    type = attribute.type;
-                    break;
-                }
+        for (var attribute of attributeTypeList.getModelList()) {
+            if (attribute.id == id) {
+                return attribute.type;
             }
         }
 
-        this.getAnimatedValue(`attr:${id}`, type);
+        return "string";
+    }
+
+    ensureAttributeProperty(id) {
+        var key = `attr:${id}`;
+        var type = this.getAttributeType(id);
+
+        if (this.lastAttributeTypes[id] != type) {
+            this.lastAttributeTypes[id] = type;
+
+            if (type == "scene") {
+                this.registerReferenceProperty(key, null, "attributeChanged", true);
+                return;
+            }
+
+            this.registerAnimationProperty(key, {
+                "number": animations.INTERPOLATION_METHODS.number
+            }[this.getAttributeType(id)] ?? animations.INTERPOLATION_METHODS.number, null, "attributeChanged");
+        }
+    }
+
+    getAttribute(id, attributeTypeList = this.attributeTypes) {
+        this.ensureAttributeProperty(id);
+
+        return this.getAnimatedValue(`attr:${id}`, this.getAttributeType(id, attributeTypeList));
     }
 
     setAttribute(id, value) {
+        this.ensureAttributeProperty(id);
+
         this[`attr:${id}`] = value;
     }
 
