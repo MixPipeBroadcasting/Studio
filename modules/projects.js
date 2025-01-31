@@ -510,13 +510,18 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getAnimatedValue(name, type = "number") {
+        var thisScope = this;
         var timeline = this[`${name}:timeline`];
 
-        if (!timeline || timeline.keyframes.length == 0) {
-            return type == "number" ? this.getNumericValue(name) : this.getValue(name);
+        function getFallback() {
+            return type == "number" ? thisScope.getNumericValue(name) : thisScope.getValue(name);
         }
 
-        return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]);
+        if (!timeline || timeline.keyframes.length == 0) {
+            return getFallback();
+        }
+
+        return animations.getValueInTimeline(timeline, animations.INTERPOLATION_METHODS[this.animationInterpolationMethods[name]]) ?? getFallback();
     }
 
     getValueComputationStatus(name) {

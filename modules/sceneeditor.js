@@ -194,7 +194,7 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                     continue;
                 }
 
-                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name.trim() || "(Unnamed)"));
+                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name?.trim() || "(Unnamed)"));
             }
         }
 

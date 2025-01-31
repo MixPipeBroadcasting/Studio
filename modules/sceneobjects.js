@@ -97,7 +97,7 @@ export class CompositedScene extends SceneObject {
             for (var attributeType of attributeTypes) {
                 this.ensureAttributeProperty(attributeType.id);
 
-                sceneOptions.env[attributeType.id] = this.getAnimatedValue(`attr:${attributeType.id}`, attributeType.type);
+                sceneOptions.env[attributeType.id] = this.getAnimatedValue(`attr:${attributeType.id}`, attributeType.type || "string");
             }
 
             this.scene.drawToContext(canvas.getContext("2d"), sceneOptions);
