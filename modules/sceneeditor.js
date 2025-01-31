@@ -168,7 +168,7 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
         this.propertyTableEventConnections = [];
 
         for (var object of this.sceneEditor.selectedObjects) {
-            if (!(object instanceof sceneObjects.CompositedScene)) {
+            if (!(object instanceof sceneObjects.CompositedScene) || !object.scene) {
                 continue;
             }
 

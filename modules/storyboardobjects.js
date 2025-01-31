@@ -86,9 +86,15 @@ export class Scene extends StoryboardObject {
         return objectsAtPoint;
     }
 
-    drawToContext(context = this.canvasContext) {
+    drawToContext(context = this.canvasContext, options = {}) {
+        if (options.callStack?.includes(this)) {
+            return;
+        }
+
+        options.callStack = [...(options.callStack || []), this];
+
         for (var object of this.objects.getModelList()) {
-            object.draw(context);
+            object.draw(context, options);
         }
     }
 

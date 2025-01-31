@@ -402,16 +402,23 @@ export class ProjectModel extends events.EventDrivenObject {
 
         this.propertyEventAssociations = {};
         this.lastAttributeTypes = {};
+        this.templateOptions = {};
     }
 
     get exists() {
         return !!this.project.get(this.path);
     }
 
-    registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true) {
+    registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true, override = false) {
         var thisScope = this;
 
         this[`${name}_canTemplate`] = canTemplate;
+
+        if (this.hasOwnProperty(name) && !override) {
+            this[name] = defaultValue;
+
+            return;
+        }
 
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
@@ -459,7 +466,7 @@ export class ProjectModel extends events.EventDrivenObject {
                 }
 
                 if (typeof(path) == "string") {
-                    path = templates.evaluteDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`);
+                    path = templates.evaluteDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`, thisScope.templateOptions);
                 }
 
                 if (!Array.isArray(path)) {
@@ -496,11 +503,11 @@ export class ProjectModel extends events.EventDrivenObject {
             return this[name];
         }
 
-        return templates.evaluateTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`);
+        return templates.evaluateTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`, this.templateOptions);
     }
 
     getNumericValue(name) {
-        return templates.evaluateNumericTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`);
+        return templates.evaluateNumericTemplate(this[name], `prop=${name}|path=${this.path.join(".")}`, this.templateOptions);
     }
 
     getAnimatedValue(name, type = "number") {
@@ -557,8 +564,12 @@ export class ProjectModel extends events.EventDrivenObject {
 
             this.registerAnimationProperty(key, {
                 "number": animations.INTERPOLATION_METHODS.number
-            }[this.getAttributeType(id)] ?? animations.INTERPOLATION_METHODS.number, null, "attributeChanged");
+            }[this.getAttributeType(id)] ?? animations.INTERPOLATION_METHODS.number, null, "attributeChanged", true, true);
         }
+    }
+
+    serialise() {
+        return this.path;
     }
 
     propertyIsKeyframedNow(name) {

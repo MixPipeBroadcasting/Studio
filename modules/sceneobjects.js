@@ -1,5 +1,7 @@
 import * as projects from "./projects.js";
 
+var nextCompositionId = 0;
+
 export class SceneObject extends projects.ProjectModel {
     constructor(project, path = ["sceneObjects", projects.generateKey()]) {
         super(project, path);
@@ -12,7 +14,7 @@ export class SceneObject extends projects.ProjectModel {
         this.registerAnimationProperty("height", "number", 0, "resized");
     }
 
-    draw(context) {}
+    draw(context, options = {}) {}
 }
 
 export class Rectangle extends SceneObject {
@@ -26,7 +28,9 @@ export class Rectangle extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(context) {
+    draw(context, options = {}) {
+        this.templateOptions = options;
+
         context.beginPath();
 
         context.rect(
@@ -64,19 +68,41 @@ export class CompositedScene extends SceneObject {
         this.registerProperty("type", "compositedScene");
         this.registerProperty("name", "Composited scene", "renamed", false);
         this.registerReferenceProperty("scene", null, "sceneChanged", true);
+
+        this.compositionId = nextCompositionId++;
     }
 
     get attributeTypeListOwner() {
         return this.scene;
     }
 
-    draw(context) {
+    draw(context, options = {}) {
+        this.templateOptions = options;
+
         if (!this.scene) {
             return;
         }
 
+        var attributeTypes = this.scene.attributeTypes.getModelList();
+        var canvas = this.scene.canvas;
+
+        if (attributeTypes.length > 0) { //  && !options.callStack?.includes(this.scene)
+            var sceneOptions = {...options};
+
+            canvas = new OffscreenCanvas(this.scene.width, this.scene.height);
+
+            sceneOptions.compositionId = this.compositionId;
+            sceneOptions.env ||= {};
+
+            for (var attributeType of attributeTypes) {
+                sceneOptions.env[attributeType.id] = this.getAnimatedValue(`attr:${attributeType.id}`, attributeType.type);
+            }
+
+            this.scene.drawToContext(canvas.getContext("2d"), sceneOptions);
+        }
+
         context.drawImage(
-            this.scene.canvas,
+            canvas,
             0, 0,
             this.scene.width,
             this.scene.height,
@@ -102,7 +128,9 @@ export class Text extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(context) {
+    draw(context, options = {}) {
+        this.templateOptions = options;
+
         if (this.text.trim() == "") {
             return;
         }
