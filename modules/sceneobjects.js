@@ -91,7 +91,8 @@ export class CompositedScene extends SceneObject {
 
             canvas = new OffscreenCanvas(this.scene.width, this.scene.height);
 
-            sceneOptions.compositionId = this.compositionId;
+            sceneOptions.compositionChain ||= "";
+            sceneOptions.compositionChain += `${this.compositionId},`;
             sceneOptions.env ||= {};
 
             for (var attributeType of attributeTypes) {

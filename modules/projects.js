@@ -498,7 +498,7 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getValue(name) {
-        if (!this[`${name}_canTemplate`]) {
+        if (!name.startsWith("attr:") && !this[`${name}_canTemplate`]) {
             return this[name];
         }
 
