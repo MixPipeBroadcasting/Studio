@@ -1,3 +1,17 @@
+var keyIndex = 0;
+
+export function generateKey() {
+    const DIGITS = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+
+    return BigInt(BigInt(Math.floor(Date.now() * 100) * 256) + BigInt(keyIndex++))
+        .toString(2)
+        .split(/(.{0,6})/)
+        .filter((part) => part != "")
+        .map((part) => DIGITS[parseInt(part, 2)])
+        .join("")
+    ;
+}
+
 export function lerp(v0, v1, t) {
     return (v0 * (1 - t)) + (v1 * t);
 }

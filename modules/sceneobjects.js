@@ -86,7 +86,7 @@ export class CompositedScene extends SceneObject {
         var attributeTypes = this.scene.attributeTypes.getModelList();
         var canvas = this.scene.canvas;
 
-        if (attributeTypes.length > 0) { //  && !options.callStack?.includes(this.scene)
+        if (attributeTypes.length > 0 && !options.callStack?.includes(this.scene)) {
             var sceneOptions = {...options};
 
             canvas = new OffscreenCanvas(this.scene.width, this.scene.height);
@@ -95,6 +95,8 @@ export class CompositedScene extends SceneObject {
             sceneOptions.env ||= {};
 
             for (var attributeType of attributeTypes) {
+                this.ensureAttributeProperty(attributeType.id);
+
                 sceneOptions.env[attributeType.id] = this.getAnimatedValue(`attr:${attributeType.id}`, attributeType.type);
             }
 
@@ -131,7 +133,7 @@ export class Text extends SceneObject {
     draw(context, options = {}) {
         this.templateOptions = options;
 
-        if (this.text.trim() == "") {
+        if (!this.text || String(this.text).trim() == "") {
             return;
         }
 

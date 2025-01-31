@@ -29,7 +29,7 @@ export function evaluateExpression(expression, id, options) {
 
         var serialisedEnv = JSON.stringify(env);
 
-        if (currentEnvs[id] != serialisedEnv) {
+        if (Object.keys(serialisedEnv).length > 0 && currentEnvs[id] != serialisedEnv) {
             currentEnvs[id] = serialisedEnv;
 
             if (runningWorkers[id]) {
@@ -41,7 +41,7 @@ export function evaluateExpression(expression, id, options) {
     if (currentExpressions[id] != expression) {
         runningWorkers[id]?.terminate();
 
-        var url = URL.createObjectURL(new Blob([`${apiCode}\n\nSetExpression(() => (${expression}));`], {type: "script/javascript"}));
+        var url = URL.createObjectURL(new Blob([`${apiCode}\n\n_setExpression(() => (${expression}));`], {type: "script/javascript"}));
         var worker = new Worker(url);
 
         runningWorkers[id] = worker;
@@ -58,7 +58,7 @@ export function evaluateExpression(expression, id, options) {
     return cachedValues[id] || "";
 }
 
-export function evaluteDirectTemplate(template, id, options) {
+export function evaluateDirectTemplate(template, id, options) {
     if (typeof(template) != "string") {
         return template;
     }

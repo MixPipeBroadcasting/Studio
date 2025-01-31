@@ -1,3 +1,4 @@
+import * as common from "./common.js";
 import * as events from "./events.js";
 import * as animations from "./animations.js";
 import * as templates from "./templates.js";
@@ -6,8 +7,6 @@ export var projectsById = {};
 export var modelSyncHandlers = [];
 
 const TIMELINE_TRIM_COUNT_TRIGGER = 20;
-
-var keyIndex = 0;
 
 export class Transaction {
     constructor(path) {
@@ -466,7 +465,7 @@ export class ProjectModel extends events.EventDrivenObject {
                 }
 
                 if (typeof(path) == "string") {
-                    path = templates.evaluteDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`, thisScope.templateOptions);
+                    path = templates.evaluateDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`, thisScope.templateOptions);
                 }
 
                 if (!Array.isArray(path)) {
@@ -792,15 +791,7 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
 }
 
 export function generateKey() {
-    const DIGITS = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
-
-    return BigInt(BigInt(Math.floor(Date.now() * 100) * 256) + BigInt(keyIndex++))
-        .toString(2)
-        .split(/(.{0,6})/)
-        .filter((part) => part != "")
-        .map((part) => DIGITS[parseInt(part, 2)])
-        .join("")
-    ;
+    return common.generateKey(...arguments);
 }
 
 export function getOrCreateProjectById(id) {

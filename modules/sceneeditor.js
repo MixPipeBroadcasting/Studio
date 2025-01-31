@@ -19,9 +19,12 @@ components.css(`
     mixpipe-attribute {
         ${components.styleMixins.VERTICAL_STACK}
         padding: 0.5rem;
-        gap: 0.5rem;
         background: var(--secondaryBackground);
         border-radius: 0.25rem;
+    }
+
+    mixpipe-attribute :is(input, select):has(+ label) {
+        margin-block-end: 0.5rem;
     }
 `);
 
@@ -209,7 +212,6 @@ export class SceneEditorAttributeView extends components.Component {
         this.model = model;
         this.attributesPanel = attributesPanel;
 
-        // TODO: Add labels
         this.idInput = new ui.Input("");
         this.nameInput = new ui.Input("");
         this.typeInput = new ui.SelectionInput();
@@ -220,7 +222,11 @@ export class SceneEditorAttributeView extends components.Component {
             "scene": "Scene"
         });
 
-        this.add(this.idInput, this.nameInput, this.typeInput);
+        this.idLabel = new ui.Label("ID", this.idInput);
+        this.nameLabel = new ui.Label("Name", this.nameInput);
+        this.typeLabel = new ui.Label("Type", this.typeInput);
+
+        this.add(this.idLabel, this.idInput, this.nameLabel, this.nameInput, this.typeLabel, this.typeInput);
 
         model.events.idChanged.connect(this.updateInfo, this);
         model.events.renamed.connect(this.updateInfo, this);

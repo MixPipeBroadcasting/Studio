@@ -1,3 +1,4 @@
+import * as common from "./common.js";
 import * as components from "./components.js";
 import * as events from "./events.js";
 
@@ -63,6 +64,10 @@ components.css(`
         border: 0.1rem solid var(--secondaryBackground);
         border-radius: 0.25rem;
         outline: none;
+    }
+
+    label {
+        display: block;
     }
 
     dialog {
@@ -330,6 +335,31 @@ export class SelectionInput extends components.Component {
 
     set key(value) {
         this.selectedIndex = this.internalKeys.indexOf(value);
+    }
+}
+
+export class Label extends components.Component {
+    constructor(text, target = null) {
+        super("label");
+
+        this.element.textContent = text;
+
+        this.registerState("text", "textChanged", text, (event) => this.element.textContent = event.value);
+        this.registerState("target", "targetChanged", target, this.updateTarget);
+
+        this.updateTarget();
+    }
+
+    updateTarget() {
+        if (!this.target) {
+            return;
+        }
+
+        if (!this.target.element.id) {
+            this.target.element.id = common.generateKey();
+        }
+
+        this.element.setAttribute("for", this.target.element.id);
     }
 }
 
