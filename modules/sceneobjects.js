@@ -70,6 +70,7 @@ export class CompositedScene extends SceneObject {
         this.registerReferenceProperty("scene", null, "sceneChanged", true);
 
         this.compositionId = nextCompositionId++;
+        this.uniqueCanvas = null;
     }
 
     get attributeTypeListOwner() {
@@ -89,7 +90,14 @@ export class CompositedScene extends SceneObject {
         if (attributeTypes.length > 0 && !options.callStack?.includes(this.scene)) {
             var sceneOptions = {...options};
 
-            canvas = new OffscreenCanvas(this.scene.width, this.scene.height);
+            if (!this.uniqueCanvas) {
+                this.uniqueCanvas = new OffscreenCanvas(this.scene.width, this.scene.height);
+            } else {
+                this.uniqueCanvas.width = this.scene.width;
+                this.uniqueCanvas.height = this.scene.height;
+            }
+
+            canvas = this.uniqueCanvas;
 
             sceneOptions.compositionId = this.compositionId;
             sceneOptions.env ||= {};
