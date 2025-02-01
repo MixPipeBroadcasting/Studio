@@ -6,7 +6,7 @@ var runningWorkers = {};
 var apiResponse = await fetch("sandbox/api.js");
 var apiCode = await apiResponse.text();
 
-export function evaluateExpression(expression, id, options) {
+export function evaluateExpression(expression, id, options = {}) {
     var env = {};
 
     for (var key of Object.keys(options?.env || {})) {
@@ -45,6 +45,7 @@ export function evaluateExpression(expression, id, options) {
         var worker = new Worker(url);
 
         runningWorkers[id] = worker;
+        currentEnvs[id] = null;
 
         worker.addEventListener("message", function(event) {
             cachedValues[id] = event.data.value;
@@ -58,7 +59,7 @@ export function evaluateExpression(expression, id, options) {
     return cachedValues[id] || "";
 }
 
-export function evaluateDirectTemplate(template, id, options) {
+export function evaluateDirectTemplate(template, id, options = {}) {
     if (typeof(template) != "string") {
         return template;
     }
@@ -72,7 +73,7 @@ export function evaluateDirectTemplate(template, id, options) {
     return evaluateExpression(match[1], `${id}|expr=0`, options);
 }
 
-export function evaluateTemplate(template, id, options) {
+export function evaluateTemplate(template, id, options = {}) {
     if (typeof(template) != "string" || template.split("{{").length == 1) {
         return template;
     }
@@ -97,7 +98,7 @@ export function evaluateTemplate(template, id, options) {
     return evaluatedParts.join("");
 }
 
-export function evaluateNumericTemplate(template, id, options) {
+export function evaluateNumericTemplate(template, id, options = {}) {
     if (typeof(template) == "number") {
         return template;
     }

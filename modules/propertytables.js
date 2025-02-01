@@ -106,7 +106,7 @@ export class Property {
             editTemplateDialog.openBelowElement(editTemplateButton.element, true);
         });
 
-        editTemplateButton.setVisiblity(this.name.startsWith("attr:") || model[`${this.name}_canTemplate`]);
+        editTemplateButton.setVisiblity(this.name.startsWith("attr:") || model[`${this.name}:canTemplate`]);
 
         var targetButton = null;
 
@@ -143,7 +143,7 @@ export class Property {
                 function updateInputComputationIndicator() {
                     updateComputationStatus();
 
-                    if (computationStatus != null && (thisScope.name.startsWith("attr:") || model[`${thisScope.name}_canTemplate`])) {
+                    if (computationStatus != null && (thisScope.name.startsWith("attr:") || model[`${thisScope.name}:canTemplate`])) {
                         input.enabled = computationStatus == "animated";
 
                         input.element.setAttribute("mixpipe-computed", computationStatus);

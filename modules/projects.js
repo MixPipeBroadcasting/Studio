@@ -411,7 +411,7 @@ export class ProjectModel extends events.EventDrivenObject {
     registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true, override = false) {
         var thisScope = this;
 
-        this[`${name}_canTemplate`] = canTemplate;
+        this[`${name}:canTemplate`] = canTemplate;
 
         if (this.hasOwnProperty(name) && !override) {
             this[name] = defaultValue;
@@ -447,7 +447,7 @@ export class ProjectModel extends events.EventDrivenObject {
     registerReferenceProperty(name, defaultValue = null, propertyEventName = null, canTemplate = false) {
         var thisScope = this;
 
-        this[`${name}_canTemplate`] = canTemplate;
+        this[`${name}:canTemplate`] = canTemplate;
 
         if (propertyEventName != null) {
             this.events[propertyEventName] ??= new events.EventType(this);
@@ -498,7 +498,7 @@ export class ProjectModel extends events.EventDrivenObject {
     }
 
     getValue(name) {
-        if (!name.startsWith("attr:") && !this[`${name}_canTemplate`]) {
+        if (!name.startsWith("attr:") && !this[`${name}:canTemplate`]) {
             return this[name];
         }
 
