@@ -24,8 +24,8 @@ export function evaluateExpression(expression, id, options) {
         } catch (error) {}
     }
 
-    if (options.hasOwnProperty("compositionId")) {
-        id += `|cid=${options.compositionId}`;
+    if (options.hasOwnProperty("compositionChain")) {
+        id += `|cch=${options.compositionChain}`;
 
         var serialisedEnv = JSON.stringify(env);
 
