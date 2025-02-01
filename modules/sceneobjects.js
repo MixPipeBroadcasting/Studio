@@ -1,6 +1,9 @@
 import * as projects from "./projects.js";
 
 var nextCompositionId = 0;
+var logoImage = new Image();
+
+logoImage.src = "media/logo.svg";
 
 export class SceneObject extends projects.ProjectModel {
     constructor(project, path = ["sceneObjects", projects.generateKey()]) {
@@ -81,6 +84,55 @@ export class CompositedScene extends SceneObject {
         this.templateOptions = options;
 
         if (!this.scene) {
+            context.fillStyle = "black";
+            context.strokeStyle = "white";
+            context.lineWidth = 2;
+
+            var x = this.getAnimatedValue("x");
+            var y = this.getAnimatedValue("y");
+            var width = this.getAnimatedValue("width");
+            var height = this.getAnimatedValue("height");
+
+            context.beginPath();
+            context.rect(x, y, width, height);
+            context.closePath();
+            context.fill();
+            context.stroke();
+
+            context.font = "50px Overpass, system-ui, sans-serif";
+            context.fillStyle = "white";
+            context.textAlign = "center";
+
+            var template = this.project.get([...this.path, "scene"]);
+
+            context.save();
+            context.beginPath();
+            context.rect(x, y, width, height);
+            context.clip();
+
+            context.globalAlpha = 0.5;
+            context.filter = "grayscale(1)";
+
+            context.drawImage(
+                logoImage,
+                0, 0, logoImage.width, logoImage.height,
+                x + 20, y + 20, height * 0.2, height * 0.2
+            );
+
+            context.globalAlpha = 1;
+            context.filter = null;
+
+            context.textBaseline = "bottom";
+
+            context.fillText(typeof(template) == "string" ? `Placeholder for ${template}` : "Unknown scene", x + (width / 2), y + (height / 2) - 10);
+
+            context.font = "40px Overpass, system-ui, sans-serif";
+            context.textBaseline = "top";
+
+            context.fillText(`${Math.round(width)}×${Math.round(height)}`, (x + width / 2), y + (height / 2) + 10);
+
+            context.restore();
+
             return;
         }
 
@@ -159,6 +211,8 @@ export class Text extends SceneObject {
         context.clip();
 
         context.font = `${fontSize}px ${this.getValue("font") || "Overpass, system-ui, sans-serif"}`;
+        context.textAlign = "start";
+        context.textBaseline = "alphabetic";
 
         if (![null, "transparent"].includes(context.backgroundFill)) {
             context.fillStyle = this.backgroundFill;

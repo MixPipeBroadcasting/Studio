@@ -445,7 +445,7 @@ export class SceneView extends StoryboardObjectView {
 
         this.always(this.render);
 
-        function updateInputTargetState() {
+        function updateTargetState() {
             if (model.project.localState.targetingScene) {
                 thisScope.element.classList.add("target");
             } else {
@@ -453,7 +453,7 @@ export class SceneView extends StoryboardObjectView {
             }
         }
 
-        model.project.events.localStateChanged.connect(updateInputTargetState);
+        model.project.events.localStateChanged.connect(updateTargetState);
     }
 
     updateInfo() {

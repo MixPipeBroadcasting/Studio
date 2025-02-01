@@ -26,12 +26,35 @@ components.css(`
     mixpipe-attribute :is(input, select):has(+ label) {
         margin-block-end: 0.5rem;
     }
+
+    mixpipe-attribute .hint {
+        opacity: 0.5;
+    }
+
+    mixpipe-attribute.target {
+        animation: 1s attributeTarget infinite alternate-reverse;
+        cursor: cell;
+    }
+
+    mixpipe-attribute.target * {
+        cursor: cell;
+    }
+
+    @keyframes attributeTarget {
+        0% {
+            background: var(--targetStart);
+        }
+
+        100% {
+            background: var(--targetEnd);
+        }
+    }
 `);
 
 export const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name", {placeholder: "Untitled object"}),
     new propertyTables.Property("text", "string", "Text"),
-    new propertyTables.Property("scene", "scene", "Scene", {placeholder: "Untitled scene"}),
+    new propertyTables.Property("scene", "scene", "Scene"),
     new propertyTables.Property("x", "number", "X", {roundNumber: true}),
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
     new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
@@ -51,15 +74,17 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
         var thisScope = this;
         var targetSceneEventConnection = null;
+        var targetAttributeEventConnection = null;
 
         this.sceneEditor = sceneEditor;
 
         this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
         this.createTextButton = new ui.IconButton("icons/text.svg", "Create text");
         this.createCompositedSceneButton = new ui.ToggleIconButton("icons/composite.svg", "Cancel creating a composited scene", undefined, "Create composited scene");
+        this.createCompositedScenePlaceholderButton = new ui.ToggleIconButton("icons/compositeattribute.svg", "Cancel creating a composited scene placeholder", undefined, "Create composited scene placeholder");
         this.deleteObjectsButton = new ui.IconButton("icons/delete.svg", "Delete selected objects");
 
-        this.add(this.createRectangleButton, this.createTextButton, this.createCompositedSceneButton, this.deleteObjectsButton);
+        this.add(this.createRectangleButton, this.createTextButton, this.createCompositedSceneButton, this.createCompositedScenePlaceholderButton, this.deleteObjectsButton);
 
         this.createRectangleButton.events.activated.connect(function() {
             var rectangle = new sceneObjects.Rectangle(sceneEditor.scene.project);
@@ -113,6 +138,37 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                         compositedScene.width = scene.width;
                         compositedScene.height = scene.height;
                         compositedScene.scene = scene;
+
+                        sceneEditor.scene.objects.addModel(compositedScene);
+
+                        sceneEditor.setSelectedObjects([compositedScene]);
+                    }
+                });
+            }
+        });
+
+        this.createCompositedScenePlaceholderButton.events.valueChanged.connect(function(event) {
+            var project = sceneEditor.scene.project;
+
+            project.setLocalProperty("targetingAttributeScenePath", sceneEditor.scene.path);
+            project.setLocalProperty("targetingAttributeType", "scene");
+            project.setLocalProperty("targetingAttribute", event.value);
+
+            project.events.localStateChanged.disconnect(targetAttributeEventConnection);
+
+            if (event.value) {
+                targetAttributeEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedAttributePath") {
+                        thisScope.createCompositedScenePlaceholderButton.value = false;
+
+                        var attributeType = project.getOrCreateModel(event.value);
+                        var compositedScene = new sceneObjects.CompositedScene(project);
+
+                        compositedScene.x = 0;
+                        compositedScene.y = 0;
+                        compositedScene.width = sceneEditor.scene.width;
+                        compositedScene.height = sceneEditor.scene.height;
+                        compositedScene.scene = `{{ ${attributeType.id} }}`;
 
                         sceneEditor.scene.objects.addModel(compositedScene);
 
@@ -209,11 +265,13 @@ export class SceneEditorAttributeView extends components.Component {
     constructor(model, attributesPanel) {
         super("mixpipe-attribute");
 
+        var thisScope = this;
+
         this.model = model;
         this.attributesPanel = attributesPanel;
 
-        this.idInput = new ui.Input("");
         this.nameInput = new ui.Input("");
+        this.idInput = new ui.Input("");
         this.typeInput = new ui.SelectionInput();
 
         this.typeInput.loadObject({
@@ -222,26 +280,71 @@ export class SceneEditorAttributeView extends components.Component {
             "scene": "Scene"
         });
 
-        this.idLabel = new ui.Label("ID", this.idInput);
         this.nameLabel = new ui.Label("Name", this.nameInput);
+        this.idLabel = new ui.Label("ID", this.idInput);
         this.typeLabel = new ui.Label("Type", this.typeInput);
 
-        this.add(this.idLabel, this.idInput, this.nameLabel, this.nameInput, this.typeLabel, this.typeInput);
+        this.idLabel.element.append(components.element("span", [components.className("hint"), components.text(" (used in templates)")]));
 
-        model.events.idChanged.connect(this.updateInfo, this);
+        this.add(this.nameLabel, this.nameInput, this.idLabel, this.idInput, this.typeLabel, this.typeInput);
+
         model.events.renamed.connect(this.updateInfo, this);
+        model.events.idChanged.connect(this.updateInfo, this);
         model.events.typeChanged.connect(this.updateInfo, this);
         this.updateInfo();
 
+        this.nameInput.events.valueCommitted.connect(function(event) {
+            thisScope.model.name = event.value;
+
+            if (!thisScope.model.id) {
+                thisScope.model.id = event.value.trim().split(" ").map(function(word, i) {
+                    if (i == 0) {
+                        return word.toLocaleLowerCase().replace(/^([0-9])/g, "n$1");
+                    }
+
+                    return word[0].toLocaleUpperCase() + word.slice(1).toLocaleLowerCase();
+                }).join("").replace(/[^a-zA-Z0-9_]/g, "");
+            }
+        });
+
         this.idInput.events.valueCommitted.connect((event) => this.model.id = event.value);
-        this.nameInput.events.valueCommitted.connect((event) => this.model.name = event.value);
         this.typeInput.events.selectionCommitted.connect(() => this.model.type = this.typeInput.key);
+
+        this.element.addEventListener("pointerdown", function(event) {
+            if (thisScope.matchesTargetCriteria()) {
+                model.project.setLocalProperty("targetedAttributePath", model.path);
+
+                event.preventDefault();
+            }
+        });
+
+        model.project.events.localStateChanged.connect(this.updateTargetState, this);
+    }
+
+    matchesTargetCriteria() {
+        var localState = this.model.project.localState;
+
+        return (
+            localState.targetingAttribute &&
+            localState.targetingAttributeType == this.model.type &&
+            localState.targetingAttributeScenePath.join(".") == this.model.parentStoryboardObject.path.join(".")
+        );
+    }
+
+    updateTargetState() {
+        if (this.matchesTargetCriteria()) {
+            this.element.classList.add("target");
+        } else {
+            this.element.classList.remove("target");
+        }
     }
 
     updateInfo() {
-        this.idInput.value = this.model.id || "";
         this.nameInput.value = this.model.name || "";
+        this.idInput.value = this.model.id || "";
         this.typeInput.key = this.model.type || "string";
+
+        this.updateTargetState();
     }
 }
 

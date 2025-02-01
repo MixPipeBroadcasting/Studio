@@ -399,7 +399,15 @@ export function addEventListenersForProject(project) {
             modeTooltipContainer.clear();
 
             if (value) {
-                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select a scene on the storyboard to target."));
+                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select a scene to target on the storyboard."));
+            }
+        }
+
+        if (property == "targetingAttribute") {
+            modeTooltipContainer.clear();
+
+            if (value) {
+                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select an attribute type to target on the scene."));
             }
         }
     }

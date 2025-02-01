@@ -275,7 +275,7 @@ export class Property {
                         return;
                     }
 
-                    input.value = model[thisScope.name].name;
+                    input.value = model[thisScope.name].name?.trim() || "Untitled scene";
 
                     sceneRenameEvent?.component.events.renamed.disconnect(sceneRenameEvent);
 
