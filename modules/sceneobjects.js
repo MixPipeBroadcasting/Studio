@@ -84,7 +84,10 @@ export class CompositedScene extends SceneObject {
         this.templateOptions = options;
 
         if (!this.scene) {
-            context.fillStyle = "black";
+            var template = this.project.get([...this.path, "scene"]);
+            var isPlaceholder = typeof(template) == "string";
+
+            context.fillStyle = isPlaceholder ? "black" : "#770000";
             context.strokeStyle = "white";
             context.lineWidth = 2;
 
@@ -102,8 +105,6 @@ export class CompositedScene extends SceneObject {
             context.font = "50px Overpass, system-ui, sans-serif";
             context.fillStyle = "white";
             context.textAlign = "center";
-
-            var template = this.project.get([...this.path, "scene"]);
 
             context.save();
             context.beginPath();
@@ -124,7 +125,7 @@ export class CompositedScene extends SceneObject {
 
             context.textBaseline = "bottom";
 
-            context.fillText(typeof(template) == "string" ? `Placeholder for ${template}` : "Unknown scene", x + (width / 2), y + (height / 2) - 10);
+            context.fillText(isPlaceholder ? `Placeholder for ${template}` : "Unknown scene", x + (width / 2), y + (height / 2) - 10);
 
             context.font = "40px Overpass, system-ui, sans-serif";
             context.textBaseline = "top";
