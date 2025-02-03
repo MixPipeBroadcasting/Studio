@@ -32,13 +32,17 @@ components.css(`
 
     mixpipe-tabs {
         ${components.styleMixins.HORIZONTAL_STACK}
-        height: 2rem;
+        flex-wrap: wrap;
+        min-height: 2rem;
+        max-height: 10rem;
         background-color: var(--secondaryBackground);
         padding: 0.2rem;
         gap: 0.2rem;
+        overflow: auto;
     }
 
     mixpipe-tab {
+        height: calc(2rem - 0.4rem);
         background-color: var(--primaryBackground);
         border-radius: 0.25rem;
     }
@@ -50,6 +54,8 @@ components.css(`
     }
 
     mixpipe-tab button:first-child {
+        ${components.styleMixins.ELLIPSIS_CUTOFF}
+        max-width: calc(100vw - 20rem);
         padding-inline-end: 0.2rem;
     }
 

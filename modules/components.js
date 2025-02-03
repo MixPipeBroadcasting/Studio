@@ -5,7 +5,8 @@ export const styleMixins = {
     VERTICAL_STACK: `display: flex; flex-direction: column;`,
     HORIZONTAL_STACK: `display: flex; flex-direction: row;`,
     ICON_INVERT: `filter: contrast(0.5) brightness(10);`,
-    NO_SELECT: `user-select: none; cursor: default;`
+    NO_SELECT: `user-select: none; cursor: default;`,
+    ELLIPSIS_CUTOFF: "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
 };
 
 export class Component extends events.EventDrivenObject {
