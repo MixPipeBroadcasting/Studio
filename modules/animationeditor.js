@@ -170,14 +170,20 @@ export class KeyframeView extends components.Component {
         this.update();
 
         this.element.addEventListener("pointerdown", function(event) {
+            var selectedKeyframeCount = thisScope.animationControllerEditor.element.querySelectorAll("mixpipe-keyframe.selected").length;
+
             if (event.shiftKey) {
                 thisScope.selected = !thisScope.selected;
             } else {
-                if (thisScope.animationControllerEditor.element.querySelectorAll("mixpipe-keyframe.selected").length == 1) {
+                if (!thisScope.selected) {
                     thisScope.animationControllerEditor.events.allKeyframesDeselected.emit();
                 }
 
                 thisScope.selected = true;
+
+                if (!event.ctrlKey && selectedKeyframeCount <= 1) {
+                    thisScope.animationControllerEditor.model.step(thisScope.model.time);
+                }
             }
 
             event.preventDefault();
