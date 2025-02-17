@@ -1,5 +1,5 @@
 # MixPipe Studio
-A pipeline-based vision and audio mixer for live video productions.
+A pipeline-based vision and audio mixing application for live video productions.
 
 ## Running MPS
 To run MPS, simply serve the root directory for this project:
