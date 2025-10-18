@@ -9,7 +9,7 @@ export class AttributeType extends projects.ProjectModel {
 
         this.registerProperty("id", null, "idChanged");
         this.registerProperty("name", null, "renamed");
-        this.registerProperty("type", null, "typeChanged");
+        this.registerProperty("type", "string", "typeChanged");
         this.registerReferenceProperty("parentStoryboardObject", null, "reparented");
     }
 
