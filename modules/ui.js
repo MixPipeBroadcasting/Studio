@@ -150,17 +150,23 @@ components.css(`
     }
 `);
 
-export class Icon extends components.Component {
+export class Image extends components.Component {
     constructor(source, alt) {
         super("img");
 
         this.element.src = source;
         this.element.alt = alt;
 
-        this.element.classList.add("icon");
-
         this.registerState("source", "sourceChanged", source, (event) => this.element.src = event.value);
         this.registerState("alt", "altChanged", alt, (event) => this.element.alt = event.value);
+    }
+}
+
+export class Icon extends Image {
+    constructor(source, alt) {
+        super(source, alt);
+
+        this.element.classList.add("icon");
     }
 }
 

@@ -6,6 +6,7 @@ import * as timelines from "./modules/timelines.js";
 import * as storyboardObjects from "./modules/storyboardobjects.js";
 import * as sceneObjects from "./modules/sceneobjects.js";
 import * as storyboards from "./modules/storyboards.js";
+import * as home from "./modules/home.js";
 
 windows.init();
 
@@ -17,10 +18,13 @@ document.querySelector("#root").append(
 );
 
 if (!opener) {
+    var homePanel = new home.HomePanel();
+
     var project = new projects.Project();
 
     var storyboardPanel = new storyboards.StoryboardPanel(project);
 
+    workspaces.mainWorkspace.add(homePanel);
     workspaces.mainWorkspace.add(storyboardPanel);
     workspaces.addEventListenersForProject(project);
 

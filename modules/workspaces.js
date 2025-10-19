@@ -221,17 +221,15 @@ export class Panel extends components.Component {
     close() {
         this.parent.remove(this);
     }
+
+    createTab() {
+        return new Tab(this);
+    }
 }
 
 export class TabContainer extends components.Component {
     constructor() {
         super("mixpipe-tabs");
-    }
-
-    addTabForPanel(panel) {
-        var tab = new Tab(panel);
-
-        this.add(tab);
     }
 
     removeTabForPanel(panel) {
@@ -261,21 +259,21 @@ export class Workspace extends components.Component {
         this.registerState("activePanel", "switchedPanels", null, (event) => this._switchToPanel(event.value));
 
         this.events.childAdded.connect((event) => this.registerPanel(event.child));
-        this.events.childRemoved.connect((event) => this.unregisterPanel(event.child));
+        this.events.childRemoved.connect((event) => this.unregisterPanel(event.child, event.index - 1));
     }
 
     registerPanel(panel) {
-        this.tabContainer.addTabForPanel(panel);
+        this.tabContainer.add(panel.createTab());
 
         this.activePanel = panel;
     }
 
-    unregisterPanel(panel) {
+    unregisterPanel(panel, panelIndexToSwitchTo) {
         panel.events.closed.emit();
 
         this.tabContainer.removeTabForPanel(panel);
 
-        var panelIndexToSwitchTo = Math.max(this.children.findIndex((currentPanel) => currentPanel == panel) - 1, 0);
+        panelIndexToSwitchTo = Math.max(panelIndexToSwitchTo, 0);
 
         if (this.activePanel == panel && this.children.length > 0) {
             this.activePanel = this.children[panelIndexToSwitchTo];

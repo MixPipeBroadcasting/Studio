@@ -34,7 +34,7 @@ export class Component extends events.EventDrivenObject {
 
             this.childContainerElement.appendChild(child.element);
     
-            this.events.childAdded.emit({child}, this);
+            this.events.childAdded.emit({child, index: this.childContainerElement.childElementCount - 1}, this);
         }
     }
 
@@ -46,12 +46,14 @@ export class Component extends events.EventDrivenObject {
 
             this.childContainerElement.insertBefore(child.element, this.childContainerElement.childNodes[index]);
     
-            this.events.childAdded.emit({child}, this);
+            this.events.childAdded.emit({child, index}, this);
         }
     }
 
     remove(...children) {
         for (var child of children) {
+            var index = this.children.indexOf(child);
+
             this.children = this.children.filter((currentChild) => currentChild != child);
 
             child.parent = null;
@@ -62,7 +64,7 @@ export class Component extends events.EventDrivenObject {
                 console.warn(e);
             }
 
-            this.events.childRemoved.emit({child}, this);
+            this.events.childRemoved.emit({child, index}, this);
         }
     }
 
