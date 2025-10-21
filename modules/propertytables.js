@@ -228,6 +228,12 @@ export class Property {
                     });
                 }
 
+                if (this.type == "number") {
+                    input.minValue = this.options.minValue ?? -Infinity;
+                    input.maxValue = this.options.maxValue ?? Infinity;
+                    input.stepValue = this.options.stepValue ?? 1;
+                }
+
                 requestAnimationFrame(function updateComputed() {
                     if (!document.body.contains(existenceCheckElement)) {
                         return;

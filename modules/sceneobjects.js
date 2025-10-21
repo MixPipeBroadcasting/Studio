@@ -15,9 +15,36 @@ export class SceneObject extends projects.ProjectModel {
         this.registerAnimationProperty("y", "number", 0, "moved");
         this.registerAnimationProperty("width", "number", 0, "resized");
         this.registerAnimationProperty("height", "number", 0, "resized");
+        this.registerAnimationProperty("opacity", "number", 1, "filterChanged");
+        this.registerAnimationProperty("rotation", "number", 0, "transformationChanged");
     }
 
-    draw(context, options = {}) {}
+    draw(context, options = {}) {
+        context.save();
+
+        var filterValues = [];
+
+        if (this.getAnimatedValue("opacity") < 1) {
+            filterValues.push(`opacity(${this.getAnimatedValue("opacity")})`);
+        }
+        
+        context.filter = filterValues.join(" ");
+        
+        if (this.getAnimatedValue("rotation") != 0) {
+            var originX = this.getAnimatedValue("x") + (this.getAnimatedValue("width") / 2);
+            var originY = this.getAnimatedValue("y") + (this.getAnimatedValue("height") / 2);
+
+            context.translate(originX, originY);
+            context.rotate(this.getAnimatedValue("rotation") * Math.PI / 180);
+            context.translate(-originX, -originY);
+        }
+
+        this._draw(context, options);
+
+        context.restore();
+    }
+
+    _draw(context, options = {}) {}
 }
 
 export class Rectangle extends SceneObject {
@@ -80,7 +107,7 @@ export class CompositedScene extends SceneObject {
         return this.scene;
     }
 
-    draw(context, options = {}) {
+    _draw(context, options = {}) {
         this.templateOptions = options;
 
         if (!this.scene) {
@@ -192,7 +219,7 @@ export class Text extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(context, options = {}) {
+    _draw(context, options = {}) {
         this.templateOptions = options;
 
         if (!this.text || String(this.text).trim() == "") {

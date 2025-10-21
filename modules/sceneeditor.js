@@ -59,6 +59,8 @@ export const PROPERTIES = [
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
     new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
     new propertyTables.Property("height", "number", "Height", {roundNumber: true}),
+    new propertyTables.Property("opacity", "number", "Opacity", {minValue: 0, maxValue: 1, stepValue: 0.01}),
+    new propertyTables.Property("rotation", "number", "Rotation"),
     new propertyTables.Property("font", "string", "Font"),
     new propertyTables.Property("fontSize", "number", "Font size", {roundNumber: true}),
     new propertyTables.Property("backgroundFill", "string", "Background"),

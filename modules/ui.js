@@ -240,6 +240,9 @@ export class Input extends components.Component {
 
         this.registerState("placeholder", "placeholderChanged", placeholder, (event) => this.element.placeholder = event.value);
         this.registerState("value", "valueChanged", value, (event) => this.element.value = event.value);
+        this.registerState("minValue", "minValueChanged", -Infinity, (event) => this.element.min = event.value);
+        this.registerState("maxValue", "maxValueChanged", Infinity, (event) => this.element.max = event.value);
+        this.registerState("stepValue", "stepValueChanged", 1, (event) => this.element.step = event.value);
         this.registerState("enabled", "interactionChanged", true, (event) => this.element.disabled = !event.value);
 
         this.events.valueCommitted = new events.EventType(this);
