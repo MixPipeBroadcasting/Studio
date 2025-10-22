@@ -3,6 +3,11 @@ import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 
 components.css(`
+    mixpipe-panel.home {
+        padding: 1rem;
+        background: linear-gradient(315deg, color-mix(in srgb, var(--selectedBackground) 40%, transparent) 0%, transparent 30%, transparent 100%);
+    }
+
     mixpipe-tab.home {
         position: relative;
         height: 2rem;
@@ -34,11 +39,31 @@ components.css(`
     mixpipe-tab.home.active button {
         font-weight: bold;
     }
+
+    mixpipe-homewordmark {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    mixpipe-homewordmark img {
+        height: 4rem;
+    }
+
+    mixpipe-homewordmark h1 {
+        margin-block: 0.25rem;
+        font-size: 2rem;
+    }
 `);
 
 export class HomePanel extends workspaces.Panel {
     constructor() {
         super("MPS");
+
+        this.wordmark = new HomeWordmark();
+
+        this.element.classList.add("home");
+
+        this.element.append(this.wordmark.element);
     }
 
     createTab() {
@@ -57,6 +82,23 @@ export class HomeTab extends workspaces.Tab {
         this.element.prepend(this.logo.element);
 
         this.remove(this.closeButton);
+    }
+}
+
+export class HomeWordmark extends components.Component {
+    constructor() {
+        super("mixpipe-homewordmark");
+
+        this.logo = new ui.Image("media/logo.svg", "");
+
+        this.titleElement = components.element("h1", [
+            components.text("MixPipe Studio")
+        ]);
+
+        this.element.append(
+            this.logo.element,
+            this.titleElement
+        );
     }
 }
 
