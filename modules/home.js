@@ -4,8 +4,21 @@ import * as workspaces from "./workspaces.js";
 
 components.css(`
     mixpipe-panel.home {
-        padding: 1rem;
+        padding: 4rem;
+        padding-inline: 15%;
         background: linear-gradient(315deg, color-mix(in srgb, var(--selectedBackground) 40%, transparent) 0%, transparent 30%, transparent 100%);
+    }
+
+    mixpipe-panel.home .columns {
+        display: flex;
+        gap: 2rem;
+        margin-block: 2rem;
+    }
+
+    mixpipe-panel.home .columns > div {
+        width: 100%;
+        flex-grow: 1;
+        flex-basis: 0;
     }
 
     mixpipe-tab.home {
@@ -53,7 +66,29 @@ components.css(`
         margin-block: 0.25rem;
         font-size: 2rem;
     }
+
+    mixpipe-tipoftheday {
+        display: block;
+        padding: 0.5rem;
+        background: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+
+    mixpipe-tipoftheday h2 {
+        margin: 0;
+        margin-block-end: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    mixpipe-tipoftheday p {
+        margin: 0;
+    }
 `);
+
+export const TIPS = [
+    "This is an example tip.",
+    "This is another example tip."
+];
 
 export class HomePanel extends workspaces.Panel {
     constructor() {
@@ -61,9 +96,39 @@ export class HomePanel extends workspaces.Panel {
 
         this.wordmark = new HomeWordmark();
 
+        this.columnsElement = components.element("div", [
+            components.className("columns")
+        ]);
+
+        this.actionsColumnElement = components.element("div");
+        this.statusColumnElement = components.element("div");
+
+        this.createProjectButton = new ui.ActionListButton("Create a new project", "icons/add.svg", "");
+        this.openLocalProjectButton = new ui.ActionListButton("Open a local project", "icons/add.svg", "");
+        this.openRemoteProjectButton = new ui.ActionListButton("Open a remote project", "icons/add.svg", "");
+        this.tipOfTheDay = new TipOfTheDay();
+
+        this.actionsColumnElement.append(
+            this.createProjectButton.element,
+            this.openLocalProjectButton.element,
+            this.openRemoteProjectButton.element
+        );
+
+        this.statusColumnElement.append(
+            this.tipOfTheDay.element
+        );
+
+        this.columnsElement.append(
+            this.actionsColumnElement,
+            this.statusColumnElement
+        );
+
         this.element.classList.add("home");
 
-        this.element.append(this.wordmark.element);
+        this.element.append(
+            this.wordmark.element,
+            this.columnsElement
+        );
     }
 
     createTab() {
@@ -99,6 +164,31 @@ export class HomeWordmark extends components.Component {
             this.logo.element,
             this.titleElement
         );
+    }
+}
+
+export class TipOfTheDay extends components.Component {
+    constructor() {
+        super("mixpipe-tipoftheday");
+
+        this.titleElement = components.element("h2", [
+            components.text("Tip of the day")
+        ]);
+
+        this.tipElement = components.element("p");
+
+        this.element.append(
+            this.titleElement,
+            this.tipElement
+        );
+
+        this.showTip();
+    }
+
+    showTip() {
+        var randomTip = TIPS[Math.floor(Math.random() * TIPS.length)];
+
+        this.tipElement.textContent = randomTip;
     }
 }
 

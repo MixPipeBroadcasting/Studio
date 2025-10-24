@@ -34,7 +34,7 @@ components.css(`
     button img.icon {
         width: 100%;
         height: 100%;
-        vertical-align: bottom;
+        vertical-align: middle;
     }
 
     button[mixpipe-active="true"] {
@@ -52,6 +52,35 @@ components.css(`
 
     button:not([mixpipe-active="true"]) .active {
         display: none;
+    }
+
+    button.textualIcon img.icon {
+        width: unset;
+    }
+
+    button.action {
+        position: relative;
+        width: 100%;
+        height: unset;
+        min-height: 2.4rem;
+        margin-block: 0.2rem;
+        padding-inline-start: 2.6rem;
+        background: transparent;
+        text-align: left;
+        transition: 0.5s background;
+    }
+
+    button.action:hover {
+        background: var(--secondaryBackground);
+    }
+
+    button.action img {
+        position: absolute;
+        top: 50%;
+        left: 0.4rem;
+        width: 2rem;
+        height: 2rem;
+        transform: translate(0, -50%);
     }
 
     input, select {
@@ -224,6 +253,27 @@ export class ToggleIconButton extends ToggleButton {
         this.add(this.activeIcon, this.inactiveIcon);
 
         this.events.valueChanged.connect((event) => this.tooltip = event.value ? this.activeTooltip : this.inactiveTooltip);
+    }
+}
+
+export class TextualIconButton extends Button {
+    constructor(text, source, alt) {
+        super(text);
+
+        this.icon = new Icon(source, alt);
+        this.tooltip = alt;
+
+        this.element.classList.add("textualIcon");
+
+        this.insert(0, this.icon);
+    }
+}
+
+export class ActionListButton extends TextualIconButton {
+    constructor(text, source, alt) {
+        super(text, source, alt);
+
+        this.element.classList.add("action");
     }
 }
 
