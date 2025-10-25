@@ -78,8 +78,8 @@ components.css(`
         position: absolute;
         top: 50%;
         left: 0.4rem;
-        width: 2rem;
-        height: 2rem;
+        width: 1.6rem;
+        height: 1.6rem;
         transform: translate(0, -50%);
     }
 
