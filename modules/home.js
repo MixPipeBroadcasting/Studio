@@ -86,8 +86,8 @@ components.css(`
 `);
 
 export const TIPS = [
-    "This is an example tip.",
-    "This is another example tip."
+    "In the scene editor, compare the values of specific properties for two or more objects by selecting each object while holding the Shift key, and then expanding the properties panel.",
+    "You can quickly add new keyframes to an object's animation timeline by moving the playhead in the animation editor to the desired time, and then modifying the timeline's property value in the scene editor."
 ];
 
 export class HomePanel extends workspaces.Panel {
@@ -104,8 +104,8 @@ export class HomePanel extends workspaces.Panel {
         this.statusColumnElement = components.element("div");
 
         this.createProjectButton = new ui.ActionListButton("Create a new project", "icons/add.svg", "");
-        this.openLocalProjectButton = new ui.ActionListButton("Open a local project", "icons/add.svg", "");
-        this.openRemoteProjectButton = new ui.ActionListButton("Open a remote project", "icons/add.svg", "");
+        this.openLocalProjectButton = new ui.ActionListButton("Open a local project", "icons/open.svg", "");
+        this.openRemoteProjectButton = new ui.ActionListButton("Open a remote project", "icons/remote.svg", "");
         this.tipOfTheDay = new TipOfTheDay();
 
         this.actionsColumnElement.append(
