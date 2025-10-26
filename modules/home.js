@@ -87,7 +87,8 @@ components.css(`
 
 export const TIPS = [
     "In the scene editor, compare the values of specific properties for two or more objects by selecting each object while holding the Shift key, and then expanding the properties panel.",
-    "You can quickly add new keyframes to an object's animation timeline by moving the playhead in the animation editor to the desired time, and then modifying the timeline's property value in the scene editor."
+    "You can quickly add new keyframes to an object's animation timeline by moving the playhead in the animation editor to the desired time, and then modifying the timeline's property value in the scene editor.",
+    "Use composited scene placeholders in a scene to create a reusable layout template that can then be applied to create a consistent set of multi-scene layouts."
 ];
 
 export class HomePanel extends workspaces.Panel {
