@@ -8,6 +8,7 @@ export var projectsById = {};
 export var modelSyncHandlers = [];
 
 const TIMELINE_TRIM_COUNT_TRIGGER = 20;
+const SAVE_DELAY_DURATION = 3_000;
 
 export class Transaction {
     constructor(path) {
@@ -807,4 +808,41 @@ export function getOrCreateProjectById(id) {
 
 export function registerModelSyncHandler(rootPath, modelType, condition = undefined) {
     modelSyncHandlers.push(new ModelSyncHandler(rootPath, modelType, condition));
+}
+
+export async function openLocalProject() {
+    var rootHandle = await window.showDirectoryPicker();
+    var assetStore = new assets.FileSystemAssetStore(rootHandle);
+
+    var projectFile = await assetStore.readAsset("Project.mpp");
+    var projectJson = await projectFile.text();
+    var projectData = {};
+
+    if (projectJson != "") {
+        projectData = JSON.parse(projectJson);
+    }
+
+    var project = new Project(undefined, assetStore);
+
+    project.data = projectData;
+
+    project.sync();
+
+    var saveTimeout = null;
+    var lastSavedAt = Date.now();
+
+    project.events.transactionAdded.connect(function() {
+        if (Date.now() - lastSavedAt < SAVE_DELAY_DURATION) {
+            clearTimeout(saveTimeout);
+        }
+
+        setTimeout(function() {
+            lastSavedAt = Date.now();
+            projectJson = JSON.stringify(project.data);
+
+            assetStore.writeAsset("Project.mpp", new TextEncoder().encode(projectJson));
+        }, SAVE_DELAY_DURATION);
+    });
+
+    return project;
 }

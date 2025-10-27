@@ -1,6 +1,8 @@
 import * as components from "./components.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
+import * as projects from "./projects.js";
+import * as storyboards from "./storyboards.js";
 
 components.css(`
     mixpipe-panel.home {
@@ -130,6 +132,20 @@ export class HomePanel extends workspaces.Panel {
             this.wordmark.element,
             this.columnsElement
         );
+
+        this.createProjectButton.events.activated.connect(function() {
+            var project = new projects.Project();
+            var storyboardPanel = new storyboards.StoryboardPanel(project);
+
+            workspaces.mainWorkspace.add(storyboardPanel);
+        });
+
+        this.openLocalProjectButton.events.activated.connect(async function() {
+            var project = await projects.openLocalProject();
+            var storyboardPanel = new storyboards.StoryboardPanel(project);
+
+            workspaces.mainWorkspace.add(storyboardPanel);
+        });
     }
 
     createTab() {
