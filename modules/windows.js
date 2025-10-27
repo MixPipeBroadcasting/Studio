@@ -1,4 +1,5 @@
 import * as projects from "./projects.js";
+import * as assets from "./assets.js";
 import * as workspaces from "./workspaces.js";
 
 export var allWindows = [];
@@ -20,8 +21,29 @@ export function handleMessage(data) {
         return;
     }
 
+    if (data.type == "remoteAssetResponseGiven") {
+        var assetStore = projects.getOrCreateProjectById(data.projectId).assetStore;
+
+        if (assetStore instanceof assets.RemoteAssetStore) {
+            assetStore.processResponse(data.payload);
+        } else {
+            console.warn("Remote asset response given but project does not use remote asset store");
+        }
+
+        return;
+    }
+
     if (data.type == "loadProject") {
-        var project = new projects.Project(data.projectId);
+        var assetStore = new assets.RemoteAssetStore();
+        var project = new projects.Project(data.projectId, assetStore);
+
+        assetStore.setRequestHandler(function(payload) {
+            parent.postMessage({
+                type: "remoteAssetRequested",
+                projectId: project.id,
+                payload
+            });
+        });
 
         project.events.transactionAdded.connect(function(event) {
             if (event.transaction.createdExternally) {
@@ -60,6 +82,8 @@ export function handleMessage(data) {
             workspaces.addEventListenersForProject(project);
         }
 
+        window.project = project;
+
         console.log(project);
 
         return;
@@ -96,7 +120,7 @@ export function open(project, panelToOpen = null) {
         }, window.location.origin);
     });
 
-    childWindow.addEventListener("message", function(event) {
+    childWindow.addEventListener("message", async function(event) {
         if (event.origin != window.location.origin || event.source.window == window) {
             return;
         }
@@ -118,6 +142,19 @@ export function open(project, panelToOpen = null) {
                 panel: panelToOpen ? panelToOpen.serialise() : null
             }, window.location.origin);
 
+            return;
+        }
+
+        if (event.data.type == "remoteAssetRequested") {
+            var assetStore = projects.getOrCreateProjectById(event.data.projectId).assetStore;
+            var payload = await assetStore.processRemoteRequest(event.data.payload);
+
+            childWindow.postMessage({
+                type: "remoteAssetResponseGiven",
+                projectId: project.id,
+                payload
+            });
+    
             return;
         }
 

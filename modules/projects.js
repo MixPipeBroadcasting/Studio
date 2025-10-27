@@ -1,5 +1,6 @@
 import * as common from "./common.js";
 import * as events from "./events.js";
+import * as assets from "./assets.js";
 import * as animations from "./animations.js";
 import * as templates from "./templates.js";
 
@@ -84,13 +85,14 @@ export class ModelSyncHandler {
 }
 
 export class Project extends events.EventDrivenObject {
-    constructor(id = generateKey()) {
+    constructor(id = generateKey(), assetStore = new assets.TemporaryAssetStore()) {
         super();
 
         this.id = id;
         this.data = {};
         this.timeline = [];
         this.createdAt = Date.now();
+        this.assetStore = assetStore;
         this.unregisteredModels = [];
         this.models = [];
         this.modelPropertyEventAssociations = {};

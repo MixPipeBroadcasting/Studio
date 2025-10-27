@@ -177,6 +177,8 @@ if (!opener) {
 
     project.registerNewModels();
 
+    window.project = project;
+
     console.log(project);
 
     setInterval(function() {
