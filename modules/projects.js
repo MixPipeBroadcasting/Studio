@@ -838,7 +838,7 @@ export async function openLocalProject() {
 
         setTimeout(function() {
             lastSavedAt = Date.now();
-            projectJson = JSON.stringify(project.data);
+            projectJson = JSON.stringify(project.data, null, "\t");
 
             assetStore.writeAsset("Project.mpp", new TextEncoder().encode(projectJson));
         }, SAVE_DELAY_DURATION);
