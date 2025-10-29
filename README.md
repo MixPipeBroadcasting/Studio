@@ -1,4 +1,4 @@
-# MixPipe Studio
+# MixPipe Studio (MPS)
 A pipeline-based vision and audio mixing application for live video productions.
 
 ## Running MPS
