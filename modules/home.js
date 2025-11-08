@@ -138,6 +138,7 @@ export class HomePanel extends workspaces.Panel {
             var storyboardPanel = new storyboards.StoryboardPanel(project);
 
             workspaces.mainWorkspace.add(storyboardPanel);
+            workspaces.addEventListenersForProject(project);
         });
 
         this.openLocalProjectButton.events.activated.connect(async function() {
@@ -145,6 +146,7 @@ export class HomePanel extends workspaces.Panel {
             var storyboardPanel = new storyboards.StoryboardPanel(project);
 
             workspaces.mainWorkspace.add(storyboardPanel);
+            workspaces.addEventListenersForProject(project);
         });
     }
 
