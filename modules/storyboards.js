@@ -639,21 +639,71 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.createFeedButton = new ui.IconButton("icons/input.svg", "Create feed");
         this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
         this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
+        this.createPresetSceneButton = new ui.IconButton("icons/input.svg", "Create scene from preset");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
+
+        this.presetSceneMenu = new PresetSceneMenu();
 
         this.add(
             this.createSceneButton,
             this.createFeedButton,
             this.createStoryboardGroupButton,
             this.createAnimationControllerButton,
-            this.newWindowButton
+            this.createPresetSceneButton,
+            this.newWindowButton,
+            this.presetSceneMenu
         );
 
         this.createSceneButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Scene));
         this.createFeedButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Feed));
         this.createStoryboardGroupButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.StoryboardGroup));
         this.createAnimationControllerButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.AnimationController));
+        this.createPresetSceneButton.events.activated.connect(() => this.presetSceneMenu.toggleFromOpener(this.createPresetSceneButton.element));
         this.newWindowButton.events.activated.connect(() => windows.open(this.storyboard.project, this.storyboardPanel));
+    }
+}
+
+export class PresetSceneMenu extends ui.Menu {
+    constructor() {
+        super();
+
+        this.colourBarsButton = new ui.Button("Colour bars (EBU)");
+
+        this.testCardsExpandable = new ui.Expandable("Test cards and patterns");
+
+        this.testCardsExpandable.add(
+            this.colourBarsButton
+        );
+
+        this.cueDotButton = new ui.Button("Cue dot");
+
+        this.inBandSignallingExpandable = new ui.Expandable("In-band signalling");
+
+        this.inBandSignallingExpandable.add(
+            this.cueDotButton
+        );
+
+        this.productPlacementButton = new ui.Button("Product placement DOG");
+        this.subtitlesButton = new ui.Button("Subtitles DOG");
+        this.audioDescriptionButton = new ui.Button("Audio description DOG");
+        this.subtitlesAndAudioDescriptionButton = new ui.Button("Subtitles and audio description DOG");
+        this.legalSuperCaptionButton = new ui.Button("Legal superimposed caption");
+        
+        this.ukStandardGraphicsExpandable = new ui.Expandable("UK standard graphics");
+
+        this.ukStandardGraphicsExpandable.add(
+            this.productPlacementButton,
+            this.subtitlesButton,
+            this.audioDescriptionButton,
+            this.subtitlesAndAudioDescriptionButton,
+            this.legalSuperCaptionButton
+        );
+
+        this.add(
+            this.testCardsExpandable,
+            this.inBandSignallingExpandable,
+            this.ukStandardGraphicsExpandable
+        );
     }
 }
 

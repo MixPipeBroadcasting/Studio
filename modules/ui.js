@@ -167,6 +167,83 @@ components.css(`
         border: 0.1rem solid var(--selectedBorder);
     }
 
+    mixpipe-menu {
+        position: fixed;
+        min-width: 10rem;
+        max-height: 80vh;
+        margin: 0;
+        padding: 0;
+        background: var(--secondaryBackground);
+        border: 0.1rem solid var(--secondaryBorder);
+        border-radius: 0.25rem;
+    }
+
+    mixpipe-menu button {
+        display: block;
+        width: 100%;
+        padding-block: 0.25rem!important;
+        padding-inline-end: 0.4rem!important;
+        text-align: start;
+        border-radius: 0;
+    }
+
+    mixpipe-menu:has(button img.icon, details) button:not(:has(img.icon)) {
+        padding-inline-start: 1.6rem;
+    }
+
+    mixpipe-menu :is(button:hover, details summary:hover) {
+        background: var(--selectedBackground);
+        color: var(--selectedForeground);
+    }
+
+    mixpipe-menu button img.icon {
+        height: 1.5rem!important;
+    }
+
+    mixpipe-menu button:hover img.icon {
+        ${components.styleMixins.ICON_INVERT}
+    }
+
+    mixpipe-menu details summary {
+        position: relative;
+        padding-block: 0.25rem;
+        padding-inline-start: 1.6rem;
+        padding-inline-end: 0.4rem;
+        cursor: default;
+        user-select: none;
+    }
+
+    mixpipe-menu details summary:before {
+        position: absolute;
+        display: block;
+        width: 1.5rem;
+        height: 1.5rem;
+        top: 0.125rem;
+        left: 0.125rem;
+        background: url(icons/expand.svg) no-repeat;
+        background-size: 1.5rem 1.5rem;
+        content: "";
+    }
+
+    mixpipe-menu details summary:hover:before {
+        ${components.styleMixins.ICON_INVERT}
+    }
+
+    mixpipe-menu details summary::marker {
+        content: "";
+    }
+
+    mixpipe-menu details[open] summary:before {
+        transform: rotate(90deg);
+    }
+
+    mixpipe-menu details :is(button, details) {
+        width: calc(100% - 1rem);
+        margin-inline-start: 1rem;
+        border-start-start-radius: 0.25rem;
+        border-end-start-radius: 0.25rem;
+    }
+
     [disabled] {
         opacity: 0.6;
         cursor: not-allowed;
@@ -193,7 +270,7 @@ export class Image extends components.Component {
 
 export class Icon extends Image {
     constructor(source, alt) {
-        super(source, alt);
+        super(source, alt ?? "");
 
         this.element.classList.add("icon");
     }
@@ -230,7 +307,7 @@ export class IconButton extends Button {
         super("");
 
         this.icon = new Icon(source, alt);
-        this.tooltip = alt;
+        this.tooltip = alt ?? "";
 
         this.add(this.icon);
     }
@@ -602,6 +679,84 @@ export class Tooltip extends components.Component {
         if (rect.bottom >= windowRect.bottom) {
             this.element.style.top = `calc(${lastPointerY - rect.height}px - 0.5rem)`;
         }
+    }
+}
+
+export class Menu extends components.Component {
+    constructor() {
+        super("mixpipe-menu");
+
+        var thisScope = this;
+
+        this.element.setAttribute("popover", "auto");
+
+        this._openerElement = null;
+        this._shouldIgnoreNextToggle = false;
+    
+        this.element.addEventListener("beforetoggle", function(event) {
+            if (event.newState == "closed") {
+                thisScope._shouldIgnoreNextToggle = true;
+
+                setTimeout(function() {
+                    thisScope._shouldIgnoreNextToggle = false;
+                });
+            }
+        });
+
+        this.element.addEventListener("toggle", function(event) {
+            if (event.newState == "open") {
+                var rect = thisScope._openerElement?.getBoundingClientRect();
+
+                if (!rect) {
+                    rect = {top: 10, left: 10, width: 0, height: 0};
+                }
+
+                thisScope.element.style.top = `${Math.min(
+                    rect.top + rect.height + 10,
+                    document.body.clientHeight - thisScope.element.clientHeight - rect.height - 10
+                )}px`;
+
+                thisScope.element.style.left = `${Math.min(
+                    rect.left,
+                    document.body.clientWidth - thisScope.element.clientWidth - 10
+                )}px`;
+            }
+        });
+
+        this.element.addEventListener("click", function(event) {
+            if (event.target.matches("button, button *")) {
+                thisScope.element.hidePopover();
+            }
+        });
+    }
+
+    showFromOpener(openerElement) {
+        this._openerElement = openerElement;
+
+        this.element.showPopover({source: openerElement});
+    }
+
+    toggleFromOpener(openerElement) {
+        if (this._shouldIgnoreNextToggle) {
+            return;
+        }
+
+        this._openerElement = openerElement;
+
+        this.element.togglePopover({source: openerElement});
+    }
+}
+
+export class Expandable extends components.Component {
+    constructor(summary) {
+        super("details");
+
+        this.summaryElement = components.element("summary");
+        this.summaryElement.textContent = summary;
+
+        this.registerState("summary", "summaryChanged", summary, (event) => this.summaryElement.textContent = event.value);
+
+        this.element.append(this.summaryElement);
     }
 }
 
