@@ -54,6 +54,7 @@ components.css(`
 export const PROPERTIES = [
     new propertyTables.Property("name", "string", "Name", {placeholder: "Untitled object"}),
     new propertyTables.Property("text", "string", "Text"),
+    new propertyTables.Property("uri", "string", "URI"),
     new propertyTables.Property("scene", "scene", "Scene"),
     new propertyTables.Property("x", "number", "X", {roundNumber: true}),
     new propertyTables.Property("y", "number", "Y", {roundNumber: true}),
@@ -82,11 +83,19 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
         this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
         this.createTextButton = new ui.IconButton("icons/text.svg", "Create text");
+        this.createGraphicButton = new ui.IconButton("icons/graphic.svg", "Create graphic");
         this.createCompositedSceneButton = new ui.ToggleIconButton("icons/composite.svg", "Cancel creating a composited scene", undefined, "Create composited scene");
         this.createCompositedScenePlaceholderButton = new ui.ToggleIconButton("icons/compositeattribute.svg", "Cancel creating a composited scene placeholder", undefined, "Create composited scene placeholder");
         this.deleteObjectsButton = new ui.IconButton("icons/delete.svg", "Delete selected objects");
 
-        this.add(this.createRectangleButton, this.createTextButton, this.createCompositedSceneButton, this.createCompositedScenePlaceholderButton, this.deleteObjectsButton);
+        this.add(
+            this.createRectangleButton,
+            this.createTextButton,
+            this.createGraphicButton,
+            this.createCompositedSceneButton,
+            this.createCompositedScenePlaceholderButton,
+            this.deleteObjectsButton
+        );
 
         this.createRectangleButton.events.activated.connect(function() {
             var rectangle = new sceneObjects.Rectangle(sceneEditor.scene.project);
@@ -118,6 +127,19 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             sceneEditor.scene.objects.addModel(text);
 
             sceneEditor.setSelectedObjects([text]);
+        });
+
+        this.createGraphicButton.events.activated.connect(function() {
+            var graphic = new sceneObjects.Graphic(sceneEditor.scene.project);
+
+            graphic.x = 50;
+            graphic.y = 50;
+            graphic.width = 100;
+            graphic.height = 100;
+
+            sceneEditor.scene.objects.addModel(graphic);
+
+            sceneEditor.setSelectedObjects([graphic]);
         });
 
         this.createCompositedSceneButton.events.valueChanged.connect(function(event) {

@@ -99,6 +99,7 @@ export class Project extends events.EventDrivenObject {
         this.modelPropertyEventAssociations = {};
         this.modelReferencePropertyEventAssociations = {};
         this.localState = {};
+        this.registeredSources = {};
 
         this.events.transactionAdded = new events.EventType(this);
         this.events.modelAdded = new events.EventType(this);

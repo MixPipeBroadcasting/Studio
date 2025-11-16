@@ -128,7 +128,7 @@ export class Feed extends Scene {
             return;
         }
 
-        var source = sources.get(this.uri);
+        var source = sources.get(this.project, this.uri, "feed");
 
         if (!source.isConnected) {
             if (!this.connectCalled) {

@@ -35,15 +35,15 @@ export class FileSystemAssetStore extends AssetStore {
         this.root = root;
     }
 
-    async _resolvePath(path) {
+    async _resolvePath(path, create = false) {
         var currentDir = this.root;
         var parts = path.split("/");
 
         for (var part of parts.slice(0, -1)) {
-            currentDir = await currentDir.getDirectoryHandle(part, {create: true});
+            currentDir = await currentDir.getDirectoryHandle(part, {create});
         }
 
-        return await currentDir.getFileHandle(parts.at(-1), {create: true});
+        return await currentDir.getFileHandle(parts.at(-1), {create});
     }
 
     async readAsset(path) {
@@ -53,7 +53,7 @@ export class FileSystemAssetStore extends AssetStore {
     }
     
     async writeAsset(path, data) {
-        var fileHandle = await this._resolvePath(path);
+        var fileHandle = await this._resolvePath(path, true);
         var writable = await fileHandle.createWritable();
 
         await writable.write(data);

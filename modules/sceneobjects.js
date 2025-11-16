@@ -1,4 +1,5 @@
 import * as projects from "./projects.js";
+import * as sources from "./sources.js";
 
 var nextCompositionId = 0;
 var logoImage = new Image();
@@ -263,10 +264,59 @@ export class Text extends SceneObject {
     }
 }
 
+export class Graphic extends SceneObject {
+    constructor(project, path = undefined) {
+        super(project, path);
+
+        this.registerProperty("type", "graphic");
+        this.registerProperty("name", "Graphic", "renamed", false);
+        this.registerProperty("uri", "", "uriChanged", true);
+
+        this._cachedGraphicUri = null;
+        this._cachedGraphicImage = null;
+    }
+
+    async getImage() {
+        var source = sources.get(this.project, this.getValue("uri"), "graphic");
+
+        try {
+            this._cachedGraphicImage = await source.getGraphic();
+        } catch (error) {
+            console.warn(error);
+
+            this._cachedGraphicImage = null;
+        }
+
+        return this._cachedGraphicImage;
+    }
+
+    _draw(context, options = {}) {
+        if (this.getValue("uri") != this._cachedGraphicUri) {
+            this._cachedGraphicUri = this.getValue("uri");
+
+            this.getImage();
+        }
+
+        if (this._cachedGraphicImage) {
+            context.drawImage(
+                this._cachedGraphicImage,
+                0, 0,
+                this._cachedGraphicImage.width,
+                this._cachedGraphicImage.height,
+                this.getAnimatedValue("x"),
+                this.getAnimatedValue("y"),
+                this.getAnimatedValue("width"),
+                this.getAnimatedValue("height")
+            );
+        }
+    }
+}
+
 export const SCENE_OBJECT_TYPES = {
     "rectangle": Rectangle,
     "compositedScene": CompositedScene,
-    "text": Text
+    "text": Text,
+    "graphic": Graphic
 };
 
 Object.keys(SCENE_OBJECT_TYPES).forEach(function(type) {
