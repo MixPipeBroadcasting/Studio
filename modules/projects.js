@@ -815,7 +815,7 @@ export async function openLocalProject() {
     var rootHandle = await window.showDirectoryPicker();
     var assetStore = new assets.FileSystemAssetStore(rootHandle);
 
-    var projectFile = await assetStore.readAsset("Project.mpp");
+    var projectFile = await assetStore.readAsset("Project.mpp", true);
     var projectJson = await projectFile.text();
     var projectData = {};
 

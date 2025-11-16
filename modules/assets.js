@@ -46,8 +46,8 @@ export class FileSystemAssetStore extends AssetStore {
         return await currentDir.getFileHandle(parts.at(-1), {create});
     }
 
-    async readAsset(path) {
-        var fileHandle = await this._resolvePath(path);
+    async readAsset(path, create = false) {
+        var fileHandle = await this._resolvePath(path, create);
 
         return await fileHandle.getFile();
     }

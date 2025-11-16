@@ -639,7 +639,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.createFeedButton = new ui.IconButton("icons/input.svg", "Create feed");
         this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
         this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
-        this.createPresetSceneButton = new ui.IconButton("icons/input.svg", "Create scene from preset");
+        this.createPresetSceneButton = new ui.IconButton("icons/presetscenes.svg", "Create scene from preset");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
 
         this.presetSceneMenu = new PresetSceneMenu();
@@ -667,43 +667,47 @@ export class PresetSceneMenu extends ui.Menu {
     constructor() {
         super();
 
-        this.colourBarsButton = new ui.Button("Colour bars (EBU)");
+        this.items = [
+            {component: new ui.Expandable("Test cards and patterns"), children: [
+                {component: new ui.Button("Colour bars (EBU)"), preset: "colourbars"}
+            ]},
+            {component: new ui.Expandable("In-band signalling"), children: [
+                {component: new ui.Button("Cue dot"), preset: "colourbars"}
+            ]},
+            {component: new ui.Expandable("UK standard graphics"), children: [
+                {component: new ui.Button("Product placement DOG"), preset: "colourbars"},
+                {component: new ui.Button("Subtitles DOG"), preset: "colourbars"},
+                {component: new ui.Button("Audio description DOG"), preset: "colourbars"},
+                {component: new ui.Button("Subtitles and audio description DOG"), preset: "colourbars"},
+                {component: new ui.Button("Legal superimposed caption"), preset: "colourbars"}
+            ]},
+            {component: new ui.Expandable("US standard graphics"), children: [
+                {component: new ui.Button("TV Parental Guidelines DOG"), preset: "colourbars"}
+            ]}
+        ];
 
-        this.testCardsExpandable = new ui.Expandable("Test cards and patterns");
+        this.addItems();
+    }
 
-        this.testCardsExpandable.add(
-            this.colourBarsButton
-        );
+    addItems() {
+        function addItemsForComponent(component, items) {
+            for (var item of items) {
+                if (item.component instanceof ui.Button) {
+                    item.component.events.activated.connect(function() {
+                        // TODO: Merge preset scene project into current project
+                        console.log("Add preset scene:", item.preset);
+                    });
+                }
 
-        this.cueDotButton = new ui.Button("Cue dot");
+                component.add(item.component);
 
-        this.inBandSignallingExpandable = new ui.Expandable("In-band signalling");
+                if (item.children) {
+                    addItemsForComponent(item.component, item.children);
+                }
+            }
+        }
 
-        this.inBandSignallingExpandable.add(
-            this.cueDotButton
-        );
-
-        this.productPlacementButton = new ui.Button("Product placement DOG");
-        this.subtitlesButton = new ui.Button("Subtitles DOG");
-        this.audioDescriptionButton = new ui.Button("Audio description DOG");
-        this.subtitlesAndAudioDescriptionButton = new ui.Button("Subtitles and audio description DOG");
-        this.legalSuperCaptionButton = new ui.Button("Legal superimposed caption");
-        
-        this.ukStandardGraphicsExpandable = new ui.Expandable("UK standard graphics");
-
-        this.ukStandardGraphicsExpandable.add(
-            this.productPlacementButton,
-            this.subtitlesButton,
-            this.audioDescriptionButton,
-            this.subtitlesAndAudioDescriptionButton,
-            this.legalSuperCaptionButton
-        );
-
-        this.add(
-            this.testCardsExpandable,
-            this.inBandSignallingExpandable,
-            this.ukStandardGraphicsExpandable
-        );
+        addItemsForComponent(this, this.items);
     }
 }
 

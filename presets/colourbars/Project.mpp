@@ -1,0 +1,146 @@
+{
+	"scenes": {
+		"c4xJgJ-JE2": {
+			"x": 100,
+			"y": 100,
+			"width": 1920,
+			"height": 1080,
+			"name": "Colour bars (EBU)",
+			"scale": 1,
+			"objects": {
+				"c4xJjdToF0": [
+					"sceneObjects",
+					"c4xJjdSFF-"
+				],
+				"c4xK1bo-F2": [
+					"sceneObjects",
+					"c4xK1bmRF1"
+				],
+				"c4xK7cFgG0": [
+					"sceneObjects",
+					"c4xK7cE7G-"
+				],
+				"c4xKF-jkG2": [
+					"sceneObjects",
+					"c4xKF-iBG1"
+				],
+				"c4xKQnYZH0": [
+					"sceneObjects",
+					"c4xKQnVRH-"
+				],
+				"c4xKaw1-H2": [
+					"sceneObjects",
+					"c4xKaw-RH1"
+				],
+				"c4xL12y-I0": [
+					"sceneObjects",
+					"c4xL12wRI-"
+				],
+				"c4xLDnhoI2": [
+					"sceneObjects",
+					"c4xLDngFI1"
+				]
+			}
+		}
+	},
+	"sceneObjects": {
+		"c4xJjdSFF-": {
+			"name": "Rectangle",
+			"x": 0,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(255, 255, 255)",
+			"borderFill": ""
+		},
+		"c4xK1bmRF1": {
+			"name": "Rectangle",
+			"x": 240,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(192, 192, 0)"
+		},
+		"c4xK7cE7G-": {
+			"name": "Rectangle",
+			"x": 480,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(0, 192, 192)"
+		},
+		"c4xKF-iBG1": {
+			"name": "Rectangle",
+			"x": 720,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(0, 192, 0)"
+		},
+		"c4xKQnVRH-": {
+			"name": "Rectangle",
+			"x": 960,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(192, 0, 192)"
+		},
+		"c4xKaw-RH1": {
+			"name": "Rectangle",
+			"x": 1200,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(192, 0, 0)"
+		},
+		"c4xL12wRI-": {
+			"name": "Rectangle",
+			"x": 1440,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(0, 0, 192)",
+			"borderFill": ""
+		},
+		"c4xLDngFI1": {
+			"name": "Rectangle",
+			"x": 1680,
+			"y": 0,
+			"width": 240,
+			"height": 1080,
+			"opacity": 1,
+			"rotation": 0,
+			"type": "rectangle",
+			"borderWidth": 0,
+			"backgroundFill": "rgb(0, 0, 0)"
+		}
+	}
+}
