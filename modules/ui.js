@@ -191,7 +191,11 @@ components.css(`
         padding-inline-start: 1.6rem;
     }
 
-    mixpipe-menu :is(button:hover, details summary:hover) {
+    mixpipe-menu :is(button, summary) {
+        outline: none;
+    }
+
+    mixpipe-menu :is(button, summary):focus-visible, mixpipe-menu:not(:has(:focus-visible)) :is(button, summary):hover {
         background: var(--selectedBackground);
         color: var(--selectedForeground);
     }
@@ -200,11 +204,11 @@ components.css(`
         height: 1.5rem!important;
     }
 
-    mixpipe-menu button:hover img.icon {
+    mixpipe-menu button:focus-visible img.icon, mixpipe-menu:not(:has(:focus-visible)) button:hover img.icon {
         ${components.styleMixins.ICON_INVERT}
     }
 
-    mixpipe-menu details summary {
+    mixpipe-menu summary {
         position: relative;
         padding-block: 0.25rem;
         padding-inline-start: 1.6rem;
@@ -213,7 +217,7 @@ components.css(`
         user-select: none;
     }
 
-    mixpipe-menu details summary:before {
+    mixpipe-menu summary:before {
         position: absolute;
         display: block;
         width: 1.5rem;
@@ -225,11 +229,11 @@ components.css(`
         content: "";
     }
 
-    mixpipe-menu details summary:hover:before {
+    mixpipe-menu summary:focus-visible:before, mixpipe-menu:not(:has(:focus-visible)) summary:hover:before {
         ${components.styleMixins.ICON_INVERT}
     }
 
-    mixpipe-menu details summary::marker {
+    mixpipe-menu summary::marker {
         content: "";
     }
 
@@ -699,7 +703,7 @@ export class Menu extends components.Component {
 
                 setTimeout(function() {
                     thisScope._shouldIgnoreNextToggle = false;
-                });
+                }, 250);
             }
         });
 
@@ -720,12 +724,60 @@ export class Menu extends components.Component {
                     rect.left,
                     document.body.clientWidth - thisScope.element.clientWidth - 10
                 )}px`;
+
+                thisScope.element.querySelector("button, summary")?.focus();
             }
         });
 
         this.element.addEventListener("click", function(event) {
             if (event.target.matches("button, button *")) {
                 thisScope.element.hidePopover();
+            }
+        });
+
+        this.element.addEventListener("keydown", function(event) {
+            var focusables = [...thisScope.element.querySelectorAll(":is(button, summary):not(details:not([open]) summary ~ *)")];
+            var currentFocusIndex = focusables.findIndex((element) => element.isSameNode(document.activeElement)) ?? 0;
+
+            if (focusables.length == 0) {
+                return;
+            }
+
+            if (event.code == "ArrowUp") {
+                if (currentFocusIndex == 0) {
+                    focusables.at(-1).focus();
+                } else {
+                    focusables[currentFocusIndex - 1].focus();
+                }
+            }
+
+            if (event.code == "ArrowDown") {
+                if (currentFocusIndex == focusables.length - 1) {
+                    focusables[0].focus();
+                } else {
+                    focusables[currentFocusIndex + 1].focus();
+                }
+            }
+
+            if (event.code == "ArrowLeft") {
+                var closestDetailsElement = document.activeElement.closest("details");
+
+                closestDetailsElement?.removeAttribute("open");
+                closestDetailsElement?.querySelector("summary").focus();
+            }
+
+            if (event.code == "ArrowRight") {
+                var closestDetailsElement = document.activeElement.closest("details");
+
+                closestDetailsElement?.setAttribute("open", "");
+                closestDetailsElement?.querySelector("summary").focus();
+            }
+        });
+
+        this.element.addEventListener("focusout", function(event) {
+            if (!thisScope.element.contains(event.relatedTarget)) {
+                thisScope.element.hidePopover();
+                thisScope._openerElement?.focus();
             }
         });
     }
