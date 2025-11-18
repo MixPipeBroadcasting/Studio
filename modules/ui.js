@@ -266,6 +266,7 @@ export class Image extends components.Component {
 
         this.element.src = source;
         this.element.alt = alt;
+        this.element.draggable = false;
 
         this.registerState("source", "sourceChanged", source, (event) => this.element.src = event.value);
         this.registerState("alt", "altChanged", alt, (event) => this.element.alt = event.value);

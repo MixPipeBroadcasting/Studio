@@ -38,6 +38,7 @@ body {
     background-color: var(--primaryBackground);
     color: var(--primaryForeground);
     overflow: hidden;
+    user-select: none;
 }
 
 #root {
