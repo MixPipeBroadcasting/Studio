@@ -672,6 +672,7 @@ export class PresetSceneMenu extends ui.Menu {
                 {component: new ui.Button("Colour bars (EBU)"), preset: "colourbars"}
             ]},
             {component: new ui.Expandable("In-band signalling"), children: [
+                {component: new ui.Button("VT clock"), preset: "colourbars"},
                 {component: new ui.Button("Cue dot"), preset: "colourbars"}
             ]},
             {component: new ui.Expandable("UK standard graphics"), children: [
@@ -682,7 +683,8 @@ export class PresetSceneMenu extends ui.Menu {
                 {component: new ui.Button("Legal superimposed caption"), preset: "colourbars"}
             ]},
             {component: new ui.Expandable("US standard graphics"), children: [
-                {component: new ui.Button("TV Parental Guidelines DOG"), preset: "colourbars"}
+                {component: new ui.Button("TV Parental Guidelines DOG"), preset: "colourbars"},
+                {component: new ui.Button("Closed captions DOG"), preset: "colourbars"}
             ]}
         ];
 

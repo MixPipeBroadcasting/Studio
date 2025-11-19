@@ -174,6 +174,7 @@ components.css(`
         margin: 0;
         padding: 0;
         background: var(--secondaryBackground);
+        color: var(--primaryForeground);
         border: 0.1rem solid var(--secondaryBorder);
         border-radius: 0.25rem;
     }
@@ -255,6 +256,10 @@ components.css(`
 
     @media (prefers-color-scheme: dark) {
         img.icon {
+            ${components.styleMixins.ICON_INVERT}
+        }
+
+        mixpipe-menu summary:before {
             ${components.styleMixins.ICON_INVERT}
         }
     }
