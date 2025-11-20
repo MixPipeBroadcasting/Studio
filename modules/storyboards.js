@@ -680,7 +680,7 @@ export class PresetSceneMenu extends ui.Menu {
                 {component: new ui.Button("Subtitles DOG"), preset: "colourbars"},
                 {component: new ui.Button("Audio description DOG"), preset: "colourbars"},
                 {component: new ui.Button("Subtitles and audio description DOG"), preset: "colourbars"},
-                {component: new ui.Button("Legal superimposed caption"), preset: "colourbars"}
+                {component: new ui.Button("Superimposed legal caption (ASA CAP)"), preset: "colourbars"}
             ]},
             {component: new ui.Expandable("US standard graphics"), children: [
                 {component: new ui.Button("TV Parental Guidelines DOG"), preset: "colourbars"},
