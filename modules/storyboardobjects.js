@@ -18,6 +18,14 @@ export class AttributeType extends projects.ProjectModel {
     }
 }
 
+export class Connection {
+    constructor(type, source, destination) {
+        this.type = type;
+        this.source = source;
+        this.destination = destination;
+    }
+}
+
 export class StoryboardObject extends projects.ProjectModel {
     constructor(project, path) {
         super(project, path);
@@ -29,6 +37,10 @@ export class StoryboardObject extends projects.ProjectModel {
         this.registerReferenceProperty("parentGroup", null, "reparented");
 
         this.attributeTypes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "attributeTypes"], AttributeType);
+    }
+
+    getConnections() {
+        return [];
     }
 
     addAttributeType(attributeType) {
@@ -64,6 +76,18 @@ export class Scene extends StoryboardObject {
 
     get canvasContext() {
         return this.canvas.getContext("2d");
+    }
+
+    getConnections() {
+        var connections = [];
+
+        for (var object of this.objects.getModelList()) {
+            if (object instanceof sceneObjects.CompositedScene && object.scene) {
+                connections.push(new Connection("activeScene", object.scene, this));
+            }
+        }
+
+        return connections;
     }
 
     getObjectsAtPoint(point) {
