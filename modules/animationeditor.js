@@ -553,7 +553,7 @@ export class AnimationControllerEditorView extends components.Component {
         this.timeElement.textContent = this.model.getDisplayTime("progress");
 
         this.playheadElement.style.left = `calc(10rem + ${this.model.currentTime * this.timeScale}px)`;
-        this.playheadElement.style.height = `calc(${this.element.clientHeight}px - 1rem)`;
+        this.playheadElement.style.height = `calc(${Math.floor(this.element.clientHeight) - 0.5}px - 1rem)`;
         this.playheadElement.style.visibility = playheadRect.x < timeRect.width ? "hidden" : null;
 
         this.scrubberElement.style.minWidth = `calc(12rem + ${this.timelineWidth}px)`;
