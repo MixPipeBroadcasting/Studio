@@ -17,6 +17,8 @@ export class SceneObject extends projects.ProjectModel {
         this.registerAnimationProperty("width", "number", 0, "resized");
         this.registerAnimationProperty("height", "number", 0, "resized");
         this.registerAnimationProperty("opacity", "number", 1, "filterChanged");
+        this.registerAnimationProperty("originX", "number", 0, "originChanged");
+        this.registerAnimationProperty("originY", "number", 0, "originChanged");
         this.registerAnimationProperty("rotation", "number", 0, "transformationChanged");
     }
 
@@ -32,8 +34,8 @@ export class SceneObject extends projects.ProjectModel {
         context.filter = filterValues.join(" ");
         
         if (this.getAnimatedValue("rotation") != 0) {
-            var originX = this.getAnimatedValue("x") + (this.getAnimatedValue("width") / 2);
-            var originY = this.getAnimatedValue("y") + (this.getAnimatedValue("height") / 2);
+            var originX = this.getAnimatedValue("x") + (this.getAnimatedValue("width") / 2) + this.getAnimatedValue("originX");
+            var originY = this.getAnimatedValue("y") + (this.getAnimatedValue("height") / 2) + this.getAnimatedValue("originY");
 
             context.translate(originX, originY);
             context.rotate(this.getAnimatedValue("rotation") * Math.PI / 180);
@@ -59,7 +61,7 @@ export class Rectangle extends SceneObject {
         this.registerProperty("borderFill");
     }
 
-    draw(context, options = {}) {
+    _draw(context, options = {}) {
         this.templateOptions = options;
 
         context.beginPath();

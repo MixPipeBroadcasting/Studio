@@ -61,6 +61,8 @@ export const PROPERTIES = [
     new propertyTables.Property("width", "number", "Width", {roundNumber: true}),
     new propertyTables.Property("height", "number", "Height", {roundNumber: true}),
     new propertyTables.Property("opacity", "number", "Opacity", {minValue: 0, maxValue: 1, stepValue: 0.01}),
+    new propertyTables.Property("originX", "number", "Origin X", {roundNumber: true}),
+    new propertyTables.Property("originY", "number", "Origin Y", {roundNumber: true}),
     new propertyTables.Property("rotation", "number", "Rotation"),
     new propertyTables.Property("font", "string", "Font"),
     new propertyTables.Property("fontSize", "number", "Font size", {roundNumber: true}),
@@ -722,7 +724,7 @@ export class SceneEditorPanel extends workspaces.Panel {
         var thisScope = this;
         var context = this.canvasContext;
         var boundingHalo = this.boundingHalo;
-        
+
         function checkHandle(x, y, targetHandle = null) {
             const HANDLE_RADIUS = 8 / thisScope.zoom;
 
