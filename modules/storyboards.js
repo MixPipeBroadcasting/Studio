@@ -17,6 +17,11 @@ components.css(`
         overflow: auto;
     }
 
+    mixpipe-storyboard .background {
+        position: fixed;
+        pointer-events: none;
+    }
+
     mixpipe-storyboardgroup, mixpipe-scene, mixpipe-animationcontroller {
         position: absolute;
     }
@@ -598,15 +603,20 @@ export class Storyboard extends components.Component {
 
         this.project = project;
 
+        this.backgroundCanvasElement = components.element("canvas", [components.className("background")]);
         this.slowlyScroll = null;
         this.slowlyScrollCallback = null;
 
-        project.associateChildModels(this, new Map([
+        this.element.append(this.backgroundCanvasElement);
+
+        this.modelViewMap = new Map([
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
             [storyboardObjects.Feed, FeedView],
             [storyboardObjects.AnimationController, AnimationControllerView]
-        ]), [this], (model) => model.parentGroup == null);
+        ]);
+
+        project.associateChildModels(this, this.modelViewMap, [this], (model) => model.parentGroup == null);
 
         setInterval(function() {
             if (thisScope.slowlyScroll != null) {
@@ -617,14 +627,52 @@ export class Storyboard extends components.Component {
                 }
             }
         }, 20);
+
+        this.always(this.renderBackground);
+
+        console.log(this); // TODO: Remove
+    }
+
+    get backgroundCanvasContext() {
+        return this.backgroundCanvasElement.getContext("2d");
     }
 
     createObject(type) {
-        var group = new type(this.project);
+        var instance = new type(this.project);
 
         this.project.registerNewModels();
 
-        return group;
+        return instance;
+    }
+
+    renderBackground() {
+        var areaRect = this.element.getBoundingClientRect();
+        var context = this.backgroundCanvasContext;
+
+        this.backgroundCanvasElement.width = areaRect.width;
+        this.backgroundCanvasElement.height = areaRect.height;
+
+        context.translate(-this.element.scrollLeft, -this.element.scrollTop);
+
+        context.fillStyle = "red";
+
+        context.beginPath();
+
+        // TODO: Call connection renderer method
+        // context.rect(10, 10, 100, 100);
+        // context.fill();
+
+        context.restore();
+
+        context.closePath();
+    }
+
+    _renderConnections() {
+        var objects = this.project.getModels([...this.modelViewMap.keys()]);
+
+        console.log(objects.map((object) => [object, object.getConnections()]));
+
+        // TODO: Iterate over connections and draw Bézier curves
     }
 }
 
