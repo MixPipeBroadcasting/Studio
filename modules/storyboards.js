@@ -1,3 +1,4 @@
+import * as common from "./common.js";
 import * as projects from "./projects.js";
 import * as components from "./components.js";
 import * as ui from "./ui.js";
@@ -652,27 +653,56 @@ export class Storyboard extends components.Component {
         this.backgroundCanvasElement.width = areaRect.width;
         this.backgroundCanvasElement.height = areaRect.height;
 
-        context.translate(-this.element.scrollLeft, -this.element.scrollTop);
-
-        context.fillStyle = "red";
-
-        context.beginPath();
-
-        // TODO: Call connection renderer method
-        // context.rect(10, 10, 100, 100);
-        // context.fill();
-
-        context.restore();
-
-        context.closePath();
+        this._renderConnections();
     }
 
     _renderConnections() {
-        var objects = this.project.getModels([...this.modelViewMap.keys()]);
+        var context = this.backgroundCanvasContext;
+        var objectViews = this.descendentsOfTypes([StoryboardObjectView]);
+        var connections = [];
+        var objectViewMap = new Map([]);
+        var storyboardRect = this.element.getBoundingClientRect();
 
-        console.log(objects.map((object) => [object, object.getConnections()]));
+        for (var objectView of objectViews) {
+            connections = connections.concat(objectView.model.getConnections());
 
-        // TODO: Iterate over connections and draw Bézier curves
+            objectViewMap.set(objectView.model, objectView);
+        }
+
+        for (var connection of connections) {
+            var sourceView = objectViewMap.get(connection.source);
+            var destinationView = objectViewMap.get(connection.destination);
+
+            if (!sourceView || !destinationView) {
+                continue;
+            }
+
+            var sourceRect = sourceView.element.getBoundingClientRect();
+            var destinationRect = destinationView.element.getBoundingClientRect();
+            var sourcePoint = {x: 0, y: 0};
+            var destinationPoint = {x: 0, y: 0};
+            var bestRectSide = common.getBestRectSide(sourceRect, destinationRect);
+
+            sourcePoint = common.rectSideToPoint(sourceRect, bestRectSide);
+            destinationPoint = common.rectSideToPoint(destinationRect, common.RECT_OPPOSITE_SIDES[bestRectSide]);
+
+            context.save();
+
+            console.log(connection.type);
+
+            switch (connection.type) {
+                case "activeScene":
+                    context.strokeStyle = "#4444ff";
+                    context.lineWidth = 2;
+            }
+
+            // TODO: Draw Bézier curves instead of lines
+            context.moveTo(sourcePoint.x - storyboardRect.x, sourcePoint.y - storyboardRect.y);
+            context.lineTo(destinationPoint.x - storyboardRect.x, destinationPoint.y - storyboardRect.y);
+            context.stroke();
+
+            context.restore();
+        }
     }
 }
 
