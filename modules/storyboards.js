@@ -688,8 +688,6 @@ export class Storyboard extends components.Component {
 
             context.save();
 
-            console.log(connection.type);
-
             switch (connection.type) {
                 case "activeScene":
                     context.strokeStyle = "#4444ff";
