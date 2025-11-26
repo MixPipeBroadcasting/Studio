@@ -42,7 +42,7 @@ export function getRectCentre(rect) {
 export function getBestRectSide(thisRect, otherRect) {
     var thisCentre = getRectCentre(thisRect);
     var otherCentre = getRectCentre(otherRect);
-    var shouldBeHorizontal = thisRect.y < otherCentre.y && otherRect.y < thisCentre.y;
+    var shouldBeHorizontal = thisRect.y + thisRect.height >= otherRect.y && otherRect.y + otherRect.height >= thisRect.y;
 
     if (shouldBeHorizontal) {
         return thisCentre.x > otherCentre.x ? "left" : "right";

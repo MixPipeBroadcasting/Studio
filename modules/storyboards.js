@@ -29,7 +29,7 @@ components.css(`
 
     mixpipe-storyboardgroup {
         overflow: hidden;
-        background-color: var(--primaryBackground);
+        background-color: color-mix(in srgb, var(--primaryBackground) 75%, transparent);
         border: 0.15rem solid var(--secondaryForeground);
         border-radius: 0.25rem;
         z-index: 0;
@@ -630,8 +630,6 @@ export class Storyboard extends components.Component {
         }, 20);
 
         this.always(this.renderBackground);
-
-        console.log(this); // TODO: Remove
     }
 
     get backgroundCanvasContext() {
@@ -647,11 +645,8 @@ export class Storyboard extends components.Component {
     }
 
     renderBackground() {
-        var areaRect = this.element.getBoundingClientRect();
-        var context = this.backgroundCanvasContext;
-
-        this.backgroundCanvasElement.width = areaRect.width;
-        this.backgroundCanvasElement.height = areaRect.height;
+        this.backgroundCanvasElement.width = this.element.clientWidth;
+        this.backgroundCanvasElement.height = this.element.clientHeight;
 
         this._renderConnections();
     }
@@ -694,9 +689,27 @@ export class Storyboard extends components.Component {
                     context.lineWidth = 2;
             }
 
-            // TODO: Draw Bézier curves instead of lines
-            context.moveTo(sourcePoint.x - storyboardRect.x, sourcePoint.y - storyboardRect.y);
-            context.lineTo(destinationPoint.x - storyboardRect.x, destinationPoint.y - storyboardRect.y);
+            sourcePoint.x -= storyboardRect.x;
+            sourcePoint.y -= storyboardRect.y;
+            destinationPoint.x -= storyboardRect.x;
+            destinationPoint.y -= storyboardRect.y;
+
+            context.moveTo(sourcePoint.x, sourcePoint.y);
+
+            if (bestRectSide == "top" || bestRectSide == "bottom") {
+                context.bezierCurveTo(
+                    sourcePoint.x, sourcePoint.y + ((destinationPoint.y - sourcePoint.y) / 2),
+                    destinationPoint.x, sourcePoint.y + ((destinationPoint.y - sourcePoint.y) / 2),
+                    destinationPoint.x, destinationPoint.y
+                );
+            } else {
+                context.bezierCurveTo(
+                    sourcePoint.x + ((destinationPoint.x - sourcePoint.x) / 2), sourcePoint.y,
+                    sourcePoint.x + ((destinationPoint.x - sourcePoint.x) / 2), destinationPoint.y,
+                    destinationPoint.x, destinationPoint.y
+                );
+            }
+
             context.stroke();
 
             context.restore();
