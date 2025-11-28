@@ -56,22 +56,10 @@ export function rectSideToPoint(rect, side) {
     var sourcePoint;
 
     switch (side) {
-        case "top":
-            sourcePoint = {x: centre.x, y: rect.top};
-            break;
-
-        case "bottom":
-        default:
-            sourcePoint = {x: centre.x, y: rect.bottom};
-            break;
-
-        case "left":
-            sourcePoint = {x: rect.left, y: centre.y};
-            break;
-
-        case "right":
-            sourcePoint = {x: rect.right, y: centre.y};
-            break;
+        case "top": sourcePoint = {x: centre.x, y: rect.top}; break;
+        case "bottom": default: sourcePoint = {x: centre.x, y: rect.bottom}; break;
+        case "left": sourcePoint = {x: rect.left, y: centre.y}; break;
+        case "right": sourcePoint = {x: rect.right, y: centre.y}; break;
     }
 
     return sourcePoint;
