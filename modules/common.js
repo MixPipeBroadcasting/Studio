@@ -55,14 +55,11 @@ export function rectSideToPoint(rect, side) {
     var centre = getRectCentre(rect);
     var sourcePoint;
 
-    if (side == "top") {
-        sourcePoint = {x: centre.x, y: rect.top};
-    } else if (side == "bottom") {
-        sourcePoint = {x: centre.x, y: rect.bottom};
-    } else if (side == "left") {
-        sourcePoint = {x: rect.left, y: centre.y};
-    } else if (side == "right") {
-        sourcePoint = {x: rect.right, y: centre.y};
+    switch (side) {
+        case "top": sourcePoint = {x: centre.x, y: rect.top}; break;
+        case "bottom": default: sourcePoint = {x: centre.x, y: rect.bottom}; break;
+        case "left": sourcePoint = {x: rect.left, y: centre.y}; break;
+        case "right": sourcePoint = {x: rect.right, y: centre.y}; break;
     }
 
     return sourcePoint;
