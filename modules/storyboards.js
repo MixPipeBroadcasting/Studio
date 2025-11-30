@@ -680,7 +680,6 @@ export class Storyboard extends components.Component {
             var sourcePoint = common.rectSideToPoint(sourceRect, bestRectSide);
             var destinationPoint = common.rectSideToPoint(destinationRect, common.RECT_OPPOSITE_SIDES[bestRectSide]);
 
-
             context.save();
 
             switch (connection.type) {
