@@ -317,7 +317,14 @@ export class Project extends events.EventDrivenObject {
             view.add(associate(event.model, new modelClass(event.model, ...args)));
         }
 
-        this.events.modelAdded.connect(parentEventListener);
+        this.events.modelAdded.connect(function(event) {
+            if (view.children.find((child) => child.model == event.model)) {
+                return;
+            }
+
+            parentEventListener(event);
+        });
+
         this.events.modelReparented.connect(parentEventListener);
 
         this.events.modelDeleted.connect(function(event) {
