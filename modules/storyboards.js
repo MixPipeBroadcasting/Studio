@@ -674,9 +674,7 @@ export class Storyboard extends components.Component {
 
             var sourceRect = sourceView.element.getBoundingClientRect();
             var destinationRect = destinationView.element.getBoundingClientRect();
-
             var bestRectSide = common.getBestRectSide(sourceRect, destinationRect);
-
             var sourcePoint = common.rectSideToPoint(sourceRect, bestRectSide);
             var destinationPoint = common.rectSideToPoint(destinationRect, common.RECT_OPPOSITE_SIDES[bestRectSide]);
 
