@@ -71,8 +71,8 @@ if (!opener) {
     }
 
     scene2.name = "Scene 2";
-    scene2.x = 400;
-    scene2.y = 180;
+    scene2.x = 550;
+    scene2.y = 400;
 
     var testAttribute = new storyboardObjects.AttributeType(project);
 
@@ -106,8 +106,8 @@ if (!opener) {
     scene2.objects.addModel(text);
 
     scene3.name = "Scene 3";
-    scene3.x = 700;
-    scene3.y = 180;
+    scene3.x = 600;
+    scene3.y = 150;
 
     var compositedScene = new sceneObjects.CompositedScene(project);
 
