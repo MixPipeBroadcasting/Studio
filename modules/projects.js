@@ -336,7 +336,7 @@ export class Project extends events.EventDrivenObject {
         });
     }
 
-    getOrCreateModel(path) {
+    getModel(path) {
         for (var model of this.models) {
             if (model.path.join(".") == path.join(".")) {
                 return model;
@@ -349,9 +349,18 @@ export class Project extends events.EventDrivenObject {
             }
         }
 
+        return null;
+    }
+
+    getOrCreateModel(path) {
+        var model = this.getModel(path);
+
+        if (model) {
+            return model;
+        }
+
         var data = this.get(path);
-        var model = null;
-        
+
         for (var handler of modelSyncHandlers) {
             if (path.slice(0, -1).join(".") == handler.rootPath.join(".") && handler.condition(data)) {
                 model = new handler.modelType(this, path);
@@ -483,7 +492,7 @@ export class ProjectModel extends events.EventDrivenObject {
                     return null;
                 }
 
-                return thisScope.project.getOrCreateModel(path);
+                return thisScope.project.getModel(path);
             },
             set: function(newValue) {
                 thisScope.project.set([...thisScope.path, name], newValue?.path ?? newValue);
