@@ -21,12 +21,13 @@ components.css(`
 
     button {
         height: 1.5rem;
+        padding-block: 0.1rem;
+        padding-inline: 0.4rem;
         background: var(--secondaryBackground);
         color: inherit;
         font-size: 1em;
         font-family: inherit;
-        padding-block: 0.1rem;
-        padding-inline: 0.4rem;
+        line-height: 1;
         border: none;
         border-radius: 0.25rem;
     }

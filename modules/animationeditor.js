@@ -40,6 +40,7 @@ components.css(`
         width: 10rem;
         height: calc(100% - 1px);
         padding: 0.5rem;
+        line-height: 1;
         border-inline-end: 2px solid var(--secondaryBackground);
     }
 
