@@ -483,6 +483,14 @@ export class SelectionInput extends components.Component {
     set key(value) {
         this.selectedIndex = this.internalKeys.indexOf(value);
     }
+
+    get value() {
+        return this.options[this.selectedIndex];
+    }
+
+    set value(value) {
+        this.selectedIndex = this.options.indexOf(value);
+    }
 }
 
 export class Label extends components.Component {

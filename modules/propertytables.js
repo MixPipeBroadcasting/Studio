@@ -29,24 +29,24 @@ components.css(`
         flex-shrink: 0;
     }
 
-    mixpipe-properties input {
+    mixpipe-properties :is(input, select) {
         width: 100%;
         min-width: 8rem;
     }
 
-    mixpipe-properties input[mixpipe-computed="animated"] {
+    mixpipe-properties :is(input, select)[mixpipe-computed="animated"] {
         border: 2px solid var(--animatedBackground);
     }
 
-    mixpipe-properties input[mixpipe-computed="animated"][mixpipe-computedpoint="keyframe"] {
+    mixpipe-properties :is(input, select)[mixpipe-computed="animated"][mixpipe-computedpoint="keyframe"] {
         background: var(--keyframePoint);
     }
 
-    mixpipe-properties input[mixpipe-computed="computed"] {
+    mixpipe-properties :is(input, select)[mixpipe-computed="computed"] {
         border: 2px solid var(--computedBackground);
     }
 
-    mixpipe-properties input.target {
+    mixpipe-properties :is(input, select).target {
         animation: 1s propertyTarget infinite alternate-reverse;
         cursor: cell;
     }
@@ -74,7 +74,7 @@ export class Property {
         var thisScope = this;
 
         if (!(
-            (this.name.startsWith("attr:") && model.scene?.attributeTypes.getModelList().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
+            (this.name.startsWith("attr:") && model.scene?.getAllAttributeTypes().find((attributeType) => `attr:${attributeType.id}` == this.name)) ||
             model.hasOwnProperty(this.name)
         )) {
             return components.element("span", [
@@ -111,7 +111,7 @@ export class Property {
         var targetButton = null;
 
         function getValue(textualOnly = false) {
-            var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type);
+            var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type) ?? thisScope.options.defaultValue;
 
             if (textualOnly && !["string", "number"].includes(typeof(currentValue))) {
                 return "";
@@ -133,7 +133,19 @@ export class Property {
         switch (this.type) {
             case "string":
             case "number":
-                var input = new ui.Input(this.options.placeholder || "", {"string": "text", "number": "number"}[this.type], getValue(true));
+                var input;
+
+                if (this.options.useChoices && Array.isArray(this.options.choices)) {
+                    var choiceNames = this.options.choices.map((choice) => choice.name);
+                    var choiceValues = this.options.choices.map((choice) => choice.value);
+
+                    input = new ui.SelectionInput(choiceNames, choiceValues.indexOf(getValue(true)));
+
+                    input.internalKeys = choiceValues;
+                } else {
+                    input = new ui.Input(this.options.placeholder || "", {"string": "text", "number": "number"}[this.type], getValue(true));
+                }
+
                 var ignoreNextValueChange = false;
 
                 function isTargetingProperty() {
@@ -180,38 +192,46 @@ export class Property {
                     }
                 });
 
-                input.element.addEventListener("focus", () => input.element.select());
-
-                input.element.addEventListener("blur", function() {
-                    input.value = getValue(true);
-                });
-
                 model.project.events.localStateChanged.connect(updateInputTargetState);
 
-                input.events.valueChanged.connect(function(event) {
+                function onValueChanged() {
                     if (ignoreNextValueChange) {
                         ignoreNextValueChange = false;
                         return;
                     }
 
+                    var inputValue = input instanceof ui.SelectionInput ? input.key : input.value;
                     var newValue;
 
                     if (thisScope.type == "number") {
-                        newValue = parseFloat(event.value);
+                        newValue = parseFloat(inputValue);
 
                         if (Number.isNaN(newValue)) {
                             return;
                         }
                     } else {
-                        newValue = event.value;
+                        newValue = inputValue;
                     }
 
                     model.addOrEditKeyframeNow(thisScope.name, newValue);
-                });
+                }
 
-                input.events.valueCommitted.connect(function() {
+                function onValueCommitted() {
                     ignoreNextValueChange = true;
-                });
+                }
+
+                if (input instanceof ui.SelectionInput) {
+                    input.events.selectionChanged.connect(onValueChanged);
+                } else {
+                    input.events.valueChanged.connect(onValueChanged);
+                    input.events.valueCommitted.connect(onValueCommitted);
+
+                    input.element.addEventListener("focus", () => input.element.select());
+
+                    input.element.addEventListener("blur", function() {
+                        input.value = getValue(true);
+                    });
+                }
 
                 var eventName = model.propertyEventAssociations[this.name];
 
@@ -222,7 +242,12 @@ export class Property {
                         }
 
                         ignoreNextValueChange = true;
-                        input.value = getValue(true);
+
+                        if (input instanceof ui.SelectionInput) {
+                            input.key = getValue(true);
+                        } else {
+                            input.value = getValue(true);
+                        }
 
                         updateInputComputationIndicator();
                     });
@@ -247,7 +272,12 @@ export class Property {
 
                     if (computationStatus != null) {
                         ignoreNextValueChange = true;
-                        input.value = getValue(true);
+
+                        if (input instanceof ui.SelectionInput) {
+                            input.key = getValue(true);
+                        } else {
+                            input.value = getValue(true);
+                        }
                     }
 
                     updateInputComputationIndicator();
@@ -340,7 +370,6 @@ export class Property {
                 returnElement = input.element;
 
                 break;
-
         }
 
         return components.element("div", [returnElement, targetButton?.element, editTemplateButton.element, editTemplateDialog.element, existenceCheckElement]);

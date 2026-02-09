@@ -11,10 +11,39 @@ export class AttributeType extends projects.ProjectModel {
         this.registerProperty("name", null, "renamed");
         this.registerProperty("type", "string", "typeChanged");
         this.registerReferenceProperty("parentStoryboardObject", null, "reparented");
+
+        this.placeholder = "";
+        this.defaultValue = null;
+        this.choices = null;
+        this.useChoices = false;
     }
 
     get sanitisedId() {
         return this.id?.match(/([a-zA-Z_][a-zA-Z0-9_]*)/)?.[1] || "";
+    }
+}
+
+export class BuiltInAttributeChoice {
+    constructor(name, value) {
+        this.name = name;
+        this.value = value;
+    }
+}
+
+export class BuiltInAttributeType {
+    constructor(id, name, type = "string", options = {}) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+
+        this.placeholder = options.placeholder ?? "";
+        this.defaultValue = options.defaultValue ?? null;
+        this.choices = options.choices ?? null;
+        this.useChoices = !!options.choices;
+    }
+
+    get sanitisedId() {
+        return this.id;
     }
 }
 
@@ -37,10 +66,15 @@ export class StoryboardObject extends projects.ProjectModel {
         this.registerReferenceProperty("parentGroup", null, "reparented");
 
         this.attributeTypes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "attributeTypes"], AttributeType);
+        this.builtInAttributeTypes = [];
     }
 
     getConnections() {
         return [];
+    }
+
+    getAllAttributeTypes() {
+        return [...this.attributeTypes.getModelList(), ...this.builtInAttributeTypes];
     }
 
     addAttributeType(attributeType) {
@@ -188,6 +222,48 @@ export class Feed extends Scene {
     }
 }
 
+export class VisionMixer extends Scene {
+    static _builtInAttributeTypes = [
+        new BuiltInAttributeType("bus", "Bus", "string", {
+            defaultValue: "programme",
+            choices: [
+                new BuiltInAttributeChoice("Programme", "programme"),
+                new BuiltInAttributeChoice("Preview", "preview")
+            ]
+        })
+    ];
+
+    constructor(project, path = ["visionMixers", projects.generateKey()]) {
+        super(project, path);
+
+        this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], Scene);
+
+        this.registerProperty("name", "", "renamed");
+        this.registerReferenceProperty("programmeScene", null, "transitionStarted");
+        this.registerReferenceProperty("previewScene", null, "previewSelected");
+
+        this.builtInAttributeTypes = this.constructor._builtInAttributeTypes;
+    }
+
+    drawToContext(context = this.canvasContext, options = {}) {
+        if (options.callStack?.includes(this)) {
+            return;
+        }
+
+        options.callStack = [...(options.callStack || []), this];
+
+        var bus = options.env?.bus ?? "programme";
+
+        if (bus == "preview") {
+            this.previewScene?.drawToContext(context, options);
+
+            return;
+        }
+
+        this.programmeScene?.drawToContext(context, options);
+    }
+}
+
 export class AnimationController extends StoryboardObject {
     constructor(project, path = ["animationControllers", projects.generateKey()]) {
         super(project, path);
@@ -331,4 +407,5 @@ projects.registerModelSyncHandler(["attributeTypes"], AttributeType);
 projects.registerModelSyncHandler(["storyboardGroups"], StoryboardGroup);
 projects.registerModelSyncHandler(["scenes"], Scene);
 projects.registerModelSyncHandler(["feeds"], Feed);
+projects.registerModelSyncHandler(["visionMixers"], VisionMixer);
 projects.registerModelSyncHandler(["animationControllers"], AnimationController);

@@ -167,7 +167,7 @@ export class CompositedScene extends SceneObject {
             return;
         }
 
-        var attributeTypes = this.scene.attributeTypes.getModelList();
+        var attributeTypes = this.scene.getAllAttributeTypes();
         var canvas = this.scene.canvas;
 
         if (attributeTypes.length > 0 && !options.callStack?.includes(this.scene)) {

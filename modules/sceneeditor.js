@@ -257,18 +257,20 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                 continue;
             }
 
-            for (var attributeType of object.scene.attributeTypes.getModelList()) {
+            for (var attributeType of object.scene.getAllAttributeTypes()) {
                 object.ensureAttributeProperty(attributeType.id);
 
                 if (addedAttributeIds.includes(attributeType.id)) {
                     continue;
                 }
 
-                this.propertyTableEventConnections.push(
-                    attributeType.events.idChanged.connect(() => this.setPropertyTable(true)),
-                    attributeType.events.renamed.connect(() => this.setPropertyTable(true)),
-                    attributeType.events.typeChanged.connect(() => this.setPropertyTable(true))
-                );
+                if (attributeType instanceof storyboardObjects.AttributeType) {
+                    this.propertyTableEventConnections.push(
+                        attributeType.events.idChanged.connect(() => this.setPropertyTable(true)),
+                        attributeType.events.renamed.connect(() => this.setPropertyTable(true)),
+                        attributeType.events.typeChanged.connect(() => this.setPropertyTable(true))
+                    );
+                }
 
                 addedAttributeIds.push(attributeType.id);
 
@@ -276,7 +278,17 @@ export class SceneEditorPropertiesPanel extends workspaces.Panel {
                     continue;
                 }
 
-                properties.push(new propertyTables.Property(`attr:${attributeType.sanitisedId}`, attributeType.type, attributeType.name?.trim() || "(Unnamed)"));
+                properties.push(new propertyTables.Property(
+                    `attr:${attributeType.sanitisedId}`,
+                    attributeType.type,
+                    attributeType.name?.trim() || "(Unnamed)",
+                    {
+                        placeholder: attributeType.placeholder,
+                        defaultValue: attributeType.defaultValue,
+                        choices: attributeType.choices,
+                        useChoices: attributeType.useChoices
+                    }
+                ));
             }
         }
 

@@ -96,6 +96,33 @@ components.css(`
         cursor: cell;
     }
 
+    mixpipe-scene.visionMixer {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    mixpipe-scene.visionMixer .title {
+        grid-row: 1;
+        grid-column: span 2;
+    }
+
+    mixpipe-scene.visionMixer .title input {
+        background: var(--primaryBackground);
+        margin: 0.5rem;
+        margin-block-end: 0;
+    }
+
+    mixpipe-scene.visionMixer canvas {
+        --zoom: 0.08;
+        margin: calc(1rem / var(--zoom));
+        margin-block-end: calc(0.5rem / var(--zoom));
+    }
+
+    mixpipe-scene.visionMixer span {
+        text-align: center;
+        margin-block-end: 0.5rem;
+    }
+
     mixpipe-animationcontroller {
         display: grid;
         grid-template-rows: repeat(2, min-content);
@@ -348,6 +375,7 @@ export class StoryboardGroupView extends StoryboardObjectView {
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
             [storyboardObjects.Feed, FeedView],
+            [storyboardObjects.VisionMixer, VisionMixerView],
             [storyboardObjects.AnimationController, AnimationControllerView]
         ]), [storyboard], (childModel) => childModel.parentGroup == model);
 
@@ -403,6 +431,25 @@ export class SceneView extends StoryboardObjectView {
 
         this.sizeUnconstrained = true;
 
+        function updateTargetState() {
+            if (model.project.localState.targetingScene) {
+                thisScope.element.classList.add("target");
+            } else {
+                thisScope.element.classList.remove("target");
+            }
+        }
+        
+        model.project.events.localStateChanged.connect(updateTargetState);
+        
+        this.createElements();
+        this.setUpLayout();
+
+        this.always(this.render);
+    }
+
+    createElements() {
+        var thisScope = this;
+
         this.nameInput = new ui.Input("Untitled scene");
         this.canvasElement = components.element("canvas");
 
@@ -411,11 +458,9 @@ export class SceneView extends StoryboardObjectView {
             this.nameInput.becomeChild(this.titleElement)
         ]);
 
-        this.element.append(this.titleElement, this.canvasElement);
-
         this.updatePositioning();
 
-        model.events.renamed.connect(this.updateInfo, this);
+        this.model.events.renamed.connect(this.updateInfo, this);
         this.updateInfo();
 
         this.connectPositioningUpdater(this.updateCanvasSize);
@@ -426,8 +471,8 @@ export class SceneView extends StoryboardObjectView {
         var lastClicked = null;
 
         this.element.addEventListener("pointerdown", function(event) {
-            if (model.project.localState.targetingScene) {
-                model.project.setLocalProperty("targetedScenePath", model.path);
+            if (thisScope.model.project.localState.targetingScene) {
+                thisScope.model.project.setLocalProperty("targetedScenePath", thisScope.model.path);
 
                 event.preventDefault();
             }
@@ -448,18 +493,12 @@ export class SceneView extends StoryboardObjectView {
 
             lastClicked = Date.now();
         });
+    }
 
-        this.always(this.render);
+    setUpLayout() {
+        this.element.append(this.titleElement, this.canvasElement);
 
-        function updateTargetState() {
-            if (model.project.localState.targetingScene) {
-                thisScope.element.classList.add("target");
-            } else {
-                thisScope.element.classList.remove("target");
-            }
-        }
-
-        model.project.events.localStateChanged.connect(updateTargetState);
+        this.updateCanvasSize();
     }
 
     updateInfo() {
@@ -492,8 +531,16 @@ export class FeedView extends SceneView {
         super(model, storyboard);
 
         this.nameInput.placeholder = "Untitled feed";
+    }
+
+    createElements() {
+        super.createElements();
 
         this.feedIcon = new ui.Icon("icons/input.svg", "Feed");
+    }
+
+    setUpLayout() {
+        super.setUpLayout();
 
         this.titleElement.append(this.feedIcon.becomeChild(this.titleElement));
     }
@@ -503,6 +550,57 @@ export class FeedView extends SceneView {
         this.canvasElement.height = this.model.canvas.height;
 
         super.render();
+    }
+
+    openEditor() {}
+}
+
+export class VisionMixerView extends SceneView {
+    constructor(model, storyboard) {
+        super(model, storyboard);
+
+        this.nameInput.placeholder = "Untitled vision mixer";
+    }
+
+    createElements() {
+        super.createElements();
+
+        this.element.classList.add("visionMixer");
+
+        this.previewCanvasElement = components.element("canvas");
+    }
+
+    setUpLayout() {
+        this.element.append(
+            this.titleElement,
+            this.previewCanvasElement,
+            this.canvasElement,
+            components.element("span", [components.text("Preview")]),
+            components.element("span", [components.text("Programme")])
+        );
+        
+        this.updateCanvasSize();
+    }
+
+    updateCanvasSize() {
+        super.updateCanvasSize();
+
+        if (!this.previewCanvasElement) {
+            return;
+        }
+
+        this.previewCanvasElement.width = this.model.width;
+        this.previewCanvasElement.height = this.model.height;
+    }
+
+    render() {
+        super.render();
+
+        var previewContext = this.previewCanvasElement.getContext("2d");
+
+        previewContext.clearRect(0, 0, this.previewCanvasElement.width, this.previewCanvasElement.height);
+
+        this.model.drawToContext(previewContext, {env: {bus: "preview"}});
     }
 
     openEditor() {}
@@ -614,6 +712,7 @@ export class Storyboard extends components.Component {
             [storyboardObjects.StoryboardGroup, StoryboardGroupView],
             [storyboardObjects.Scene, SceneView],
             [storyboardObjects.Feed, FeedView],
+            [storyboardObjects.VisionMixer, VisionMixerView],
             [storyboardObjects.AnimationController, AnimationControllerView]
         ]);
 
@@ -724,6 +823,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
         this.createFeedButton = new ui.IconButton("icons/input.svg", "Create feed");
         this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
+        this.createVisionMixerButton = new ui.IconButton("icons/input.svg", "Create vision mixer");
         this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
         this.createPresetSceneButton = new ui.IconButton("icons/presetscenes.svg", "Create scene from preset");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
@@ -734,6 +834,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
             this.createSceneButton,
             this.createFeedButton,
             this.createStoryboardGroupButton,
+            this.createVisionMixerButton,
             this.createAnimationControllerButton,
             this.createPresetSceneButton,
             this.newWindowButton,
@@ -743,6 +844,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.createSceneButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Scene));
         this.createFeedButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.Feed));
         this.createStoryboardGroupButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.StoryboardGroup));
+        this.createVisionMixerButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.VisionMixer));
         this.createAnimationControllerButton.events.activated.connect(() => this.storyboard.createObject(storyboardObjects.AnimationController));
         this.createPresetSceneButton.events.activated.connect(() => this.presetSceneMenu.toggleFromOpener(this.createPresetSceneButton.element));
         this.newWindowButton.events.activated.connect(() => windows.open(this.storyboard.project, this.storyboardPanel));
