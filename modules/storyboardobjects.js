@@ -238,7 +238,6 @@ export class VisionMixer extends Scene {
 
         this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], Scene);
 
-        this.registerProperty("name", "", "renamed");
         this.registerReferenceProperty("programmeScene", null, "transitionStarted");
         this.registerReferenceProperty("previewScene", null, "previewSelected");
 
