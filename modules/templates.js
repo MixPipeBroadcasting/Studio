@@ -7,33 +7,40 @@ var apiResponse = await fetch("sandbox/api.js");
 var apiCode = await apiResponse.text();
 
 export function evaluateExpression(expression, id, options = {}) {
-    var env = {};
+    var env = options?.env || {};
+    var convertedEnv = {};
 
-    for (var key of Object.keys(options?.env || {})) {
-        var value = options.env[key];
+    if (options["compositionChain"]) {
+        id += `|cch=${options.compositionChain}`;
+    } else {
+        for (var key of Object.keys(options?.templateEnv || {})) {
+            env[key] = options.templateEnv[key];
+        }
+    }
+
+    for (var key of Object.keys(env)) {
+        var value = env[key];
 
         if (value && typeof(value) == "object" && "serialise" in value) {
-            env[key] = value.serialise();
+            convertedEnv[key] = value.serialise();
             continue;
         }
 
         try {
             JSON.stringify(value);
 
-            env[key] = value;
+            convertedEnv[key] = value;
         } catch (error) {}
     }
 
-    if (options.hasOwnProperty("compositionChain")) {
-        id += `|cch=${options.compositionChain}`;
+    if (Object.keys(convertedEnv).length > 0) {
+        var serialisedEnv = JSON.stringify(convertedEnv);
 
-        var serialisedEnv = JSON.stringify(env);
-
-        if (Object.keys(serialisedEnv).length > 0 && currentEnvs[id] != serialisedEnv) {
+        if (currentEnvs[id] != serialisedEnv) {
             currentEnvs[id] = serialisedEnv;
 
             if (runningWorkers[id]) {
-                runningWorkers[id].postMessage({type: "setEnv", env});
+                runningWorkers[id].postMessage({type: "setEnv", env: convertedEnv});
             }
         }
     }

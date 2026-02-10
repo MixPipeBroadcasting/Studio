@@ -422,10 +422,15 @@ export class ProjectModel extends events.EventDrivenObject {
         this.propertyEventAssociations = {};
         this.lastAttributeTypes = {};
         this.templateOptions = {};
+        this.referencePropertyTemplateActualResult = null;
     }
 
     get exists() {
         return !!this.project.get(this.path);
+    }
+
+    isSameModel(otherModel) {
+        return this.path.join(".") == otherModel?.path.join(".");
     }
 
     registerProperty(name, defaultValue = null, propertyEventName = null, canTemplate = true, override = false) {
@@ -486,6 +491,7 @@ export class ProjectModel extends events.EventDrivenObject {
 
                 if (typeof(path) == "string") {
                     path = templates.evaluateDirectTemplate(path, `prop=${name}|path=${thisScope.path.join(".")}`, thisScope.templateOptions);
+                    thisScope.referencePropertyTemplateActualResult = path;
                 }
 
                 if (!Array.isArray(path)) {

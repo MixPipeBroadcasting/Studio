@@ -155,7 +155,7 @@ export class CompositedScene extends SceneObject {
 
             context.textBaseline = "bottom";
 
-            context.fillText(isPlaceholder ? `Placeholder for ${template}` : "Unknown scene", x + (width / 2), y + (height / 2) - 10);
+            context.fillText(isPlaceholder ? this.referencePropertyTemplateActualResult : "(Unknown scene)", x + (width / 2), y + (height / 2) - 10);
 
             context.font = "40px Overpass, system-ui, sans-serif";
             context.textBaseline = "top";

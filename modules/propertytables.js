@@ -111,6 +111,9 @@ export class Property {
         var targetButton = null;
 
         function getValue(textualOnly = false) {
+            model.templateOptions ||= {};
+            model.templateOptions.compositionChain = null;
+
             var currentValue = model.getAnimatedValue(thisScope.name, thisScope.type) ?? thisScope.options.defaultValue;
 
             if (textualOnly && !["string", "number"].includes(typeof(currentValue))) {
@@ -306,8 +309,11 @@ export class Property {
                         input.element.removeAttribute("mixpipe-computed");
                     }
 
+                    model.templateOptions ||= {};
+                    model.templateOptions.compositionChain = null;
+
                     if (!(model[thisScope.name] instanceof storyboardObjects.Scene)) {
-                        input.value = "";
+                        input.value = model.referencePropertyTemplateActualResult;
                         return;
                     }
 

@@ -48,10 +48,43 @@ export class BuiltInAttributeType {
 }
 
 export class Connection {
-    constructor(type, source, destination) {
-        this.type = type;
+    constructor(source, destination) {
         this.source = source;
         this.destination = destination;
+
+        this.upstreamConnections = [];
+        this.downstreamConnections = [];
+        this.type = null;
+    }
+
+    updateType(updatedTypes = []) {
+        if (updatedTypes.includes(this)) {
+            return;
+        }
+
+        this.type = "inactive";
+
+        if (this.destination instanceof VisionMixer) {
+            if (this.source.isSameModel(this.destination.programmeScene)) {
+                this.type = "programme";
+            } else if (this.source.isSameModel(this.destination.previewScene)) {
+                this.type = "preview";
+            }
+        }
+
+        var downstreamTypes = this.downstreamConnections.map((connection) => connection.type);
+
+        if (downstreamTypes.includes("programme")) {
+            this.type = "programme";
+        } else if (downstreamTypes.includes("preview")) {
+            this.type = "preview";
+        } else if (this.type == null && downstreamTypes.includes("active")) {
+            this.type = "active";
+        } else if (this.type == null && downstreamTypes.length == 0) {
+            this.type = "active";
+        }
+
+        this.upstreamConnections.forEach((connection) => connection.updateType([...updatedTypes, this]));
     }
 }
 
@@ -117,7 +150,7 @@ export class Scene extends StoryboardObject {
 
         for (var object of this.objects.getModelList()) {
             if (object instanceof sceneObjects.CompositedScene && object.scene) {
-                connections.push(new Connection("activeScene", object.scene, this));
+                connections.push(new Connection(object.scene, this));
             }
         }
 
@@ -150,6 +183,12 @@ export class Scene extends StoryboardObject {
         }
 
         options.callStack = [...(options.callStack || []), this];
+
+        options.templateEnv ||= {};
+
+        for (var attributeType of this.getAllAttributeTypes()) {
+            options.templateEnv[attributeType.id] = `[[ ${attributeType.name} ]]`;
+        }
 
         for (var object of this.objects.getModelList()) {
             object.draw(context, options);
@@ -242,6 +281,16 @@ export class VisionMixer extends Scene {
         this.registerReferenceProperty("previewScene", null, "previewSelected");
 
         this.builtInAttributeTypes = this.constructor._builtInAttributeTypes;
+    }
+
+    getConnections() {
+        var connections = [];
+
+        for (var scene of this.sourceScenes.getModelList()) {
+            connections.push(new Connection(scene, this));
+        }
+
+        return connections;
     }
 
     drawToContext(context = this.canvasContext, options = {}) {

@@ -118,6 +118,14 @@ components.css(`
         margin-block-end: calc(0.5rem / var(--zoom));
     }
 
+    mixpipe-scene.visionMixer canvas.preview {
+        outline: calc(0.15rem / var(--zoom)) solid var(--preview);
+    }
+
+    mixpipe-scene.visionMixer canvas.programme {
+        outline: calc(0.15rem / var(--zoom)) solid var(--programme);
+    }
+
     mixpipe-scene.visionMixer span {
         text-align: center;
         margin-block-end: 0.5rem;
@@ -565,9 +573,11 @@ export class VisionMixerView extends SceneView {
     createElements() {
         super.createElements();
 
-        this.element.classList.add("visionMixer");
-
         this.previewCanvasElement = components.element("canvas");
+
+        this.element.classList.add("visionMixer");
+        this.previewCanvasElement.classList.add("preview");
+        this.canvasElement.classList.add("programme");
     }
 
     setUpLayout() {
@@ -750,6 +760,36 @@ export class Storyboard extends components.Component {
         this._renderConnections();
     }
 
+    computeConnectionRelationships(connections) {
+        var upstreamFromPath = {};
+        var downstreamFromPath = {};
+
+        for (var connection of connections) {
+            var sourcePath = connection.source.path.join(".");
+            var destinationPath = connection.destination.path.join(".");
+            
+            if (!upstreamFromPath[destinationPath]) {
+                upstreamFromPath[destinationPath] = [];
+            }
+
+            if (!downstreamFromPath[sourcePath]) {
+                downstreamFromPath[sourcePath] = [];
+            }
+
+            upstreamFromPath[destinationPath].push(connection);
+            downstreamFromPath[sourcePath].push(connection);
+        }
+
+        for (var connection of connections) {
+            connection.upstreamConnections = upstreamFromPath[connection.source.path.join(".")] ?? [];
+            connection.downstreamConnections = downstreamFromPath[connection.destination.path.join(".")] ?? [];
+        }
+
+        for (var connection of connections) {
+            connection.updateType();
+        }
+    }
+
     _renderConnections() {
         var context = this.backgroundCanvasContext;
         var objectViews = this.descendentsOfTypes([StoryboardObjectView]);
@@ -762,6 +802,8 @@ export class Storyboard extends components.Component {
 
             objectViewMap.set(objectView.model, objectView);
         }
+
+        this.computeConnectionRelationships(connections);
 
         for (var connection of connections) {
             var sourceView = objectViewMap.get(connection.source);
@@ -776,13 +818,31 @@ export class Storyboard extends components.Component {
             var bestRectSide = common.getBestRectSide(sourceRect, destinationRect);
             var sourcePoint = common.rectSideToPoint(sourceRect, bestRectSide);
             var destinationPoint = common.rectSideToPoint(destinationRect, common.RECT_OPPOSITE_SIDES[bestRectSide]);
+            var computedStyle = getComputedStyle(this.backgroundCanvasElement);
 
             context.save();
+            context.beginPath();
 
             switch (connection.type) {
-                case "activeScene":
-                    context.strokeStyle = "#4444ff";
+                case "programme":
+                    context.strokeStyle = computedStyle.getPropertyValue("--programme");
+                    context.lineWidth = 3;
+                    break;
+
+                case "preview":
+                    context.strokeStyle = computedStyle.getPropertyValue("--preview");
+                    context.lineWidth = 3;
+                    break;
+
+                case "active":
+                    context.strokeStyle = computedStyle.getPropertyValue("--selectedBackground");
                     context.lineWidth = 2;
+                    break;
+
+                default:
+                    context.strokeStyle = computedStyle.getPropertyValue("--secondaryForeground");
+                    context.lineWidth = 2;
+                    break;
             }
 
             sourcePoint.x -= storyboardRect.x;
