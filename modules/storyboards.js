@@ -883,7 +883,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
         this.createSceneButton = new ui.IconButton("icons/add.svg", "Create scene");
         this.createFeedButton = new ui.IconButton("icons/input.svg", "Create feed");
         this.createStoryboardGroupButton = new ui.IconButton("icons/group.svg", "Create group");
-        this.createVisionMixerButton = new ui.IconButton("icons/input.svg", "Create vision mixer");
+        this.createVisionMixerButton = new ui.IconButton("icons/visionmixer.svg", "Create vision mixer");
         this.createAnimationControllerButton = new ui.IconButton("icons/animation.svg", "Create animation controller");
         this.createPresetSceneButton = new ui.IconButton("icons/presetscenes.svg", "Create scene from preset");
         this.newWindowButton = new ui.IconButton("icons/newwindow.svg", "New window");
