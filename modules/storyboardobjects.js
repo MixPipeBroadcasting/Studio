@@ -62,7 +62,21 @@ export class Connection {
             return;
         }
 
+        var affectedByDownstream = true;
+
         this.type = "inactive";
+
+        if (this.source instanceof AnimationController) {
+            if (this.source.state == "running") {
+                this.type = "activeAnimation";
+            } else if (this.source.state == "stepping") {
+                this.type = "steppingAnimation";
+            } else {
+                this.type = "inactiveAnimation";
+            }
+
+            affectedByDownstream = false;
+        }
 
         if (this.destination instanceof VisionMixer) {
             if (this.source.isSameModel(this.destination.programmeScene)) {
@@ -72,16 +86,18 @@ export class Connection {
             }
         }
 
-        var downstreamTypes = this.downstreamConnections.map((connection) => connection.type);
+        if (affectedByDownstream) {
+            var downstreamTypes = this.downstreamConnections.map((connection) => connection.type);
 
-        if (downstreamTypes.includes("programme")) {
-            this.type = "programme";
-        } else if (downstreamTypes.includes("preview")) {
-            this.type = "preview";
-        } else if (this.type == null && downstreamTypes.includes("active")) {
-            this.type = "active";
-        } else if (this.type == null && downstreamTypes.length == 0) {
-            this.type = "active";
+            if (downstreamTypes.includes("programme")) {
+                this.type = "programme";
+            } else if (downstreamTypes.includes("preview")) {
+                this.type = "preview";
+            } else if (this.type == null && downstreamTypes.includes("active")) {
+                this.type = "active";
+            } else if (this.type == null && downstreamTypes.length == 0) {
+                this.type = "active";
+            }
         }
 
         this.upstreamConnections.forEach((connection) => connection.updateType([...updatedTypes, this]));
@@ -191,6 +207,8 @@ export class Scene extends StoryboardObject {
         }
 
         for (var object of this.objects.getModelList()) {
+            object.ownerScene = this;
+
             object.draw(context, options);
         }
     }
@@ -374,6 +392,18 @@ export class AnimationController extends StoryboardObject {
             "." +
             String(Math.floor(durationToShow % 1000)).padStart(3, "0")
         );
+    }
+
+    getConnections() {
+        var connections = [];
+
+        for (var timeline of this.timelines.getModelList()) {
+            if (timeline.object instanceof sceneObjects.SceneObject && timeline.object.ownerScene) {
+                connections.push(new Connection(this, timeline.object.ownerScene));
+            }
+        }
+
+        return connections;
     }
 
     getDisplayTime(type = "general") {

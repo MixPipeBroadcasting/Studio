@@ -839,6 +839,30 @@ export class Storyboard extends components.Component {
                     context.lineWidth = 2;
                     break;
 
+                case "activeAnimation":
+                    context.strokeStyle = computedStyle.getPropertyValue("--animatedBackground");
+                    context.lineWidth = 2;
+
+                    context.setLineDash([10, 5]);
+
+                    break;
+
+                case "steppingAnimation":
+                    context.strokeStyle = computedStyle.getPropertyValue("--selectedBackground");
+                    context.lineWidth = 2;
+
+                    context.setLineDash([10, 5]);
+
+                    break;
+
+                case "inactiveAnimation":
+                    context.strokeStyle = computedStyle.getPropertyValue("--secondaryForeground");
+                    context.lineWidth = 2;
+
+                    context.setLineDash([10, 5]);
+
+                    break;
+
                 default:
                     context.strokeStyle = computedStyle.getPropertyValue("--secondaryForeground");
                     context.lineWidth = 2;

@@ -20,6 +20,8 @@ export class SceneObject extends projects.ProjectModel {
         this.registerAnimationProperty("originX", "number", 0, "originChanged");
         this.registerAnimationProperty("originY", "number", 0, "originChanged");
         this.registerAnimationProperty("rotation", "number", 0, "transformationChanged");
+
+        this.ownerScene = null;
     }
 
     draw(context, options = {}) {
