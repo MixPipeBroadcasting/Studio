@@ -99,9 +99,9 @@ export class Connection {
                 this.type = "programme";
             } else if (downstreamTypes.includes("preview")) {
                 this.type = "preview";
-            } else if (this.type == null && downstreamTypes.includes("active")) {
+            } else if (this.type == "inactive" && downstreamTypes.includes("active")) {
                 this.type = "active";
-            } else if (this.type == null && downstreamTypes.length == 0) {
+            } else if (this.type == "inactive" && downstreamTypes.length == 0) {
                 this.type = "active";
             }
         }
