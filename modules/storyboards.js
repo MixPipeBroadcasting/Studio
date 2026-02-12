@@ -839,6 +839,14 @@ export class Storyboard extends components.Component {
                     context.lineWidth = 2;
                     break;
 
+                case "template":
+                    context.strokeStyle = computedStyle.getPropertyValue("--secondaryForeground");
+                    context.lineWidth = 2;
+
+                    context.setLineDash([5, 5]);
+
+                    break;
+
                 case "activeAnimation":
                     context.strokeStyle = computedStyle.getPropertyValue("--animatedBackground");
                     context.lineWidth = 2;

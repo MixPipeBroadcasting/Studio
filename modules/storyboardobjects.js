@@ -48,9 +48,10 @@ export class BuiltInAttributeType {
 }
 
 export class Connection {
-    constructor(source, destination) {
+    constructor(source, destination, attributes = {}) {
         this.source = source;
         this.destination = destination;
+        this.attributes = attributes;
 
         this.upstreamConnections = [];
         this.downstreamConnections = [];
@@ -84,6 +85,11 @@ export class Connection {
             } else if (this.source.isSameModel(this.destination.previewScene)) {
                 this.type = "preview";
             }
+        }
+
+        if (this.attributes.sourceIsTemplateScene) {
+            this.type = "template";
+            affectedByDownstream = false;
         }
 
         if (affectedByDownstream) {
@@ -155,22 +161,57 @@ export class Scene extends StoryboardObject {
         this.registerProperty("scale", 1);
 
         this.events.resized.connect(() => this.canvas = new OffscreenCanvas(this.width, this.height));
+
+        this._lastConnections = [];
     }
 
     get canvasContext() {
         return this.canvas.getContext("2d");
     }
 
-    getConnections() {
-        var connections = [];
+    _updateConnections() {
+        this._lastConnections = [];
 
-        for (var object of this.objects.getModelList()) {
+        for (var object of this.objects.getModelList()) {            
             if (object instanceof sceneObjects.CompositedScene && object.scene) {
-                connections.push(new Connection(object.scene, this));
+                var rawValue = object.project.get([...object.path, "scene"]);
+
+                if (!Array.isArray(rawValue)) {
+                    continue;
+                }
+
+                var sourceIsTemplateScene = false;
+                var innerSceneObjects = object.scene.objects.getModelList().filter((innerObject) => innerObject instanceof sceneObjects.CompositedScene);
+                var innerScenes = [];
+
+                for (var innerSceneObject of innerSceneObjects) {
+                    innerScenes.push(innerSceneObject.scene);
+                }
+
+                for (var innerSceneObject of innerSceneObjects) {
+                    innerSceneObject.templateOptions ||= {};
+                    innerSceneObject.templateOptions.compositionChain = null;
+
+                    if (!(innerSceneObject.scene instanceof Scene)) {
+                        sourceIsTemplateScene = true;
+                    }
+                }
+
+                if (sourceIsTemplateScene) {
+                    for (var innerScene of innerScenes) {
+                        if (innerScene instanceof Scene) {
+                            this._lastConnections.push(new Connection(innerScene, this));
+                        }
+                    }
+                }
+
+                this._lastConnections.push(new Connection(object.scene, this, {sourceIsTemplateScene}));
             }
         }
+    }
 
-        return connections;
+    getConnections() {
+        return this._lastConnections;
     }
 
     getObjectsAtPoint(point) {
@@ -211,6 +252,8 @@ export class Scene extends StoryboardObject {
 
             object.draw(context, options);
         }
+
+        this._updateConnections();
     }
 
     render() {

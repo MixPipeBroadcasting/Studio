@@ -1,5 +1,6 @@
 import * as projects from "./projects.js";
 import * as sources from "./sources.js";
+import * as templates from "./templates.js";
 
 var nextCompositionId = 0;
 var logoImage = new Image();
@@ -118,6 +119,13 @@ export class CompositedScene extends SceneObject {
         if (!this.scene) {
             var template = this.project.get([...this.path, "scene"]);
             var isPlaceholder = typeof(template) == "string";
+            var templateEnv = {};
+
+            for (var attributeType of this.ownerScene?.getAllAttributeTypes() ?? []) {
+                templateEnv[attributeType.id] = `[[ ${attributeType.name} ]]`;
+            }
+
+            var evaluatedTemplate = templates.evaluateDirectTemplate(template, `prop=scene|path=${this.path.join(".")}`, {templateEnv});
 
             context.fillStyle = isPlaceholder ? "black" : "#770000";
             context.strokeStyle = "white";
@@ -157,7 +165,7 @@ export class CompositedScene extends SceneObject {
 
             context.textBaseline = "bottom";
 
-            context.fillText(isPlaceholder ? this.referencePropertyTemplateActualResult : "(Unknown scene)", x + (width / 2), y + (height / 2) - 10);
+            context.fillText(isPlaceholder ? evaluatedTemplate : "(Unknown scene)", x + (width / 2), y + (height / 2) - 10);
 
             context.font = "40px Overpass, system-ui, sans-serif";
             context.textBaseline = "top";
