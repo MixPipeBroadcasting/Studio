@@ -583,7 +583,7 @@ export class VisionMixerView extends SceneView {
         var lastClicked = null;
 
         this.element.addEventListener("pointerdown", function(event) {
-            if (event.target.matches("input")) {
+            if (event.target.matches("input, .programme")) {
                 return;
             }
 
@@ -595,7 +595,7 @@ export class VisionMixerView extends SceneView {
         });
 
         this.element.addEventListener("pointerup", function(event) {
-            if (event.target.matches("input")) {
+            if (event.target.matches("input, .programme")) {
                 return;
             }
 
