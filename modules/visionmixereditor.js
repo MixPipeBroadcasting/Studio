@@ -16,6 +16,7 @@ components.css(`
         ${components.styleMixins.GROW}
         flex-basis: 0;
         padding: 0.5rem;
+        padding-block-end: 0;
         gap: 0.5rem;
         border: 0.2rem solid var(--secondaryBackground);
         border-radius: 0.5rem;
@@ -45,6 +46,7 @@ components.css(`
     mixpipe-visionmixereditorcollection .sceneList {
         ${components.styleMixins.GROW}
         flex-wrap: wrap;
+        overflow: auto;
     }
 
     mixpipe-visionmixereditorsceneview {
