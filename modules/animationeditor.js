@@ -883,7 +883,7 @@ export class AnimationEditorPanel extends workspaces.Panel {
 
         this.add(this.toolbar, this.workArea);
 
-        this.model.events.renamed.connect(() => this.name = model.name);
+        this.model.events.renamed.connect(() => this.name = model.name || "Untitled animation");
 
         this.always(this.render);
     }

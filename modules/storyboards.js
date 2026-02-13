@@ -6,6 +6,7 @@ import * as windows from "./windows.js";
 import * as workspaces from "./workspaces.js";
 import * as storyboardObjects from "./storyboardobjects.js";
 import * as sceneEditor from "./sceneeditor.js";
+import * as visionMixerEditor from "./visionmixereditor.js";
 import * as animationEditor from "./animationeditor.js";
 
 const OBJECT_MOVE_Z_INDEX = 2;
@@ -119,11 +120,11 @@ components.css(`
     }
 
     mixpipe-scene.visionMixer canvas.preview {
-        outline: calc(0.15rem / var(--zoom)) solid var(--preview);
+        outline: calc(0.15rem / var(--zoom)) solid var(--previewBackground);
     }
 
     mixpipe-scene.visionMixer canvas.programme {
-        outline: calc(0.15rem / var(--zoom)) solid var(--programme);
+        outline: calc(0.15rem / var(--zoom)) solid var(--programmeBackground);
     }
 
     mixpipe-scene.visionMixer span {
@@ -505,8 +506,6 @@ export class SceneView extends StoryboardObjectView {
 
     setUpLayout() {
         this.element.append(this.titleElement, this.canvasElement);
-
-        this.updateCanvasSize();
     }
 
     updateInfo() {
@@ -571,6 +570,8 @@ export class VisionMixerView extends SceneView {
     }
 
     createElements() {
+        var thisScope = this;
+
         super.createElements();
 
         this.previewCanvasElement = components.element("canvas");
@@ -578,6 +579,32 @@ export class VisionMixerView extends SceneView {
         this.element.classList.add("visionMixer");
         this.previewCanvasElement.classList.add("preview");
         this.canvasElement.classList.add("programme");
+
+        var lastClicked = null;
+
+        this.element.addEventListener("pointerdown", function(event) {
+            if (event.target.matches("input")) {
+                return;
+            }
+
+            event.preventDefault();
+        });
+
+        this.element.addEventListener("pointermove", function() {
+            lastClicked = null;
+        });
+
+        this.element.addEventListener("pointerup", function(event) {
+            if (event.target.matches("input")) {
+                return;
+            }
+
+            if (lastClicked != null && Date.now() - lastClicked <= ui.DOUBLE_CLICK_DURATION) {
+                thisScope.openEditor();
+            }
+
+            lastClicked = Date.now();
+        });
     }
 
     setUpLayout() {
@@ -613,7 +640,9 @@ export class VisionMixerView extends SceneView {
         this.model.drawToContext(previewContext, {env: {bus: "preview"}});
     }
 
-    openEditor() {}
+    openEditor() {
+        workspaces.subWorkspace.add(new visionMixerEditor.VisionMixerEditorPanel(this.model));
+    }
 }
 
 export class AnimationControllerView extends StoryboardObjectView {
@@ -825,12 +854,12 @@ export class Storyboard extends components.Component {
 
             switch (connection.type) {
                 case "programme":
-                    context.strokeStyle = computedStyle.getPropertyValue("--programme");
+                    context.strokeStyle = computedStyle.getPropertyValue("--programmeBackground");
                     context.lineWidth = 3;
                     break;
 
                 case "preview":
-                    context.strokeStyle = computedStyle.getPropertyValue("--preview");
+                    context.strokeStyle = computedStyle.getPropertyValue("--previewBackground");
                     context.lineWidth = 3;
                     break;
 

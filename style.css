@@ -14,8 +14,10 @@
     --animatedProgressForeground: #ff6666;
     --computedBackground: #00ff00;
     --computedForeground: black;
-    --programme: #ff0000;
-    --preview: #007700;
+    --programmeBackground: #ff0000;
+    --programmeForeground: white;
+    --previewBackground: #007700;
+    --previewForeground: white;
     --linearKeyframe: linear-gradient(90deg, #ffaa00 0%, #ffaa00 50%, #aa7700 50%, #aa7700 100%);
     --bezierKeyframe: linear-gradient(90deg, #009900 0%, #009900 50%, #006600 50%, #006600 100%);
     --keyframePoint: #ffbbbb;
