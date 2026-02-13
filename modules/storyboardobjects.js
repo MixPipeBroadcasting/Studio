@@ -85,6 +85,8 @@ export class Connection {
             } else if (this.source.isSameModel(this.destination.previewScene)) {
                 this.type = "preview";
             }
+
+            affectedByDownstream = false;
         }
 
         if (this.attributes.sourceIsTemplateScene) {

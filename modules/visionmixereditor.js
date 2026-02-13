@@ -1,4 +1,5 @@
 import * as components from "./components.js";
+import * as events from "./events.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as storyboardObjects from "./storyboardobjects.js";
@@ -59,17 +60,18 @@ components.css(`
         margin-block-end: 0.5rem;
         margin-inline-end: 0.5rem;
         padding: 0.2rem;
+        border: 0.2rem solid transparent;
         border-radius: 0.25rem;
         align-items: center;
     }
 
-    mixpipe-visionmixereditorsceneview[mixpipe-type="programme"] {
+    mixpipe-visionmixereditorsceneview.programme {
         background: var(--programmeBackground);
         color: var(--programmeForeground);
         border: 0.2rem solid var(--programmeBackground);
     }
 
-    mixpipe-visionmixereditorsceneview[mixpipe-type="preview"] {
+    mixpipe-visionmixereditorsceneview.preview {
         border: 0.2rem solid var(--previewBackground);
     }
     
@@ -104,6 +106,10 @@ export class VisionMixerEditorSceneView extends components.Component {
 
         this.updateCanvasSize();
 
+        this.element.addEventListener("click", function() {
+            collection.events.sceneSelected.emit({scene: model});
+        });
+
         this.always(this.update);
     }
 
@@ -123,11 +129,15 @@ export class VisionMixerEditorSceneView extends components.Component {
 
 
         if (this.model.isSameModel(this.collection.model.programmeScene)) {
-            this.element.setAttribute("mixpipe-type", "programme");
-        } else if (this.model.isSameModel(this.collection.model.previewScene)) {
-            this.element.setAttribute("mixpipe-type", "preview");
+            this.element.classList.add("programme");
         } else {
-            this.element.removeAttribute("mixpipe-type");
+            this.element.classList.remove("programme");
+        }
+        
+        if (this.model.isSameModel(this.collection.model.previewScene)) {
+            this.element.classList.add("preview");
+        } else {
+            this.element.classList.remove("preview");
         }
 
         this.model.render();
@@ -147,6 +157,8 @@ export class VisionMixerEditorCollection extends components.Component {
 
         this.addSceneButton = new ui.IconButton("icons/add.svg", "Add scene");
         this.removeSceneButton = new ui.IconButton("icons/delete.svg", "Remove scene");
+
+        this.events.sceneSelected = new events.EventType(this);
 
         this.titleBarElement = components.element("div", [
             components.className("titleBar"),
@@ -175,6 +187,8 @@ export class VisionMixerEditorSceneCollection extends VisionMixerEditorCollectio
         this.model.project.associateChildModels(this, new Map([
             [storyboardObjects.Scene, VisionMixerEditorSceneView]
         ]), [this], (sceneModel) => model.sourceScenes.hasModel(sceneModel));
+
+        this.events.sceneSelected.connect((event) => this.model.previewScene = event.scene);
     }
 }
 
