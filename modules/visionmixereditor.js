@@ -156,7 +156,7 @@ export class VisionMixerEditorCollection extends components.Component {
         this.model = model;
 
         this.addSceneButton = new ui.IconButton("icons/add.svg", "Add scene");
-        this.removeSceneButton = new ui.IconButton("icons/delete.svg", "Remove scene");
+        this.removeSceneButton = new ui.IconButton("icons/delete.svg", "Remove selected scene");
 
         this.events.sceneSelected = new events.EventType(this);
 
