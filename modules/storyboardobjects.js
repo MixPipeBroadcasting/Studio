@@ -101,10 +101,12 @@ export class Connection {
                 this.type = "programme";
             } else if (downstreamTypes.includes("preview")) {
                 this.type = "preview";
-            } else if (this.type == "inactive" && downstreamTypes.includes("active")) {
-                this.type = "active";
-            } else if (this.type == "inactive" && downstreamTypes.length == 0) {
-                this.type = "active";
+            } else if (this.type == "inactive") {
+                if (downstreamTypes.includes("active")) {
+                    this.type = "active";
+                } else if (downstreamTypes.length == 0) {
+                    this.type = "active";
+                }
             }
         }
 
