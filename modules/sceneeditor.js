@@ -147,14 +147,18 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
         this.createCompositedSceneButton.events.valueChanged.connect(function(event) {
             var project = sceneEditor.scene.project;
 
-            project.setLocalProperty("targetingScene", event.value);
-
             project.events.localStateChanged.disconnect(targetSceneEventConnection);
 
             if (event.value) {
+                workspaces.clearTargetingModes();
+
                 targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
                     if (event.property == "targetedScenePath") {
                         thisScope.createCompositedSceneButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
 
                         var scene = project.getOrCreateModel(event.value);
                         var compositedScene = new sceneObjects.CompositedScene(project);
@@ -171,21 +175,25 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                     }
                 });
             }
+
+            project.setLocalProperty("targetingScene", event.value);
         });
 
         this.createCompositedScenePlaceholderButton.events.valueChanged.connect(function(event) {
             var project = sceneEditor.scene.project;
 
-            project.setLocalProperty("targetingAttributeScenePath", sceneEditor.scene.path);
-            project.setLocalProperty("targetingAttributeType", "scene");
-            project.setLocalProperty("targetingAttribute", event.value);
-
             project.events.localStateChanged.disconnect(targetAttributeEventConnection);
 
             if (event.value) {
+                workspaces.clearTargetingModes();
+
                 targetAttributeEventConnection = project.events.localStateChanged.connect(function(event) {
                     if (event.property == "targetedAttributePath") {
                         thisScope.createCompositedScenePlaceholderButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
 
                         var attributeType = project.getOrCreateModel(event.value);
                         var compositedScene = new sceneObjects.CompositedScene(project);
@@ -202,6 +210,10 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                     }
                 });
             }
+
+            project.setLocalProperty("targetingAttributeScenePath", sceneEditor.scene.path);
+            project.setLocalProperty("targetingAttributeType", "scene");
+            project.setLocalProperty("targetingAttribute", event.value);
         });
 
         this.deleteObjectsButton.events.activated.connect(function() {

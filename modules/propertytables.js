@@ -1,5 +1,6 @@
 import * as components from "./components.js";
 import * as ui from "./ui.js";
+import * as workspaces from "./workspaces.js";
 import * as storyboardObjects from "./storyboardobjects.js";
 
 components.css(`
@@ -331,14 +332,18 @@ export class Property {
                 targetButton.events.valueChanged.connect(function(event) {
                     var project = model.project;
 
-                    project.setLocalProperty("targetingScene", event.value);
-
                     project.events.localStateChanged.disconnect(targetSceneEventConnection);
 
                     if (event.value) {
+                        workspaces.clearTargetingModes();
+
                         targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
                             if (event.property == "targetedScenePath") {
                                 targetButton.value = false;
+
+                                if (!event.value) {
+                                    return;
+                                }
 
                                 model[thisScope.name] = project.getOrCreateModel(event.value);
 
@@ -346,6 +351,8 @@ export class Property {
                             }
                         });
                     }
+
+                    project.setLocalProperty("targetingScene", event.value);
                 });
 
                 var eventName = model.propertyEventAssociations[this.name];

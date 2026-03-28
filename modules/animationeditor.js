@@ -695,14 +695,18 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                 thisScope.targetPropertyButton.value = false;
             }
 
-            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
-
             project.events.localStateChanged.disconnect(targetPropertyEventConnection);
 
             if (event.value) {
+                workspaces.clearTargetingModes();
+                
                 targetPropertyEventConnection = project.events.localStateChanged.connect(function(event) {
                     if (event.property == "targetedProperty") {
                         thisScope.createTimelineButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
 
                         var timeline = new timelines.TimelineSource(project);
 
@@ -715,6 +719,8 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                     }
                 });
             }
+
+            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
         });
 
         this.deleteTimelinesButton.events.activated.connect(function() {
@@ -745,14 +751,18 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                 thisScope.createTimelineButton.value = false;
             }
 
-            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
-
             project.events.localStateChanged.disconnect(targetPropertyEventConnection);
 
             if (event.value) {
+                workspaces.clearTargetingModes();
+
                 targetPropertyEventConnection = project.events.localStateChanged.connect(function(event) {
                     if (event.property == "targetedProperty") {
                         thisScope.targetPropertyButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
 
                         var selectedTimelineView = thisScope.animationEditor.controllerEditor.selectedTimelineViews[0];
 
@@ -767,6 +777,8 @@ export class AnimationEditorToolbar extends workspaces.Toolbar {
                     }
                 });
             }
+
+            project.setLocalProperty("targetingProperty", event.value ? "number" : null);
         });
 
         this.addKeyframeButton.events.activated.connect(function() {

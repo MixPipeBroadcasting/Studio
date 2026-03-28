@@ -448,6 +448,8 @@ export class SceneView extends StoryboardObjectView {
             }
         }
         
+        updateTargetState();
+
         model.project.events.localStateChanged.connect(updateTargetState);
         
         this.createElements();

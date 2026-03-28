@@ -425,6 +425,12 @@ export function addEventListenersForProject(project) {
     }
 }
 
+export function clearTargetingModes() {
+    project.setLocalProperty("targetedProperty", null);
+    project.setLocalProperty("targetedScenePath", null);
+    project.setLocalProperty("targetedAttributePath", null);
+}
+
 mainWorkspace = new Workspace();
 subWorkspace = new Workspace(true);
 mainSubSplitter = new ui.Splitter(true);
