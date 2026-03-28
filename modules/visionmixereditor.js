@@ -153,10 +153,13 @@ export class VisionMixerEditorCollection extends components.Component {
     constructor(model, title) {
         super("mixpipe-visionmixereditorcollection");
 
+        var thisScope = this;
+        var targetSceneEventConnection = null;
+
         this.model = model;
 
-        this.addSceneButton = new ui.IconButton("icons/add.svg", "Add scene");
-        this.removeSceneButton = new ui.IconButton("icons/delete.svg", "Remove selected scene");
+        this.addSceneButton = new ui.ToggleIconButton("icons/add.svg", "Cancel adding a scene", undefined, "Add scene");
+        this.removeSceneButton = new ui.IconButton("icons/delete.svg", "Remove current preview scene");
 
         this.events.sceneSelected = new events.EventType(this);
 
@@ -177,6 +180,34 @@ export class VisionMixerEditorCollection extends components.Component {
         this.element.append(this.titleBarElement, this.sceneListElement);
 
         this.childContainerElement = this.sceneListElement;
+
+        this.addSceneButton.events.valueChanged.connect(function(event) {
+            var project = model.project;
+
+            project.events.localStateChanged.disconnect(targetSceneEventConnection);
+
+            if (event.value) {
+                workspaces.clearTargetingModes();
+
+                targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedScenePath") {
+                        thisScope.addSceneButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
+
+                        thisScope.addScene(project.getOrCreateModel(event.value));
+                    }
+                });
+            }
+
+            project.setLocalProperty("targetingScene", event.value);
+        });
+    }
+
+    addScene(scene) {
+        throw new Error("Not implemented");
     }
 }
 
@@ -184,11 +215,27 @@ export class VisionMixerEditorSceneCollection extends VisionMixerEditorCollectio
     constructor(model) {
         super(model, "Scenes");
 
-        this.model.project.associateChildModels(this, new Map([
-            [storyboardObjects.Scene, VisionMixerEditorSceneView]
-        ]), [this], (sceneModel) => model.sourceScenes.hasModel(sceneModel));
+        this.loadScenes();
+
+        this.model.sourceScenes.events.changed.connect(this.loadScenes, this);
 
         this.events.sceneSelected.connect((event) => this.model.previewScene = event.scene);
+    }
+
+    loadScenes() {
+        // TODO: Rearchitect scene collections so that they don't rely on groups, that they are in order, and that child model list isn't completely remade when children added
+
+        this.sceneListElement.innerHTML = "";
+
+        this.model.project.loadChildModels(this, new Map([
+            [storyboardObjects.Scene, VisionMixerEditorSceneView]
+        ]), [this], (sceneModel) => this.model.sourceScenes.hasModel(sceneModel));
+    }
+
+    addScene(scene) {
+        this.model.sourceScenes.addModel(scene);
+
+        this.model.project.registerNewModels();
     }
 }
 

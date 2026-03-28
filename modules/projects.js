@@ -274,21 +274,21 @@ export class Project extends events.EventDrivenObject {
         });
     }
 
-    associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
+    associateChildModel(model, instance) {
         var thisScope = this;
 
-        function associate(model, instance) {
-            var reparentedConnection = model.events.reparented.connect(function(event) {
-                model.events.reparented.disconnect(reparentedConnection);
+        var reparentedConnection = model.events.reparented.connect(function(event) {
+            model.events.reparented.disconnect(reparentedConnection);
 
-                instance.parent?.remove(instance);
+            instance.parent?.remove(instance);
 
-                thisScope.events.modelReparented.emit({model});
-            });
+            thisScope.events.modelReparented.emit({model});
+        });
 
-            return instance;
-        }
+        return instance;
+    }
 
+    loadChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
         for (var model of this.getModels([...modelViewMap.keys()], modelFilter)) {
             var modelClass = modelViewMap.get(model.constructor);
 
@@ -296,8 +296,14 @@ export class Project extends events.EventDrivenObject {
                 continue;
             }
 
-            view.add(associate(model, new modelClass(model, ...args)));
+            view.add(this.associateChildModel(model, new modelClass(model, ...args)));
         }
+    }
+
+    associateChildModels(view, modelViewMap, args = [], modelFilter = (model) => true) {
+        var thisScope = this;
+
+        this.loadChildModels(view, modelViewMap, args, modelFilter);
 
         function parentEventListener(event) {
             if (!view.parent) {
@@ -314,7 +320,7 @@ export class Project extends events.EventDrivenObject {
                 return;
             }
 
-            view.add(associate(event.model, new modelClass(event.model, ...args)));
+            view.add(thisScope.associateChildModel(event.model, new modelClass(event.model, ...args)));
         }
 
         this.events.modelAdded.connect(function(event) {
@@ -663,10 +669,18 @@ export class ProjectModelGroup extends events.EventDrivenObject {
     constructor(project, path) {
         super();
 
+        var thisScope = this;
+
         this.project = project;
         this.path = path;
 
         this.events.changed = new events.EventType(this);
+
+        this.project.events.transactionAdded.connect(function(event) {
+            if (event.transaction.path.join(".").startsWith(thisScope.path.join(".") + ".")) {
+                thisScope.events.changed.emit();
+            }
+        });
     }
 
     get length() {
@@ -719,8 +733,6 @@ export class ProjectModelGroup extends events.EventDrivenObject {
 
     setItem(key, value) {
         this.project.set([...this.path, key], value);
-
-        this.events.changed.emit();
     }
 
     addItem(value) {
@@ -729,8 +741,6 @@ export class ProjectModelGroup extends events.EventDrivenObject {
 
     removeItem(key) {
         this.project.delete([...this.path, key]);
-
-        this.events.changed.emit();
     }
 }
 

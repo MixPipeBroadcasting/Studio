@@ -414,7 +414,7 @@ export class AnimationControllerEditorView extends components.Component {
         this.project.associateChildModels(this, new Map([
             [timelines.TimelineSource, TimelineSourceEditorView]
         ]), [this], (model) => model.parentAnimationController == this.model);
-        
+
         this.events.childRemoved.connect(function() {
             thisScope.events.allKeyframesDeselected.emit();
             thisScope.events.keyframeSelectionChanged.emit();
