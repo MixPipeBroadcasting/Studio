@@ -1,5 +1,6 @@
 import * as projects from "./projects.js";
 import * as sceneObjects from "./sceneobjects.js";
+import * as visionMixers from "./visionmixers.js";
 import * as timelines from "./timelines.js";
 import * as sources from "./sources.js";
 
@@ -340,7 +341,7 @@ export class VisionMixer extends Scene {
     constructor(project, path = ["visionMixers", projects.generateKey()]) {
         super(project, path);
 
-        this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], Scene);
+        this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], visionMixers.VisionMixerSourceScene);
 
         this.registerReferenceProperty("programmeScene", null, "transitionStarted");
         this.registerReferenceProperty("previewScene", null, "previewSelected");
@@ -351,11 +352,44 @@ export class VisionMixer extends Scene {
     getConnections() {
         var connections = [];
 
-        for (var scene of this.sourceScenes.getModelList()) {
-            connections.push(new Connection(scene, this));
+        for (var sourceScene of this.sourceScenes.getModelList()) {
+            connections.push(new Connection(sourceScene.scene, this));
         }
 
         return connections;
+    }
+
+    addScene(scene) {
+        var sourceScene = new visionMixers.VisionMixerSourceScene(this.project);
+
+        sourceScene.scene = scene;
+        sourceScene.parentVisionMixer = this;
+
+        this.project.registerNewModels();
+
+        this.sourceScenes.addModel(sourceScene);
+    }
+
+    removeScene(scene) {
+        var sourceSceneKey = this.sourceScenes.getModelKeys().find((key) => this.sourceScenes.getModel(key)?.scene?.isSameModel(scene));
+
+        if (!sourceSceneKey) {
+            return;
+        }
+
+        if (this.programmeScene?.isSameModel(scene)) {
+            this.programmeScene = null;
+        }
+
+        if (this.previewScene?.isSameModel(scene)) {
+            this.previewScene = null;
+        }
+
+        var sourceScene = this.sourceScenes.getModel(sourceSceneKey);
+
+        sourceScene.parentVisionMixer = null;
+
+        this.sourceScenes.removeModel(sourceSceneKey);
     }
 
     drawToContext(context = this.canvasContext, options = {}) {

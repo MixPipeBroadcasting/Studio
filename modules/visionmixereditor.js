@@ -2,7 +2,7 @@ import * as components from "./components.js";
 import * as events from "./events.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
-import * as storyboardObjects from "./storyboardobjects.js";
+import * as visionMixers from "./visionmixers.js";
 
 components.css(`
     mixpipe-visionmixereditorview {
@@ -97,7 +97,7 @@ export class VisionMixerEditorSceneView extends components.Component {
 
         this.sceneNameElement = components.element("span", [
             components.className("name"),
-            components.text(model.name || "Untitled scene")
+            components.text(model.scene?.name || "Untitled scene")
         ]);
 
         this.sceneCanvasElement = components.element("canvas");
@@ -107,45 +107,49 @@ export class VisionMixerEditorSceneView extends components.Component {
         this.updateCanvasSize();
 
         this.element.addEventListener("click", function() {
-            collection.events.sceneSelected.emit({scene: model});
+            collection.events.sceneSelected.emit({scene: model.scene});
         });
 
         this.always(this.update);
     }
 
     updateCanvasSize() {
-        this.sceneCanvasElement.width = this.model.width;
-        this.sceneCanvasElement.height = this.model.height;
+        if (!this.model.scene) {
+            return;
+        }
+
+        this.sceneCanvasElement.width = this.model.scene.width;
+        this.sceneCanvasElement.height = this.model.scene.height;
     }
 
     update() {
-        if (!this.model.exists) {
+        if (!this.model.exists || !this.model.scene?.exists) {
             this.removeAlways(this.update);
 
             return;
         }
 
-        this.sceneNameElement.textContent = this.model.name || "Untitled scene";
+        this.sceneNameElement.textContent = this.model.scene.name || "Untitled scene";
 
 
-        if (this.model.isSameModel(this.collection.model.programmeScene)) {
+        if (this.model.scene.isSameModel(this.collection.model.programmeScene)) {
             this.element.classList.add("programme");
         } else {
             this.element.classList.remove("programme");
         }
         
-        if (this.model.isSameModel(this.collection.model.previewScene)) {
+        if (this.model.scene.isSameModel(this.collection.model.previewScene)) {
             this.element.classList.add("preview");
         } else {
             this.element.classList.remove("preview");
         }
 
-        this.model.render();
+        this.model.scene.render();
 
         var context = this.sceneCanvasElement.getContext("2d");
 
         context.clearRect(0, 0, this.sceneCanvasElement.width, this.sceneCanvasElement.height);
-        context.drawImage(this.model.canvas, 0, 0);
+        context.drawImage(this.model.scene.canvas, 0, 0);
     }
 }
 
@@ -204,6 +208,10 @@ export class VisionMixerEditorCollection extends components.Component {
 
             project.setLocalProperty("targetingScene", event.value);
         });
+
+        this.removeSceneButton.events.activated.connect(function(event) {
+            thisScope.model.removeScene(thisScope.model.previewScene);
+        });
     }
 
     addScene(scene) {
@@ -215,27 +223,15 @@ export class VisionMixerEditorSceneCollection extends VisionMixerEditorCollectio
     constructor(model) {
         super(model, "Scenes");
 
-        this.loadScenes();
-
-        this.model.sourceScenes.events.changed.connect(this.loadScenes, this);
+        this.model.project.associateChildModels(this, new Map([
+            [visionMixers.VisionMixerSourceScene, VisionMixerEditorSceneView]
+        ]), [this], (model) => model.parentVisionMixer == this.model);
 
         this.events.sceneSelected.connect((event) => this.model.previewScene = event.scene);
     }
 
-    loadScenes() {
-        // TODO: Rearchitect scene collections so that they don't rely on groups, that they are in order, and that child model list isn't completely remade when children added
-
-        this.sceneListElement.innerHTML = "";
-
-        this.model.project.loadChildModels(this, new Map([
-            [storyboardObjects.Scene, VisionMixerEditorSceneView]
-        ]), [this], (sceneModel) => this.model.sourceScenes.hasModel(sceneModel));
-    }
-
     addScene(scene) {
-        this.model.sourceScenes.addModel(scene);
-
-        this.model.project.registerNewModels();
+        this.model.addScene(scene);
     }
 }
 

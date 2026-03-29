@@ -181,8 +181,8 @@ if (!opener) {
     visionMixer.x = 650;
     visionMixer.y = 600;
 
-    visionMixer.sourceScenes.addModel(scene2);
-    visionMixer.sourceScenes.addModel(scene3);
+    visionMixer.addScene(scene2);
+    visionMixer.addScene(scene3);
 
     visionMixer.programmeScene = scene3;
     visionMixer.previewScene = scene2;
