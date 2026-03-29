@@ -8,6 +8,8 @@
     --selectedBackground: #4444ff;
     --selectedForeground: white;
     --selectedBorder: rgba(255, 255, 255, 0.2);
+    --innerSelectedBackground: #8888ff;
+    --innerSelectedForeground: white;
     --animatedBackground: #ff0000;
     --animatedForeground: white;
     --animatedProgressBackground: #bb0000;

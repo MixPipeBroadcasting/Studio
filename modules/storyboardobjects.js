@@ -342,9 +342,11 @@ export class VisionMixer extends Scene {
         super(project, path);
 
         this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], visionMixers.VisionMixerSourceScene);
+        this.transitions = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "transitions"], visionMixers.VisionMixerTransition);
 
         this.registerReferenceProperty("programmeScene", null, "transitionStarted");
         this.registerReferenceProperty("previewScene", null, "previewSelected");
+        this.registerReferenceProperty("selectedTransition", null, "transitionSelected");
 
         this.builtInAttributeTypes = this.constructor._builtInAttributeTypes;
     }
@@ -390,6 +392,10 @@ export class VisionMixer extends Scene {
         sourceScene.parentVisionMixer = null;
 
         this.sourceScenes.removeModel(sourceSceneKey);
+    }
+
+    addTransition(transition) {
+        this.transitions.addModel(transition);
     }
 
     drawToContext(context = this.canvasContext, options = {}) {

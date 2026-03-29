@@ -50,6 +50,12 @@ components.css(`
         overflow: auto;
     }
 
+    mixpipe-visionmixereditorcollection .transitionList {
+        ${components.styleMixins.VERTICAL_STACK}
+        gap: 0.25rem;
+        overflow: auto;
+    }
+
     mixpipe-visionmixereditorsceneview {
         ${components.styleMixins.VERTICAL_STACK}
         display: inline-flex;
@@ -86,6 +92,61 @@ components.css(`
         flex-shrink: 0;
         max-width: 100%;
     }
+
+    mixpipe-visionmixereditortransitionview {
+        display: grid;
+        height: 2.5rem;
+        padding: 0.25rem;
+        padding-inline: 0.5rem;
+        flex-shrink: 0;
+        grid-template-columns: 3rem minmax(auto, 100%) 4rem auto;
+        gap: 0.5rem;
+        border-radius: 0.25rem;
+        align-items: center;
+    }
+
+    mixpipe-visionmixereditortransitionview.selected {
+        background-color: var(--selectedBackground);
+        color: var(--selectedForeground);
+    }
+
+    mixpipe-visionmixereditortransitionview:last-child {
+        margin-block-end: 0.5rem;
+    }
+
+    mixpipe-visionmixereditortransitionview canvas {
+        grid-row: 1;
+        grid-column: 1;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    mixpipe-visionmixereditortransitionview .name {
+        grid-row: 1;
+        grid-column: 2;
+    }
+
+    mixpipe-visionmixereditortransitionview .duration {
+        grid-row: 1;
+        grid-column: 3;
+    }
+
+    mixpipe-visionmixereditortransitionview .actions {
+        ${components.styleMixins.HORIZONTAL_STACK}
+        grid-row: 1;
+        grid-column: 4;
+        gap: 0.2rem;
+    }
+
+    mixpipe-visionmixereditortransitionview .actions button {
+        padding: 0.1rem;
+    }
+    
+    mixpipe-visionmixereditortransitionview.selected .actions button[mixpipe-active="true"] {
+        background: var(--innerSelectedBackground);
+        color: var(--innerSelectedForeground);
+    }
 `);
 
 export class VisionMixerEditorSceneView extends components.Component {
@@ -95,10 +156,7 @@ export class VisionMixerEditorSceneView extends components.Component {
         this.model = model;
         this.collection = collection;
 
-        this.sceneNameElement = components.element("span", [
-            components.className("name"),
-            components.text(model.scene?.name || "Untitled scene")
-        ]);
+        this.sceneNameElement = components.element("span", [components.className("name")]);
 
         this.sceneCanvasElement = components.element("canvas");
 
@@ -131,7 +189,6 @@ export class VisionMixerEditorSceneView extends components.Component {
 
         this.sceneNameElement.textContent = this.model.scene.name || "Untitled scene";
 
-
         if (this.model.scene.isSameModel(this.collection.model.programmeScene)) {
             this.element.classList.add("programme");
         } else {
@@ -153,8 +210,8 @@ export class VisionMixerEditorSceneView extends components.Component {
     }
 }
 
-export class VisionMixerEditorCollection extends components.Component {
-    constructor(model, title) {
+export class VisionMixerEditorSceneCollection extends components.Component {
+    constructor(model) {
         super("mixpipe-visionmixereditorcollection");
 
         var thisScope = this;
@@ -169,7 +226,7 @@ export class VisionMixerEditorCollection extends components.Component {
 
         this.titleBarElement = components.element("div", [
             components.className("titleBar"),
-            components.element("h1", [components.text(title)]),
+            components.element("h1", [components.text("Scenes")]),
             components.element("div", [
                 components.className("actions"),
                 this.addSceneButton.element,
@@ -184,6 +241,12 @@ export class VisionMixerEditorCollection extends components.Component {
         this.element.append(this.titleBarElement, this.sceneListElement);
 
         this.childContainerElement = this.sceneListElement;
+
+        this.model.project.associateChildModels(this, new Map([
+            [visionMixers.VisionMixerSourceScene, VisionMixerEditorSceneView]
+        ]), [this], (model) => model.parentVisionMixer == this.model);
+
+        this.events.sceneSelected.connect((event) => this.model.previewScene = event.scene);
 
         this.addSceneButton.events.valueChanged.connect(function(event) {
             var project = model.project;
@@ -215,23 +278,145 @@ export class VisionMixerEditorCollection extends components.Component {
     }
 
     addScene(scene) {
-        throw new Error("Not implemented");
+        this.model.addScene(scene);
     }
 }
 
-export class VisionMixerEditorSceneCollection extends VisionMixerEditorCollection {
-    constructor(model) {
-        super(model, "Scenes");
+export class VisionMixerEditorTransitionView extends components.Component {
+    constructor(model, collection) {
+        super("mixpipe-visionmixereditortransitionview");
 
-        this.model.project.associateChildModels(this, new Map([
-            [visionMixers.VisionMixerSourceScene, VisionMixerEditorSceneView]
-        ]), [this], (model) => model.parentVisionMixer == this.model);
+        this.model = model;
+        this.collection = collection;
 
-        this.events.sceneSelected.connect((event) => this.model.previewScene = event.scene);
+        this.targetSceneButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a scene", undefined, "Select a scene");
+        this.targetAnimationControllerButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting an animation controller", undefined, "Select an animation controller");
+
+        this.sceneNameElement = components.element("span", [components.className("name")]);
+        this.sceneDurationElement = components.element("span", [components.className("duration")]);
+
+        this.actionsElement = components.element("div", [
+            components.className("actions"),
+            this.targetSceneButton.element,
+            this.targetAnimationControllerButton.element
+        ]);
+
+        this.sceneCanvasElement = components.element("canvas");
+
+        this.element.append(this.sceneNameElement, this.sceneDurationElement, this.actionsElement, this.sceneCanvasElement);
+
+        this.updateCanvasSize();
+
+        this.element.addEventListener("click", function() {
+            collection.events.transitionSelected.emit({transition: model});
+        });
+
+        this.always(this.update);
     }
 
-    addScene(scene) {
-        this.model.addScene(scene);
+    updateCanvasSize() {
+        if (!this.model.scene) {
+            return;
+        }
+
+        this.sceneCanvasElement.width = this.model.scene.width;
+        this.sceneCanvasElement.height = this.model.scene.height;
+    }
+
+    update() {
+        if (!this.model.exists || (this.model.scene && !this.model.scene?.exists)) {
+            this.removeAlways(this.update);
+
+            return;
+        }
+
+        this.sceneNameElement.textContent = this.model.scene ? (this.model.scene.name || "Untitled scene") : "(No scene)";
+        this.sceneDurationElement.textContent = this.model.animationController?.duration ?? "--.---";
+
+        if (this.model.isSameModel(this.collection.model.selectedTransition)) {
+            this.element.classList.add("selected");
+        } else {
+            this.element.classList.remove("selected");
+        }
+
+        this.model.scene?.render();
+
+        var context = this.sceneCanvasElement.getContext("2d");
+
+        context.clearRect(0, 0, this.sceneCanvasElement.width, this.sceneCanvasElement.height);
+
+        if (this.model.scene) {
+            context.drawImage(this.model.scene.canvas, 0, 0);
+        } else {
+            this.sceneCanvasElement.width = 96;
+            this.sceneCanvasElement.height = 54;
+
+            context.fillStyle = "black";
+
+            context.fillRect(0, 0, 96, 54);
+
+            context.fillStyle = "white";
+            context.font = "32px Overpass, system-ui, sans-serif";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+
+            context.fillText("?", 96 / 2, 54 / 2);
+        }
+    }
+}
+
+export class VisionMixerEditorTransitionCollection extends components.Component {
+    constructor(model) {
+        super("mixpipe-visionmixereditorcollection");
+
+        var thisScope = this;
+
+        this.model = model;
+
+        this.addTransitionButton = new ui.IconButton("icons/add.svg", "Add transition");
+        this.removeTransitionButton = new ui.IconButton("icons/delete.svg", "Remove selected transition");
+
+        this.events.transitionSelected = new events.EventType(this);
+
+        this.titleBarElement = components.element("div", [
+            components.className("titleBar"),
+            components.element("h1", [components.text("Transitions")]),
+            components.element("div", [
+                components.className("actions"),
+                this.addTransitionButton.element,
+                this.removeTransitionButton.element
+            ])
+        ]);
+
+        this.transitionListElement = components.element("div", [
+            components.className("transitionList")
+        ]);
+
+        this.element.append(this.titleBarElement, this.transitionListElement);
+
+        this.childContainerElement = this.transitionListElement;
+
+        this.model.project.associateChildModels(this, new Map([
+            [visionMixers.VisionMixerTransition, VisionMixerEditorTransitionView]
+        ]), [this], (model) => model.parentVisionMixer == this.model);
+
+        this.events.transitionSelected.connect((event) => this.model.selectedTransition = event.transition);
+
+        this.addTransitionButton.events.activated.connect(function(event) {
+            thisScope.addTransition();
+        });
+    }
+
+    addTransition() {
+        var transition = new visionMixers.VisionMixerTransition(this.model.project);
+
+        transition.parentVisionMixer = this.model;
+
+        this.model.project.registerNewModels();
+
+        this.model.addTransition(transition);
+
+        this.model.selectedTransition = transition;
     }
 }
 
@@ -242,7 +427,7 @@ export class VisionMixerEditorView extends components.Component {
         this.model = model;
 
         this.sceneCollection = new VisionMixerEditorSceneCollection(model);
-        this.transitionCollection = new VisionMixerEditorCollection(model, "Transitions");
+        this.transitionCollection = new VisionMixerEditorTransitionCollection(model);
 
         this.add(this.sceneCollection, this.transitionCollection);
     }
