@@ -414,6 +414,14 @@ export function addEventListenersForProject(project) {
                 modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select an attribute type to target on the scene."));
             }
         }
+
+        if (property == "targetingAnimationController") {
+            modeTooltipContainer.clear();
+
+            if (value) {
+                modeTooltipContainer.add(ui.Tooltip.withText("mode", "Select an animation controller to target on the storyboard."));
+            }
+        }
     }
 
     project.events.localStateChanged.connect(function(event) {
@@ -429,6 +437,7 @@ export function clearTargetingModes() {
     project.setLocalProperty("targetedProperty", null);
     project.setLocalProperty("targetedScenePath", null);
     project.setLocalProperty("targetedAttributePath", null);
+    project.setLocalProperty("targetedAnimationControllerPath", null);
 }
 
 mainWorkspace = new Workspace();

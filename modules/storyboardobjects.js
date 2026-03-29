@@ -398,6 +398,22 @@ export class VisionMixer extends Scene {
         this.transitions.addModel(transition);
     }
 
+    removeTransition(transition) {
+        var transitionKey = this.transitions.getModelKey(transition);
+
+        if (!transitionKey) {
+            return;
+        }
+
+        if (this.selectedTransition?.isSameModel(transition)) {
+            this.selectedTransition = null;
+        }
+
+        transition.parentVisionMixer = null;
+
+        this.transitions.removeModel(transitionKey);
+    }
+
     drawToContext(context = this.canvasContext, options = {}) {
         if (options.callStack?.includes(this)) {
             return;

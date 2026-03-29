@@ -2,6 +2,7 @@ import * as components from "./components.js";
 import * as events from "./events.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
+import * as storyboardObjects from "./storyboardobjects.js";
 import * as visionMixers from "./visionmixers.js";
 
 components.css(`
@@ -52,6 +53,7 @@ components.css(`
 
     mixpipe-visionmixereditorcollection .transitionList {
         ${components.styleMixins.VERTICAL_STACK}
+        ${components.styleMixins.GROW}
         gap: 0.25rem;
         overflow: auto;
     }
@@ -99,6 +101,7 @@ components.css(`
         padding: 0.25rem;
         padding-inline: 0.5rem;
         flex-shrink: 0;
+        grid-template-rows: 100%;
         grid-template-columns: 3rem minmax(auto, 100%) 4rem auto;
         gap: 0.5rem;
         border-radius: 0.25rem;
@@ -117,9 +120,11 @@ components.css(`
     mixpipe-visionmixereditortransitionview canvas {
         grid-row: 1;
         grid-column: 1;
-        width: 100%;
-        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        justify-self: center;
         object-fit: contain;
+        background: repeating-conic-gradient(var(--primaryBackground) 0% 25%, var(--secondaryBackground) 0% 50%) 50% / 0.5rem 0.5rem;
     }
 
     mixpipe-visionmixereditortransitionview .name {
@@ -162,22 +167,11 @@ export class VisionMixerEditorSceneView extends components.Component {
 
         this.element.append(this.sceneNameElement, this.sceneCanvasElement);
 
-        this.updateCanvasSize();
-
         this.element.addEventListener("click", function() {
             collection.events.sceneSelected.emit({scene: model.scene});
         });
 
         this.always(this.update);
-    }
-
-    updateCanvasSize() {
-        if (!this.model.scene) {
-            return;
-        }
-
-        this.sceneCanvasElement.width = this.model.scene.width;
-        this.sceneCanvasElement.height = this.model.scene.height;
     }
 
     update() {
@@ -204,6 +198,9 @@ export class VisionMixerEditorSceneView extends components.Component {
         this.model.scene.render();
 
         var context = this.sceneCanvasElement.getContext("2d");
+
+        this.sceneCanvasElement.width = this.model.scene.width;
+        this.sceneCanvasElement.height = this.model.scene.height;
 
         context.clearRect(0, 0, this.sceneCanvasElement.width, this.sceneCanvasElement.height);
         context.drawImage(this.model.scene.canvas, 0, 0);
@@ -272,9 +269,7 @@ export class VisionMixerEditorSceneCollection extends components.Component {
             project.setLocalProperty("targetingScene", event.value);
         });
 
-        this.removeSceneButton.events.activated.connect(function(event) {
-            thisScope.model.removeScene(thisScope.model.previewScene);
-        });
+        this.removeSceneButton.events.activated.connect((event) => this.model.removeScene(this.model.previewScene));
     }
 
     addScene(scene) {
@@ -286,11 +281,15 @@ export class VisionMixerEditorTransitionView extends components.Component {
     constructor(model, collection) {
         super("mixpipe-visionmixereditortransitionview");
 
+        var thisScope = this;
+        var targetSceneEventConnection = null;
+        var targetAnimationControllerEventConnection = null;
+
         this.model = model;
         this.collection = collection;
 
         this.targetSceneButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting a scene", undefined, "Select a scene");
-        this.targetAnimationControllerButton = new ui.ToggleIconButton("icons/select.svg", "Cancel selecting an animation controller", undefined, "Select an animation controller");
+        this.targetAnimationControllerButton = new ui.ToggleIconButton("icons/selectanimation.svg", "Cancel selecting an animation controller", undefined, "Select an animation controller");
 
         this.sceneNameElement = components.element("span", [components.className("name")]);
         this.sceneDurationElement = components.element("span", [components.className("duration")]);
@@ -305,22 +304,59 @@ export class VisionMixerEditorTransitionView extends components.Component {
 
         this.element.append(this.sceneNameElement, this.sceneDurationElement, this.actionsElement, this.sceneCanvasElement);
 
-        this.updateCanvasSize();
-
         this.element.addEventListener("click", function() {
             collection.events.transitionSelected.emit({transition: model});
         });
 
+        this.targetSceneButton.events.valueChanged.connect(function(event) {
+            var project = model.project;
+
+            project.events.localStateChanged.disconnect(targetSceneEventConnection);
+
+            if (event.value) {
+                workspaces.clearTargetingModes();
+
+                targetSceneEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedScenePath") {
+                        thisScope.targetSceneButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
+
+                        thisScope.model.scene = project.getOrCreateModel(event.value);
+                    }
+                });
+            }
+
+            project.setLocalProperty("targetingScene", event.value);
+        });
+
+        this.targetAnimationControllerButton.events.valueChanged.connect(function(event) {
+            var project = model.project;
+
+            project.events.localStateChanged.disconnect(targetAnimationControllerEventConnection);
+
+            if (event.value) {
+                workspaces.clearTargetingModes();
+
+                targetAnimationControllerEventConnection = project.events.localStateChanged.connect(function(event) {
+                    if (event.property == "targetedAnimationControllerPath") {
+                        thisScope.targetAnimationControllerButton.value = false;
+
+                        if (!event.value) {
+                            return;
+                        }
+
+                        thisScope.model.animationController = project.getOrCreateModel(event.value);
+                    }
+                });
+            }
+
+            project.setLocalProperty("targetingAnimationController", event.value);
+        });
+
         this.always(this.update);
-    }
-
-    updateCanvasSize() {
-        if (!this.model.scene) {
-            return;
-        }
-
-        this.sceneCanvasElement.width = this.model.scene.width;
-        this.sceneCanvasElement.height = this.model.scene.height;
     }
 
     update() {
@@ -331,7 +367,12 @@ export class VisionMixerEditorTransitionView extends components.Component {
         }
 
         this.sceneNameElement.textContent = this.model.scene ? (this.model.scene.name || "Untitled scene") : "(No scene)";
-        this.sceneDurationElement.textContent = this.model.animationController?.duration ?? "--.---";
+
+        if (this.model.animationController) {
+            this.sceneDurationElement.textContent = storyboardObjects.AnimationController.renderDisplayTime(this.model.animationController?.duration);
+        } else {
+            this.sceneDurationElement.textContent = "--.---";
+        }
 
         if (this.model.isSameModel(this.collection.model.selectedTransition)) {
             this.element.classList.add("selected");
@@ -342,6 +383,11 @@ export class VisionMixerEditorTransitionView extends components.Component {
         this.model.scene?.render();
 
         var context = this.sceneCanvasElement.getContext("2d");
+
+        if (this.model.scene) {
+            this.sceneCanvasElement.width = this.model.scene.width;
+            this.sceneCanvasElement.height = this.model.scene.height;
+        }
 
         context.clearRect(0, 0, this.sceneCanvasElement.width, this.sceneCanvasElement.height);
 
@@ -368,8 +414,6 @@ export class VisionMixerEditorTransitionView extends components.Component {
 export class VisionMixerEditorTransitionCollection extends components.Component {
     constructor(model) {
         super("mixpipe-visionmixereditorcollection");
-
-        var thisScope = this;
 
         this.model = model;
 
@@ -402,9 +446,8 @@ export class VisionMixerEditorTransitionCollection extends components.Component 
 
         this.events.transitionSelected.connect((event) => this.model.selectedTransition = event.transition);
 
-        this.addTransitionButton.events.activated.connect(function(event) {
-            thisScope.addTransition();
-        });
+        this.addTransitionButton.events.activated.connect((event) => this.addTransition());
+        this.removeTransitionButton.events.activated.connect((event) => this.removeTransition(this.model.selectedTransition));
     }
 
     addTransition() {
@@ -417,6 +460,10 @@ export class VisionMixerEditorTransitionCollection extends components.Component 
         this.model.addTransition(transition);
 
         this.model.selectedTransition = transition;
+    }
+
+    removeTransition(transition) {
+        this.model.removeTransition(transition);
     }
 }
 

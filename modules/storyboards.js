@@ -89,7 +89,7 @@ components.css(`
     }
 
     mixpipe-scene.target {
-        animation: 1s sceneTarget infinite alternate-reverse;
+        animation: 1s targetStoryboardObject infinite alternate-reverse;
         cursor: cell;
     }
 
@@ -173,7 +173,16 @@ components.css(`
         color: var(--animatedForeground);
     }
 
-    @keyframes sceneTarget {
+    mixpipe-animationcontroller.target {
+        animation: 1s targetStoryboardObject infinite alternate-reverse;
+        cursor: cell;
+    }
+
+    mixpipe-animationcontroller.target * {
+        cursor: cell;
+    }
+
+    @keyframes targetStoryboardObject {
         0% {
             background: var(--targetStart);
         }
@@ -656,6 +665,18 @@ export class AnimationControllerView extends StoryboardObjectView {
         this.sizeUnconstrained = true;
         this.lastState = null;
 
+        function updateTargetState() {
+            if (model.project.localState.targetingAnimationController) {
+                thisScope.element.classList.add("target");
+            } else {
+                thisScope.element.classList.remove("target");
+            }
+        }
+        
+        updateTargetState();
+
+        model.project.events.localStateChanged.connect(updateTargetState);
+
         this.triggerButton = new ui.IconButton("icons/play.svg", "Start/reset animation");
         this.nameInput = new ui.Input("Untitled animation");
 
@@ -677,6 +698,14 @@ export class AnimationControllerView extends StoryboardObjectView {
         var lastClicked = null;
 
         this.element.addEventListener("pointerdown", function(event) {
+            if (thisScope.model.project.localState.targetingAnimationController) {
+                thisScope.model.project.setLocalProperty("targetedAnimationControllerPath", thisScope.model.path);
+
+                event.preventDefault();
+
+                return;
+            }
+
             if (event.target.matches("button, button *, input")) {
                 shouldOpenEditor = false;
 
@@ -713,15 +742,17 @@ export class AnimationControllerView extends StoryboardObjectView {
             this.lastState = this.model.state;
         }
 
+        var showRunningState = this.model.state == "running" && !this.model.project.localState.targetingAnimationController;
+
         this.triggerButton.element.style.background = (
-            this.model.state == "running" ?
+            showRunningState ?
             `conic-gradient(var(--animatedProgressForeground) 0 ${(this.model.currentTime / this.model.duration) * 100}%, var(--animatedProgressBackground) 0)` :
             null
         );
 
-        this.triggerButton.element.setAttribute("mixpipe-animated", this.model.state == "running");
+        this.triggerButton.element.setAttribute("mixpipe-animated", showRunningState);
 
-        if (this.model.state == "running") {
+        if (showRunningState) {
             this.element.classList.add("running");
         } else {
             this.element.classList.remove("running");

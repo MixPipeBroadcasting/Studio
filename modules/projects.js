@@ -769,7 +769,7 @@ export class ProjectModelReferenceGroup extends ProjectModelGroup {
     getModelKey(model) {
         var items = this.getItems();
 
-        return Object.keys(items).find((key) => items[key].join(".") == model.path.join("."));
+        return Object.keys(items).find((key) => items[key].isSameModel(model));
     }
 
     hasModel(model) {
