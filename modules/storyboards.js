@@ -1013,6 +1013,9 @@ export class PresetSceneMenu extends ui.Menu {
             {component: new ui.Expandable("Test cards and patterns"), children: [
                 {component: new ui.Button("Colour bars (EBU)"), preset: "colourbars"}
             ]},
+            {component: new ui.Expandable("Transitions and wipes"), children: [
+                {component: new ui.Button("Linear fade"), preset: "colourbars"}
+            ]},
             {component: new ui.Expandable("In-band signalling"), children: [
                 {component: new ui.Button("VT clock"), preset: "colourbars"},
                 {component: new ui.Button("Cue dot"), preset: "colourbars"}
