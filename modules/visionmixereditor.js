@@ -1,5 +1,6 @@
 import * as components from "./components.js";
 import * as events from "./events.js";
+import * as projects from "./projects.js";
 import * as ui from "./ui.js";
 import * as workspaces from "./workspaces.js";
 import * as storyboardObjects from "./storyboardobjects.js";
@@ -96,6 +97,7 @@ components.css(`
     }
 
     mixpipe-visionmixereditortransitionview {
+        position: relative;
         display: grid;
         height: 2.5rem;
         padding: 0.25rem;
@@ -301,11 +303,20 @@ export class VisionMixerEditorTransitionView extends components.Component {
         ]);
 
         this.sceneCanvasElement = components.element("canvas");
+        this.sceneCanvasPreviewStart = null;
 
         this.element.append(this.sceneNameElement, this.sceneDurationElement, this.actionsElement, this.sceneCanvasElement);
 
         this.element.addEventListener("click", function() {
             collection.events.transitionSelected.emit({transition: model});
+        });
+
+        this.sceneCanvasElement.addEventListener("pointerenter", function() {
+            thisScope.sceneCanvasPreviewStart = Date.now();
+        });
+
+        this.sceneCanvasElement.addEventListener("pointerleave", function() {
+            thisScope.sceneCanvasPreviewStart = null;
         });
 
         this.targetSceneButton.events.valueChanged.connect(function(event) {
@@ -362,14 +373,17 @@ export class VisionMixerEditorTransitionView extends components.Component {
     update() {
         if (!this.model.exists || (this.model.scene && !this.model.scene?.exists)) {
             this.removeAlways(this.update);
-
+            
             return;
         }
 
-        this.sceneNameElement.textContent = this.model.scene ? (this.model.scene.name || "Untitled scene") : "(No scene)";
+        var scene = this.model.scene;
+        var animationController = this.model.animationController;
 
-        if (this.model.animationController) {
-            this.sceneDurationElement.textContent = storyboardObjects.AnimationController.renderDisplayTime(this.model.animationController?.duration);
+        this.sceneNameElement.textContent = scene ? (scene.name || "Untitled scene") : "(No scene)";
+
+        if (animationController) {
+            this.sceneDurationElement.textContent = storyboardObjects.AnimationController.renderDisplayTime(animationController?.duration);
         } else {
             this.sceneDurationElement.textContent = "--.---";
         }
@@ -380,19 +394,33 @@ export class VisionMixerEditorTransitionView extends components.Component {
             this.element.classList.remove("selected");
         }
 
-        this.model.scene?.render();
+        if (animationController) {
+            if (this.sceneCanvasPreviewStart != null) {
+                animationController.startPreview(this.sceneCanvasPreviewStart);
+            } else {
+                animationController.stepPreview(animationController.duration / 2);
+            }
+        }
+
+        projects.ProjectModel.showPreviewTimelines = true;
+
+        scene?.render();
+
+        projects.ProjectModel.showPreviewTimelines = false;
+
+        animationController?.clearPreview();
 
         var context = this.sceneCanvasElement.getContext("2d");
 
-        if (this.model.scene) {
-            this.sceneCanvasElement.width = this.model.scene.width;
-            this.sceneCanvasElement.height = this.model.scene.height;
+        if (scene) {
+            this.sceneCanvasElement.width = scene.width;
+            this.sceneCanvasElement.height = scene.height;
         }
 
         context.clearRect(0, 0, this.sceneCanvasElement.width, this.sceneCanvasElement.height);
 
-        if (this.model.scene) {
-            context.drawImage(this.model.scene.canvas, 0, 0);
+        if (scene) {
+            context.drawImage(scene.canvas, 0, 0);
         } else {
             this.sceneCanvasElement.width = 96;
             this.sceneCanvasElement.height = 54;

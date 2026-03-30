@@ -90,6 +90,18 @@ export class TimelineSource extends projects.ProjectModel {
             this.addKeyframe(KeyframeSource.deserialise(this.project, keyframe));
         }
     }
+
+    applyPreview(startTime, stepTime = null) {
+        this.object[`${this.property}:previewTimeline`] = {
+            start: startTime,
+            step: stepTime,
+            keyframes: this.keyframes.getModelList().map((keyframe) => keyframe.serialise())
+        };
+    }
+
+    clearPreview() {
+        this.object[`${this.property}:previewTimeline`] = null;
+    }
 }
 
 projects.registerModelSyncHandler(["keyframes"], KeyframeSource);

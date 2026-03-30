@@ -412,6 +412,8 @@ export class Project extends events.EventDrivenObject {
 }
 
 export class ProjectModel extends events.EventDrivenObject {
+    static showPreviewTimelines = false;
+
     constructor(project, path) {
         super();
 
@@ -543,7 +545,7 @@ export class ProjectModel extends events.EventDrivenObject {
 
     getAnimatedValue(name, type = "number") {
         var thisScope = this;
-        var timeline = this[`${name}:timeline`];
+        var timeline = this.constructor.showPreviewTimelines ? this[`${name}:previewTimeline`] : this[`${name}:timeline`];
 
         function getFallback() {
             return type == "number" ? thisScope.getNumericValue(name) : thisScope.getValue(name);

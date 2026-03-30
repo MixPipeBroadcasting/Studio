@@ -582,6 +582,24 @@ export class AnimationController extends StoryboardObject {
 
         this.timelines.addModel(timeline);
     }
+
+    startPreview(time = Date.now()) {
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.applyPreview(time, null);
+        }
+    }
+
+    stepPreview(time = 0) {
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.applyPreview(null, time);
+        }
+    }
+
+    clearPreview() {
+        for (var timeline of this.timelines.getModelList()) {
+            timeline.clearPreview();
+        }
+    }
 }
 
 projects.registerModelSyncHandler(["attributeTypes"], AttributeType);
