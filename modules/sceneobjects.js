@@ -120,6 +120,34 @@ export class CompositedScene extends SceneObject {
             var template = this.project.get([...this.path, "scene"]);
             var isPlaceholder = typeof(template) == "string";
             var templateEnv = {};
+            var abMatch = template.match(/^\s*{{\s*([AB])\s*}}\s*$/);
+            var x = this.getAnimatedValue("x");
+            var y = this.getAnimatedValue("y");
+            var width = this.getAnimatedValue("width");
+            var height = this.getAnimatedValue("height");
+
+            if (isPlaceholder && abMatch) {
+                context.fillStyle = abMatch[1] == "B" ? "red" : "green";
+                context.strokeStyle = "white";
+                context.lineWidth = 2;
+
+                context.beginPath();
+                context.rect(x, y, width, height);
+                context.closePath();
+                context.fill();
+                context.stroke();
+
+                var fontSize = Math.min(Math.round(width * 1.2), Math.round(height * 0.8));
+
+                context.font = `${fontSize}px Overpass, system-ui, sans-serif`;
+                context.fillStyle = "white";
+                context.textAlign = "center";
+                context.textBaseline = "middle";
+
+                context.fillText(abMatch[1], x + (width / 2), y + (height / 2));
+
+                return;
+            }
 
             for (var attributeType of this.ownerScene?.getAllAttributeTypes() ?? []) {
                 templateEnv[attributeType.id] = `[[ ${attributeType.name} ]]`;
@@ -130,11 +158,6 @@ export class CompositedScene extends SceneObject {
             context.fillStyle = isPlaceholder ? "black" : "#770000";
             context.strokeStyle = "white";
             context.lineWidth = 2;
-
-            var x = this.getAnimatedValue("x");
-            var y = this.getAnimatedValue("y");
-            var width = this.getAnimatedValue("width");
-            var height = this.getAnimatedValue("height");
 
             context.beginPath();
             context.rect(x, y, width, height);
