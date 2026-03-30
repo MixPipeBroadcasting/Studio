@@ -127,7 +127,7 @@ export class CompositedScene extends SceneObject {
             var height = this.getAnimatedValue("height");
 
             if (isPlaceholder && abMatch) {
-                context.fillStyle = abMatch[1] == "B" ? "red" : "green";
+                context.fillStyle = abMatch[1] == "B" ? "#ff0000" : "#00dd00";
                 context.strokeStyle = "white";
                 context.lineWidth = 2;
 
