@@ -130,6 +130,7 @@ components.css(`
     }
 
     mixpipe-visionmixereditortransitionview .name {
+        ${components.styleMixins.ELLIPSIS_CUTOFF}
         grid-row: 1;
         grid-column: 2;
     }
