@@ -9,6 +9,7 @@ components.css(`
         padding: 4rem;
         padding-inline: 15%;
         background: linear-gradient(315deg, color-mix(in srgb, var(--selectedBackground) 40%, transparent) 0%, transparent 30%, transparent 100%);
+        overflow: auto;
     }
 
     mixpipe-panel.home .columns {
