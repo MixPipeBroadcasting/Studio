@@ -991,6 +991,7 @@ export class StoryboardToolbar extends workspaces.Toolbar {
             this.createVisionMixerButton,
             this.createAnimationControllerButton,
             this.createPresetSceneButton,
+            new workspaces.ToolbarSpacer(),
             this.newWindowButton,
             this.presetSceneMenu
         );
