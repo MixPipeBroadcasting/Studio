@@ -96,6 +96,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             this.createGraphicButton,
             this.createCompositedSceneButton,
             this.createCompositedScenePlaceholderButton,
+            new workspaces.ToolbarSpacer(),
             this.deleteObjectsButton
         );
 
