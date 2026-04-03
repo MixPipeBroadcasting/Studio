@@ -248,6 +248,9 @@ export class Scene extends StoryboardObject {
 
         options.templateEnv ||= {};
 
+        options.templateEnv["A"] = "[[ Placeholder A ]]";
+        options.templateEnv["B"] = "[[ Placeholder B ]]";
+
         for (var attributeType of this.getAllAttributeTypes()) {
             options.templateEnv[attributeType.id] = `[[ ${attributeType.name} ]]`;
         }

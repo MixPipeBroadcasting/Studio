@@ -88,6 +88,8 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
         this.createGraphicButton = new ui.IconButton("icons/graphic.svg", "Create graphic");
         this.createCompositedSceneButton = new ui.ToggleIconButton("icons/composite.svg", "Cancel creating a composited scene", undefined, "Create composited scene");
         this.createCompositedScenePlaceholderButton = new ui.ToggleIconButton("icons/compositeattribute.svg", "Cancel creating a composited scene placeholder", undefined, "Create composited scene placeholder");
+        this.createPlaceholderAButton = new ui.IconButton("icons/placeholdera.svg", "Create placeholder A (transition start)");
+        this.createPlaceholderBButton = new ui.IconButton("icons/placeholderb.svg", "Create placeholder B (transition end)");
         this.deleteObjectsButton = new ui.IconButton("icons/delete.svg", "Delete selected objects");
 
         this.add(
@@ -96,6 +98,9 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             this.createGraphicButton,
             this.createCompositedSceneButton,
             this.createCompositedScenePlaceholderButton,
+            new workspaces.ToolbarSpacer(),
+            this.createPlaceholderAButton,
+            this.createPlaceholderBButton,
             new workspaces.ToolbarSpacer(),
             this.deleteObjectsButton
         );
@@ -161,18 +166,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                             return;
                         }
 
-                        var scene = project.getOrCreateModel(event.value);
-                        var compositedScene = new sceneObjects.CompositedScene(project);
-
-                        compositedScene.x = 0;
-                        compositedScene.y = 0;
-                        compositedScene.width = scene.width;
-                        compositedScene.height = scene.height;
-                        compositedScene.scene = scene;
-
-                        sceneEditor.scene.objects.addModel(compositedScene);
-
-                        sceneEditor.setSelectedObjects([compositedScene]);
+                        thisScope.createCompositedScene(project.getOrCreateModel(event.value));
                     }
                 });
             }
@@ -197,17 +191,8 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                         }
 
                         var attributeType = project.getOrCreateModel(event.value);
-                        var compositedScene = new sceneObjects.CompositedScene(project);
 
-                        compositedScene.x = 0;
-                        compositedScene.y = 0;
-                        compositedScene.width = sceneEditor.scene.width;
-                        compositedScene.height = sceneEditor.scene.height;
-                        compositedScene.scene = `{{ ${attributeType.id} }}`;
-
-                        sceneEditor.scene.objects.addModel(compositedScene);
-
-                        sceneEditor.setSelectedObjects([compositedScene]);
+                        thisScope.createCompositedScene(`{{ ${attributeType.id} }}`);
                     }
                 });
             }
@@ -216,6 +201,9 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             project.setLocalProperty("targetingAttributeType", "scene");
             project.setLocalProperty("targetingAttribute", event.value);
         });
+
+        this.createPlaceholderAButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ A }}`));
+        this.createPlaceholderBButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ B }}`));
 
         this.deleteObjectsButton.events.activated.connect(function() {
             for (var object of sceneEditor.selectedObjects) {
@@ -230,6 +218,20 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
                 sceneEditor.setSelectedObjects([]);
             }
         });
+    }
+
+    createCompositedScene(scene) {
+        var compositedScene = new sceneObjects.CompositedScene(this.sceneEditor.scene.project);
+
+        compositedScene.x = 0;
+        compositedScene.y = 0;
+        compositedScene.width = this.sceneEditor.scene.width;
+        compositedScene.height = this.sceneEditor.scene.height;
+        compositedScene.scene = scene;
+
+        this.sceneEditor.scene.objects.addModel(compositedScene);
+
+        this.sceneEditor.setSelectedObjects([compositedScene]);
     }
 }
 
