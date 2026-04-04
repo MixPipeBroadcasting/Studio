@@ -155,6 +155,25 @@ components.css(`
         background: var(--innerSelectedBackground);
         color: var(--innerSelectedForeground);
     }
+
+    mixpipe-visionmixereditortransitioncontrols {
+        ${components.styleMixins.VERTICAL_STACK}
+        width: 6rem;
+        flex-shrink: 0;
+        gap: 0.5rem;
+    }
+
+    mixpipe-visionmixereditortransitioncontrols input[type="range"] {
+        height: 100%;
+        font-size: 1.75rem;
+    }
+
+    mixpipe-visionmixereditortransitioncontrols button {
+        padding-block: 0.75rem;
+        height: 2.5rem;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+    }
 `);
 
 export class VisionMixerEditorSceneView extends components.Component {
@@ -496,6 +515,26 @@ export class VisionMixerEditorTransitionCollection extends components.Component 
     }
 }
 
+export class VisionMixerEditorTransitionControls extends components.Component {
+    constructor(model) {
+        super("mixpipe-visionmixereditortransitioncontrols");
+
+        this.model = model;
+
+        this.faderInput = new ui.Input(undefined, "range", 0);
+        this.cutButton = new ui.Button("Cut");
+        this.transitionButton = new ui.Button("Txn");
+
+        this.faderInput.tooltip = "Transition fader bar";
+        this.faderInput.orientation = "vertical";
+
+        this.cutButton.tooltip = "Cut preview to programme";
+        this.transitionButton.tooltip = "Transition preview to programme using selected transition";
+        
+        this.add(this.faderInput, this.cutButton, this.transitionButton);
+    }
+}
+
 export class VisionMixerEditorView extends components.Component {
     constructor(model) {
         super("mixpipe-visionmixereditorview");
@@ -504,8 +543,9 @@ export class VisionMixerEditorView extends components.Component {
 
         this.sceneCollection = new VisionMixerEditorSceneCollection(model);
         this.transitionCollection = new VisionMixerEditorTransitionCollection(model);
+        this.transitionControls = new VisionMixerEditorTransitionControls(model);
 
-        this.add(this.sceneCollection, this.transitionCollection);
+        this.add(this.sceneCollection, this.transitionCollection, this.transitionControls);
     }
 }
 

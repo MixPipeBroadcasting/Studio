@@ -96,6 +96,82 @@ components.css(`
         outline: none;
     }
 
+    input[type="range"] {
+        padding: 0;
+        appearance: none;
+        border: none;
+    }
+
+    input[type="range"][mixpipe-orientation="vertical"] {
+        writing-mode: vertical-lr;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+        appearance: none;
+        padding-block: 0.25em;
+        background: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+
+    input[type="range"]::-moz-range-track {
+        appearance: none;
+        padding-block: 0.25em;
+        background: var(--secondaryBackground);
+        border-radius: 0.25rem;
+    }
+
+    input[type="range"]:not([mixpipe-orientation="vertical"])::-webkit-slider-runnable-track {
+        height: 0.5em;
+    }
+
+    input[type="range"]:not([mixpipe-orientation="vertical"])::-moz-range-track {
+        height: 0.5em;
+    }
+
+    input[type="range"][mixpipe-orientation="vertical"]::-webkit-slider-runnable-track {
+        width: 0.5em;
+    }
+
+    input[type="range"][mixpipe-orientation="vertical"]::-moz-range-track {
+        width: 0.5em;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        background: var(--selectedBackground);
+        border-radius: 0.25rem;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        appearance: none;
+        background: var(--selectedBackground);
+        border-radius: 0.25rem;
+    }
+
+    input[type="range"]:not([mixpipe-orientation="vertical"])::-webkit-slider-thumb {
+        width: 0.75em;
+        height: 1.5em;
+        transform: translateY(-0.75em);
+    }
+
+    input[type="range"]:not([mixpipe-orientation="vertical"])::-moz-range-thumb {
+        width: 0.75em;
+        height: 1.5em;
+        transform: translateY(-0.75em);
+    }
+
+    input[type="range"][mixpipe-orientation="vertical"]::-webkit-slider-thumb {
+        width: 1.5em;
+        height: 0.75em;
+        transform: translateX(-0.75em);
+    }
+
+    input[type="range"][mixpipe-orientation="vertical"]::-moz-range-thumb {
+        width: 1.5em;
+        height: 0.75em;
+        transform: translateX(-0.75em);
+    }
+
     label {
         display: block;
     }
@@ -377,11 +453,13 @@ export class Input extends components.Component {
         this.element.value = value;
 
         this.registerState("placeholder", "placeholderChanged", placeholder, (event) => this.element.placeholder = event.value);
+        this.registerState("tooltip", "tooltipChanged", null, (event) => this.element.title = event.value);
         this.registerState("value", "valueChanged", value, (event) => this.element.value = event.value);
         this.registerState("minValue", "minValueChanged", -Infinity, (event) => this.element.min = event.value);
         this.registerState("maxValue", "maxValueChanged", Infinity, (event) => this.element.max = event.value);
         this.registerState("stepValue", "stepValueChanged", 1, (event) => this.element.step = event.value);
         this.registerState("enabled", "interactionChanged", true, (event) => this.element.disabled = !event.value);
+        this.registerState("orientation", "orientationChanged", "horizontal", (event) => this.element.setAttribute("mixpipe-orientation", event.value));
 
         this.events.valueCommitted = new events.EventType(this);
         this.events.confirmed = new events.EventType(this);
