@@ -95,6 +95,20 @@ export class Connection {
             affectedByDownstream = false;
         }
 
+        if (this.attributes.sourceIsForTransition) {
+            this.type = "transition";
+            affectedByDownstream = false;
+
+            if (this.destination instanceof VisionMixer) {
+                if (
+                    this.source.isSameModel(this.destination.selectedTransition?.scene) ||
+                    this.source.isSameModel(this.destination.selectedTransition?.animationController)
+                ) {
+                    this.type = "selectedTransition";
+                }
+            }
+        }
+
         if (affectedByDownstream) {
             var downstreamTypes = this.downstreamConnections.map((connection) => connection.type);
 
@@ -359,6 +373,16 @@ export class VisionMixer extends Scene {
 
         for (var sourceScene of this.sourceScenes.getModelList()) {
             connections.push(new Connection(sourceScene.scene, this));
+        }
+
+        for (var transition of this.transitions.getModelList()) {
+            if (transition.scene) {
+                connections.push(new Connection(transition.scene, this, {sourceIsForTransition: true}));
+            }
+
+            if (transition.animationController) {
+                connections.push(new Connection(transition.animationController, this, {sourceIsForTransition: true}));
+            }
         }
 
         return connections;

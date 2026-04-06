@@ -902,7 +902,16 @@ export class Storyboard extends components.Component {
                     break;
 
                 case "template":
+                case "transition":
                     context.strokeStyle = computedStyle.getPropertyValue("--secondaryForeground");
+                    context.lineWidth = 2;
+
+                    context.setLineDash([5, 5]);
+
+                    break;
+
+                case "selectedTransition":
+                    context.strokeStyle = computedStyle.getPropertyValue("--selectedBackground");
                     context.lineWidth = 2;
 
                     context.setLineDash([5, 5]);
