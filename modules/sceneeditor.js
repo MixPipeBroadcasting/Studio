@@ -202,8 +202,8 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
             project.setLocalProperty("targetingAttribute", event.value);
         });
 
-        this.createPlaceholderAButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ A }}`));
-        this.createPlaceholderBButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ B }}`));
+        this.createPlaceholderAButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ A }}`, "Placeholder A"));
+        this.createPlaceholderBButton.events.activated.connect(() => thisScope.createCompositedScene(`{{ B }}`, "Placeholder B"));
 
         this.deleteObjectsButton.events.activated.connect(function() {
             for (var object of sceneEditor.selectedObjects) {
@@ -220,8 +220,12 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
         });
     }
 
-    createCompositedScene(scene) {
+    createCompositedScene(scene, name = undefined) {
         var compositedScene = new sceneObjects.CompositedScene(this.sceneEditor.scene.project);
+
+        if (name) {
+            compositedScene.name = name;
+        }
 
         compositedScene.x = 0;
         compositedScene.y = 0;
