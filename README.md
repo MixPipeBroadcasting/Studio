@@ -8,4 +8,4 @@ To run MPS locally, simply serve the root directory for this project by running:
 python3 -m http.server
 ```
 
-Once the server is running, you can then access MPS in your web browser at [http://localhost:8000](http://localhost:8000).
+Once the web server is running, you can then access MPS in your web browser at [http://localhost:8000](http://localhost:8000).
