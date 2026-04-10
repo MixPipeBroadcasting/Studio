@@ -456,6 +456,22 @@ export class VisionMixer extends Scene {
             return;
         }
 
+        if (
+            this.selectedTransition?.scene &&
+            this.selectedTransition?.animationController &&
+            this.selectedTransition.animationController.state != "stopped" &&
+            this.programmeScene &&
+            this.previewScene
+        ) {
+            options.env ||= {};
+            options.env["A"] = this.programmeScene;
+            options.env["B"] = this.previewScene;
+
+            this.selectedTransition.scene.drawToContext(context, options);
+
+            return;
+        }
+
         this.programmeScene?.drawToContext(context, options);
     }
 }
