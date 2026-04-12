@@ -355,6 +355,8 @@ export class VisionMixer extends Scene {
         })
     ];
 
+    static nextCompositionId = 0;
+
     constructor(project, path = ["visionMixers", projects.generateKey()]) {
         super(project, path);
 
@@ -365,6 +367,7 @@ export class VisionMixer extends Scene {
         this.registerReferenceProperty("previewScene", null, "previewSelected");
         this.registerReferenceProperty("selectedTransition", null, "transitionSelected");
 
+        this.compositionId = `vm${this.constructor.nextCompositionId++}`;
         this.builtInAttributeTypes = this.constructor._builtInAttributeTypes;
     }
 
@@ -459,17 +462,23 @@ export class VisionMixer extends Scene {
         if (
             this.selectedTransition?.scene &&
             this.selectedTransition?.animationController &&
-            this.selectedTransition.animationController.state != "stopped" &&
             this.programmeScene &&
             this.previewScene
         ) {
+            options.compositionChain ||= "";
+            options.compositionChain += `${this.compositionId},`;
             options.env ||= {};
             options.env["A"] = this.programmeScene;
             options.env["B"] = this.previewScene;
 
-            this.selectedTransition.scene.drawToContext(context, options);
+            if (this.selectedTransition.animationController.state != "stopped") {
+                this.selectedTransition.scene.drawToContext(context, options);
 
-            return;
+                return;
+            } else {
+                // Pre-evaluate all templates by rendering without drawing to vision mixer programme bus
+                this.selectedTransition.scene.drawToContext(undefined, options);
+            }
         }
 
         this.programmeScene?.drawToContext(context, options);
