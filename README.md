@@ -2,7 +2,7 @@
 A pipeline-based vision and audio mixing application for live video productions.
 
 ## Running MPS
-To run MPS locally, simply start a web server by running this command in MPS's root directory:
+To run MPS locally, simply start a web server by running the following command in MPS's root directory:
 
 ```bash
 python3 -m http.server
