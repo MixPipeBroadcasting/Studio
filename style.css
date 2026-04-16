@@ -60,5 +60,7 @@ body {
         --secondaryBackground: #333333;
         --secondaryForeground: #999999;
         --keyframePoint: #440000;
+        --targetStart: #161629;
+        --targetEnd: #1c1c41;
     }
 }
