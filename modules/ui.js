@@ -461,6 +461,7 @@ export class Input extends components.Component {
         this.registerState("enabled", "interactionChanged", true, (event) => this.element.disabled = !event.value);
         this.registerState("orientation", "orientationChanged", "horizontal", (event) => this.element.setAttribute("mixpipe-orientation", event.value));
 
+        this.events.valueEdited = new events.EventType(this);
         this.events.valueCommitted = new events.EventType(this);
         this.events.confirmed = new events.EventType(this);
 
@@ -482,6 +483,8 @@ export class Input extends components.Component {
             }
 
             thisScope.value = value;
+
+            thisScope.events.valueEdited.emit({value});
         });
 
         this.element.addEventListener("change", (event) => this.events.valueCommitted.emit({value: event.target.value}));

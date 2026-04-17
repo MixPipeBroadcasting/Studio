@@ -363,12 +363,14 @@ export class VisionMixer extends Scene {
         this.sourceScenes = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "sourceScenes"], visionMixers.VisionMixerSourceScene);
         this.transitions = new projects.ProjectModelReferenceGroup(this.project, [...this.path, "transitions"], visionMixers.VisionMixerTransition);
 
-        this.registerReferenceProperty("programmeScene", null, "transitionStarted");
+        this.registerReferenceProperty("programmeScene", null, "programmeChanged");
         this.registerReferenceProperty("previewScene", null, "previewSelected");
         this.registerReferenceProperty("selectedTransition", null, "transitionSelected");
 
         this.compositionId = `vm${this.constructor.nextCompositionId++}`;
         this.builtInAttributeTypes = this.constructor._builtInAttributeTypes;
+
+        this.transitionTimeout = null;
     }
 
     getConnections() {
@@ -442,6 +444,51 @@ export class VisionMixer extends Scene {
         transition.parentVisionMixer = null;
 
         this.transitions.removeModel(transitionKey);
+    }
+
+    cut() {
+        var tempScene = this.programmeScene;
+
+        this.programmeScene = this.previewScene;
+        this.previewScene = tempScene;
+
+        this.selectedTransition?.animationController?.reset();
+    }
+
+    startTransition() {
+        var thisScope = this;
+
+        if (!this.selectedTransition ||
+            !this.selectedTransition.scene ||
+            !this.selectedTransition.animationController
+        ) {
+            this.cut();
+
+            return;
+        }
+
+        var animationController = this.selectedTransition.animationController;
+
+        clearTimeout(this.transitionTimeout);
+
+        this.transitionTimeout = setTimeout(function() {
+            thisScope.cut();
+        }, animationController.duration);
+
+        animationController.start();
+    }
+
+    stepTransition(progress = 0) {
+        if (!this.selectedTransition ||
+            !this.selectedTransition.scene ||
+            !this.selectedTransition.animationController
+        ) {
+            return;
+        }
+
+        var animationController = this.selectedTransition.animationController;
+
+        animationController.step((progress / 100) * animationController.duration);
     }
 
     drawToContext(context = this.canvasContext, options = {}) {

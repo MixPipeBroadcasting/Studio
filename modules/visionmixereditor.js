@@ -519,6 +519,8 @@ export class VisionMixerEditorTransitionControls extends components.Component {
     constructor(model) {
         super("mixpipe-visionmixereditortransitioncontrols");
 
+        var thisScope = this;
+
         this.model = model;
 
         this.faderInput = new ui.Input(undefined, "range", 0);
@@ -532,6 +534,45 @@ export class VisionMixerEditorTransitionControls extends components.Component {
         this.transitionButton.tooltip = "Transition preview to programme using selected transition";
         
         this.add(this.faderInput, this.cutButton, this.transitionButton);
+
+        this.faderInput.events.valueEdited.connect((event) => this.model.stepTransition(Number(event.value)));
+
+        this.faderInput.events.valueCommitted.connect(function(event) {
+            var value = Number(event.value);
+
+            thisScope.model.stepTransition(value);
+
+            if (value == 100) {
+                thisScope.model.cut();
+            }
+        });
+
+        this.cutButton.events.activated.connect(() => this.model.cut());
+        this.transitionButton.events.activated.connect(() => this.model.startTransition(Number(this.faderInput.value)));
+
+        this.always(function() {
+            var animationController = thisScope.model.selectedTransition?.animationController;
+
+            if (!animationController) {
+                thisScope.faderInput.value = 0;
+
+                return;
+            }
+
+            if (animationController.startTime != null && animationController.currentTime < animationController.duration) {
+                thisScope.faderInput.value = (animationController.currentTime / animationController.duration) * 100;
+
+                return;
+            }
+
+            if (animationController.stepTime == null) {
+                thisScope.faderInput.value = 0;
+
+                return;
+            }
+
+            thisScope.faderInput.value = (animationController.stepTime / animationController.duration) * 100;
+        });
     }
 }
 
