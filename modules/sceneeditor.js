@@ -83,7 +83,7 @@ export class SceneEditorToolbar extends workspaces.Toolbar {
 
         this.sceneEditor = sceneEditor;
 
-        this.createRectangleButton = new ui.IconButton("icons/add.svg", "Create rectangle");
+        this.createRectangleButton = new ui.IconButton("icons/rectangle.svg", "Create rectangle");
         this.createTextButton = new ui.IconButton("icons/text.svg", "Create text");
         this.createGraphicButton = new ui.IconButton("icons/graphic.svg", "Create graphic");
         this.createCompositedSceneButton = new ui.ToggleIconButton("icons/composite.svg", "Cancel creating a composited scene", undefined, "Create composited scene");
