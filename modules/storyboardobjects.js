@@ -458,9 +458,9 @@ export class VisionMixer extends Scene {
     startTransition() {
         var thisScope = this;
 
-        if (!this.selectedTransition ||
-            !this.selectedTransition.scene ||
-            !this.selectedTransition.animationController
+        if (
+            !this.selectedTransition?.scene ||
+            !this.selectedTransition?.animationController
         ) {
             this.cut();
 
@@ -479,9 +479,9 @@ export class VisionMixer extends Scene {
     }
 
     stepTransition(progress = 0) {
-        if (!this.selectedTransition ||
-            !this.selectedTransition.scene ||
-            !this.selectedTransition.animationController
+        if (
+            !this.selectedTransition?.scene ||
+            !this.selectedTransition?.animationController
         ) {
             return;
         }
