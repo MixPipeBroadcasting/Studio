@@ -1,3 +1,4 @@
+import * as projects from "./projects.js";
 import * as components from "./components.js";
 import * as events from "./events.js";
 import * as ui from "./ui.js";
@@ -434,10 +435,12 @@ export function addEventListenersForProject(project) {
 }
 
 export function clearTargetingModes() {
-    project.setLocalProperty("targetedProperty", null);
-    project.setLocalProperty("targetedScenePath", null);
-    project.setLocalProperty("targetedAttributePath", null);
-    project.setLocalProperty("targetedAnimationControllerPath", null);
+    for (var project of Object.values(projects.projectsById)) {
+        project.setLocalProperty("targetedProperty", null);
+        project.setLocalProperty("targetedScenePath", null);
+        project.setLocalProperty("targetedAttributePath", null);
+        project.setLocalProperty("targetedAnimationControllerPath", null);
+    }
 }
 
 mainWorkspace = new Workspace();
